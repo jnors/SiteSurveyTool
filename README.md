@@ -1,30 +1,65 @@
-# Site Survey Tool UI
-
-*Automatically synced with your [v0.app](https://v0.app) deployments*
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/jnors-projects/v0-site-survey-tool-ui)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/P6mA3go5du4)
+# README.md — Local Development Setup
 
 ## Overview
+This document guides developers to set up and run the Site Survey Tool (SST) locally using VS Code and Codex CLI.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+### Tech Stack
+- **Frontend:** Next.js (PWA), TypeScript, TailwindCSS
+- **Local DB:** Dexie (IndexedDB)
+- **Auth & Storage:** Google OAuth + Google Drive API
+- **Offline-First:** Manual sync; no backend DB
 
-## Deployment
+## Setup Steps
+1. **Clone the repo**  
+   ```bash
+   git clone <repo-url>
+   cd site-survey-tool
+   ```
 
-Your project is live at:
+2. **Install dependencies**  
+   ```bash
+   pnpm install
+   ```
 
-**[https://vercel.com/jnors-projects/v0-site-survey-tool-ui](https://vercel.com/jnors-projects/v0-site-survey-tool-ui)**
+3. **Create `.env.local`**
+   ```bash
+   GOOGLE_OAUTH_CLIENT_ID=
+   GOOGLE_OAUTH_CLIENT_SECRET=
+   GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
+   GOOGLE_DRIVE_SCOPE="openid email profile https://www.googleapis.com/auth/drive"
+   NEXT_PUBLIC_APP_NAME="SST"
+   NEXT_PUBLIC_MAX_PHOTOS_PER_PIN=4
+   NEXT_PUBLIC_MAX_PHOTO_RES=1080
+   NEXT_PUBLIC_THEME_BG=#121212
+   NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
+   ```
 
-## Build your app
+4. **Run the development server**
+   ```bash
+   pnpm dev
+   ```
 
-Continue building your app on:
+5. **Access locally**  
+   Visit [http://localhost:3000](http://localhost:3000)
 
-**[https://v0.app/chat/projects/P6mA3go5du4](https://v0.app/chat/projects/P6mA3go5du4)**
+## Codex CLI Integration
+- Ensure Codex CLI is installed globally (`pipx install codex-cli` or similar).
+- Agents and routing rules are defined in `AGENTS.md`.
+- Example commands:
+  ```bash
+  codex plan "Implement PinModal with 4-photo limit (1080p)"
+  codex generate "Drive client upload sequence"
+  codex write "docs/sync.md: Manual sync flow"
+  ```
 
-## How It Works
+## Recommended VS Code Extensions
+- ESLint
+- Prettier
+- Tailwind CSS IntelliSense
+- Error Lens
+- GitLens
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Testing Targets
+- Offline capture → queued uploads → manual sync → success/fail handling
+- Max 4 photos per pin (1080p cap)
+- Correct folder creation under My Drive/SST/

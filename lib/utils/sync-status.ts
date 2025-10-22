@@ -3,15 +3,15 @@ import type { SyncStatus } from "@/lib/types"
 export function getSyncStatusColor(status: SyncStatus): string {
   switch (status) {
     case "synced":
-      return "bg-[--color-accent-green]"
+      return "bg-accent-green"
     case "pending":
-      return "bg-[--color-accent-yellow]"
+      return "bg-accent-yellow"
     case "error":
-      return "bg-[--color-accent-red]"
+      return "bg-accent-red"
     case "syncing":
-      return "bg-[--color-accent-blue]"
+      return "bg-accent-blue"
     default:
-      return "bg-[--color-foreground-subtle]"
+      return "bg-foreground-subtle"
   }
 }
 
@@ -33,14 +33,14 @@ export function getSyncStatusText(status: SyncStatus): string {
 export function getSyncStatusTextColor(status: SyncStatus): string {
   switch (status) {
     case "synced":
-      return "text-[--color-accent-green]"
+      return "text-accent-green"
     case "pending":
-      return "text-[--color-accent-yellow]"
+      return "text-accent-yellow"
     case "error":
-      return "text-[--color-accent-red]"
+      return "text-accent-red"
     case "syncing":
-      return "text-[--color-accent-blue]"
+      return "text-accent-blue"
     default:
-      return "text-[--color-foreground-subtle]"
+      return "text-foreground-subtle"
   }
 }

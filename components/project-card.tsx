@@ -35,12 +35,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Link href={`/projects/${project.projectId}`}>
-      <Card className="group cursor-pointer border-(--color-border) bg-(--color-background-card) p-6 transition-colors hover:border-(--color-border-hover) hover:bg-(--color-background-hover)">
+      <Card className="group cursor-pointer border-border bg-background-card p-6 transition-colors hover:border-border-hover hover:bg-background-hover">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="mb-2 font-semibold text-(--color-foreground) text-lg">{project.name}</h3>
-            <p className="text-(--color-foreground-muted) text-sm">Last synced: {formatDate(project.lastSynced)}</p>
-            <p className="mt-1 text-(--color-foreground-subtle) text-xs">
+            <h3 className="mb-2 font-semibold text-foreground text-lg">{project.name}</h3>
+            <p className="text-foreground-muted text-sm">Last synced: {formatDate(project.lastSynced)}</p>
+            <p className="mt-1 text-foreground-subtle text-xs">
               {project.pins.length} pin{project.pins.length !== 1 ? "s" : ""}
             </p>
           </div>

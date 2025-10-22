@@ -15,13 +15,13 @@ export function PinMarker({ pin, isSelected, onClick }: PinMarkerProps) {
     <button
       onClick={onClick}
       className="group absolute -translate-x-1/2 -translate-y-full transition-transform hover:scale-110"
-      style={{ left: `${pin.x}px`, top: `${pin.y}px` }}
+      style={{ left: `${pin.xPct}%`, top: `${pin.yPct}%` }}
       aria-label={`Pin: ${pin.title}`}
     >
       <div className="relative">
         <MapPin
           className={`h-8 w-8 drop-shadow-lg transition-colors ${
-            isSelected ? "text-(--color-primary)" : "text-(--color-foreground)"
+            isSelected ? "text-primary" : "text-foreground"
           }`}
           fill="currentColor"
         />

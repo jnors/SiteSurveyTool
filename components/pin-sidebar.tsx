@@ -26,7 +26,7 @@ export function PinSidebar({ pin, onViewDetails }: PinSidebarProps) {
   }
 
   return (
-    <Card className="border-(--color-border) bg-(--color-background-card) p-4">
+    <Card className="border-border bg-background-card p-4">
       <div className="space-y-4">
         <div>
           <h3 className="mb-1 font-semibold text-(--color-foreground) text-lg">{pin.title}</h3>
@@ -41,15 +41,15 @@ export function PinSidebar({ pin, onViewDetails }: PinSidebarProps) {
           </div>
         </div>
 
-        <p className="text-(--color-foreground-muted) text-sm leading-relaxed">{pin.note}</p>
+        <p className="text-foreground-muted text-sm leading-relaxed">{pin.note}</p>
 
         <div>
-          <p className="mb-2 font-medium text-(--color-foreground-muted) text-xs">PHOTOS ({pin.photos.length})</p>
+          <p className="mb-2 font-medium text-foreground-muted text-xs">PHOTOS ({pin.photos.length})</p>
           <div className="grid grid-cols-2 gap-2">
             {pin.photos.slice(0, 4).map((photo, index) => (
               <div
                 key={index}
-                className="relative aspect-square overflow-hidden rounded border border-(--color-border) bg-(--color-background-elevated)"
+                className="relative aspect-square overflow-hidden rounded border border-border bg-background-elevated"
               >
                 <Image src={photo || "/placeholder.svg"} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
               </div>
@@ -59,7 +59,7 @@ export function PinSidebar({ pin, onViewDetails }: PinSidebarProps) {
 
         <button
           onClick={onViewDetails}
-          className="w-full rounded-md bg-(--color-primary) px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-(--color-primary-hover)"
+          className="w-full rounded-md bg-primary px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-primary-hover"
         >
           View Full Details
         </button>

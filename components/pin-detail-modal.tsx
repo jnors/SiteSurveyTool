@@ -16,11 +16,17 @@ interface PinDetailModalProps {
   onOpenChange: (open: boolean) => void
   isNewPin?: boolean
   onSaveNewPin?: (pin: Pin) => void
+  onAddPhotos?: (pinId: string, files: File[]) => Promise<void> | void
 }
 
-export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSaveNewPin }: PinDetailModalProps) {
+export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSaveNewPin, onAddPhotos }: PinDetailModalProps) {
   const [title, setTitle] = useState("")
   const [note, setNote] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputId = "pin-photo-input"
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+  const [previewDims, setPreviewDims] = useState<{ w: number; h: number } | null>(null)
 
   useEffect(() => {
     if (pin) {
@@ -89,6 +95,16 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
     onOpenChange(false)
   }
 
+  const handleAddPhotos = async (files: FileList | null) => {
+    if (!files || !onAddPhotos || !pin || isNewPin) return
+    setIsUploading(true)
+    try {
+      await onAddPhotos(pin.pinId, Array.from(files))
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border border-border bg-background-card text-foreground shadow-2xl transition-all duration-150">
@@ -141,21 +157,89 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
                   className="group relative aspect-video overflow-hidden rounded-lg border border-border bg-background-elevated transition-all duration-150 hover:border-border-hover"
                 >
                   {photo ? (
-                    <Image
-                      src={photo || "/placeholder.svg"}
-                      alt={`${title} photo ${index + 1}`}
-                      fill
-                      className="object-cover transition-transform duration-150 group-hover:scale-105"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewIndex(index)
+                        setPreviewDims(null)
+                        setPreviewOpen(true)
+                      }}
+                      className="absolute inset-0"
+                      aria-label={`View photo ${index + 1}`}
+                    >
+                      <Image
+                        src={photo || "/placeholder.svg"}
+                        alt={`${title} photo ${index + 1}`}
+                        fill
+                        className="object-cover transition-transform duration-150 group-hover:scale-105"
+                      />
+                    </button>
                   ) : (
-                    <div className="flex h-full items-center justify-center text-foreground-muted text-sm">
-                      No photo
-                    </div>
+                    <label
+                      htmlFor={fileInputId}
+                      className="flex h-full cursor-pointer items-center justify-center text-foreground-muted text-sm hover:text-foreground"
+                    >
+                      {isUploading ? "Uploading..." : "Add photo"}
+                    </label>
                   )}
                 </div>
               ))}
             </div>
+            {!isNewPin && pin.photos.length < 4 && (
+              <div className="flex items-center gap-3">
+                <input
+                  id={fileInputId}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => handleAddPhotos(e.target.files)}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById(fileInputId)?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                  className="border-border text-foreground hover:bg-background-elevated"
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Processing..." : "Attach Photos"}
+                </Button>
+                <span className="text-foreground-muted text-xs">Max 4 photos, resized to 1080p JPEG</span>
+              </div>
+            )}
           </div>
+
+          {/* Photo Preview Dialog */}
+          <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+            <DialogContent className="max-h-[90vh] w-[min(92vw,900px)] overflow-hidden border border-border bg-background-card p-0 text-foreground shadow-2xl">
+              <DialogHeader className="px-6 pt-6">
+                <DialogTitle className="text-lg font-semibold">{title} — Photo {previewIndex !== null ? previewIndex + 1 : ''}</DialogTitle>
+              </DialogHeader>
+              <div className="px-6 pb-6">
+                <div className="relative mx-auto aspect-video w-full max-h-[60vh]">
+                  {previewIndex !== null && pin.photos[previewIndex] && (
+                    <Image
+                      src={pin.photos[previewIndex] || "/placeholder.svg"}
+                      alt={`${title} large preview`}
+                      fill
+                      className="object-contain"
+                      onLoadingComplete={(img) => setPreviewDims({ w: img.naturalWidth, h: img.naturalHeight })}
+                    />
+                  )}
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="text-foreground-muted text-sm">
+                    {previewDims && (
+                      <span>Resolution: {previewDims.w}×{previewDims.h}px</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setPreviewOpen(false)} className="border-border text-foreground hover:bg-background-elevated">Close</Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 border-border border-t pt-6 sm:flex-row sm:justify-between">

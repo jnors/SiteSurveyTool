@@ -7,9 +7,10 @@ import { CheckCircle2, AlertCircle, AlertTriangle, Loader2 } from "lucide-react"
 
 interface SyncBannerProps {
   status: SyncStatus
+  onSync?: () => void
 }
 
-export function SyncBanner({ status }: SyncBannerProps) {
+export function SyncBanner({ status, onSync }: SyncBannerProps) {
   const [prevStatus, setPrevStatus] = useState<SyncStatus>(status)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
@@ -64,6 +65,14 @@ export function SyncBanner({ status }: SyncBannerProps) {
     >
       <span className="text-black">{getIcon()}</span>
       <span className="font-medium text-black text-sm">{getSyncStatusText(status)}</span>
+      {onSync && (
+        <button
+          onClick={onSync}
+          className="ml-3 rounded bg-black/10 px-3 py-1 text-xs font-semibold text-black hover:bg-black/15"
+        >
+          Sync Now
+        </button>
+      )}
     </div>
   )
 }

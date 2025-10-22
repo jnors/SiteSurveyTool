@@ -2,8 +2,8 @@ export type SyncStatus = "synced" | "pending" | "error" | "syncing"
 
 export interface Pin {
   pinId: string
-  x: number
-  y: number
+  xPct: number
+  yPct: number
   title: string
   note: string
   photos: string[]

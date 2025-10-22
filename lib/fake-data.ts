@@ -10,8 +10,8 @@ export const fakeProjects: Project[] = [
     pins: [
       {
         pinId: "pin-1",
-        x: 320,
-        y: 240,
+        xPct: 40,
+        yPct: 40,
         title: "HVAC Unit 1",
         note: "Check vibration isolation. Unit appears to be functioning normally but requires inspection of mounting brackets.",
         photos: [
@@ -24,8 +24,8 @@ export const fakeProjects: Project[] = [
       },
       {
         pinId: "pin-2",
-        x: 580,
-        y: 180,
+        xPct: 72.5,
+        yPct: 30,
         title: "Electrical Panel A",
         note: "Main distribution panel. All circuits labeled and functioning.",
         photos: [
@@ -38,8 +38,8 @@ export const fakeProjects: Project[] = [
       },
       {
         pinId: "pin-3",
-        x: 450,
-        y: 420,
+        xPct: 56.25,
+        yPct: 70,
         title: "Water Damage - NE Corner",
         note: "Visible water staining on ceiling. Requires immediate attention and source investigation.",
         photos: [
@@ -61,8 +61,8 @@ export const fakeProjects: Project[] = [
     pins: [
       {
         pinId: "pin-4",
-        x: 280,
-        y: 320,
+        xPct: 35,
+        yPct: 53.3333,
         title: "Fire Suppression System",
         note: "Annual inspection due. System appears operational.",
         photos: [
@@ -84,8 +84,8 @@ export const fakeProjects: Project[] = [
     pins: [
       {
         pinId: "pin-5",
-        x: 400,
-        y: 300,
+        xPct: 50,
+        yPct: 50,
         title: "Loading Dock 3",
         note: "Hydraulic lift mechanism needs servicing.",
         photos: [
@@ -107,8 +107,8 @@ export const fakeProjects: Project[] = [
     pins: [
       {
         pinId: "pin-6",
-        x: 350,
-        y: 250,
+        xPct: 43.75,
+        yPct: 41.6667,
         title: "Fume Hood Station 2",
         note: "Airflow test completed. Within acceptable parameters.",
         photos: [

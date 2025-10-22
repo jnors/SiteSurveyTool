@@ -21,11 +21,11 @@ import type { Pin } from "@/lib/types"
 export default function ProjectDetailPage() {
   const params = useParams()
   const projectId = params.projectId as string
-  const { project, isLoading, addPin } = useProject(projectId)
+  const { project, isLoading, addPin, addPhotos, syncAll } = useProject(projectId)
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [isAddingPin, setIsAddingPin] = useState(false)
-  const [newPinPosition, setNewPinPosition] = useState<{ x: number; y: number } | null>(null)
+  const [newPinPosition, setNewPinPosition] = useState<{ xPct: number; yPct: number } | null>(null)
   const [showToast, setShowToast] = useState(false)
   const floorplanRef = useRef<HTMLDivElement>(null)
 
@@ -33,21 +33,21 @@ export default function ProjectDetailPage() {
     if (!isAddingPin || !floorplanRef.current) return
 
     const rect = floorplanRef.current.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
+    const xPct = ((e.clientX - rect.left) / rect.width) * 100
+    const yPct = ((e.clientY - rect.top) / rect.height) * 100
 
     // Create temporary new pin
     const tempPin: Pin = {
       pinId: `temp-${Date.now()}`,
-      x,
-      y,
+      xPct,
+      yPct,
       title: "New Pin",
       note: "",
       photos: [],
       syncStatus: "pending",
     }
 
-    setNewPinPosition({ x, y })
+    setNewPinPosition({ xPct, yPct })
     setSelectedPin(tempPin)
     setModalOpen(true)
     setIsAddingPin(false)
@@ -87,7 +87,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
-      <SyncBanner status={project.status} />
+      <SyncBanner status={project.status} onSync={syncAll} />
 
       <main className="mx-auto max-w-7xl px-6 py-6">
         <div className="mb-6">
@@ -104,7 +104,7 @@ export default function ProjectDetailPage() {
           {/* Floorplan Viewer */}
           <div className="overflow-hidden rounded-lg border border-border bg-background-card">
             {isAddingPin && (
-              <div className="border-b border-border bg-blue-600/10 px-4 py-2 text-center text-blue-600 text-sm">
+              <div className="border-b border-border bg-primary/10 px-4 py-2 text-center text-primary text-sm">
                 Tap anywhere on the floorplan to add a new pin.
               </div>
             )}
@@ -135,7 +135,7 @@ export default function ProjectDetailPage() {
               {newPinPosition && (
                 <div
                   className="absolute -translate-x-1/2 -translate-y-1/2 animate-pulse"
-                  style={{ left: `${newPinPosition.x}%`, top: `${newPinPosition.y}%` }}
+                  style={{ left: `${newPinPosition.xPct}%`, top: `${newPinPosition.yPct}%` }}
                 >
                   <div className="h-6 w-6 rounded-full border-2 border-yellow-500 bg-yellow-500/20" />
                 </div>
@@ -171,6 +171,10 @@ export default function ProjectDetailPage() {
         onOpenChange={setModalOpen}
         isNewPin={selectedPin?.pinId.startsWith("temp-")}
         onSaveNewPin={handleSaveNewPin}
+        onAddPhotos={async (pinId, files) => {
+          await addPhotos(pinId, files)
+          setSelectedPin((prev) => (prev ? { ...prev, photos: project?.pins.find(p => p.pinId === pinId)?.photos || prev.photos } : prev))
+        }}
       />
     </div>
   )

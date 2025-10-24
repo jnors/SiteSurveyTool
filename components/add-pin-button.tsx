@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button"
 interface AddPinButtonProps {
   onClick: () => void
   disabled?: boolean
+  disabledReason?: string
   isActive?: boolean
 }
 
-export function AddPinButton({ onClick, disabled = false, isActive = false }: AddPinButtonProps) {
+export function AddPinButton({ onClick, disabled = false, disabledReason, isActive = false }: AddPinButtonProps) {
+  const tooltipText = disabled ? disabledReason ?? "Action unavailable" : "Add Pin"
+
   return (
     <div className="group relative">
       <Button
@@ -33,7 +36,7 @@ export function AddPinButton({ onClick, disabled = false, isActive = false }: Ad
 
       {/* Tooltip */}
       <div className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md bg-background-elevated px-3 py-1.5 text-foreground text-sm opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
-        {disabled ? "Offline - Cannot add pins" : "Add Pin"}
+        {tooltipText}
       </div>
     </div>
   )

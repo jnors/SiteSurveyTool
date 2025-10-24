@@ -6,9 +6,10 @@ import { CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react"
 
 interface ProjectCardProps {
   project: Project
+  movedOrMissing?: boolean
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, movedOrMissing = false }: ProjectCardProps) {
   const getStatusIcon = () => {
     switch (project.status) {
       case "synced":
@@ -34,7 +35,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   }
 
   return (
-    <Link href={`/projects/${project.projectId}`}>
+    <Link href={`/projects/${project.projectId}`} prefetch>
       <Card className="group cursor-pointer border-border bg-background-card p-6 transition-colors hover:border-border-hover hover:bg-background-hover">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -44,7 +45,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
               {project.pins.length} pin{project.pins.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className={`flex items-center gap-2 ${getSyncStatusTextColor(project.status)}`}>{getStatusIcon()}</div>
+          <div className={`flex items-center gap-2 ${getSyncStatusTextColor(project.status)}`}>
+            {getStatusIcon()}
+            {movedOrMissing && (
+              <span className="rounded-full border border-yellow-500 bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-500">
+                Relink
+              </span>
+            )}
+          </div>
         </div>
       </Card>
     </Link>

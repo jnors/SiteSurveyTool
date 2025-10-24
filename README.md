@@ -3,6 +3,8 @@
 ## Overview
 This document guides developers to set up and run the Site Survey Tool (SST) locally using VS Code and Codex CLI.
 
+Note on Sprint 1: Manual sync is local-only (no Google OAuth/Drive yet). OAuth + Drive integration lands in Sprint 2. Offline capture and local queueing are fully functional.
+
 ### Tech Stack
 - **Frontend:** Next.js (PWA), TypeScript, TailwindCSS
 - **Local DB:** Dexie (IndexedDB)
@@ -30,8 +32,9 @@ This document guides developers to set up and run the Site Survey Tool (SST) loc
    NEXT_PUBLIC_APP_NAME="SST"
    NEXT_PUBLIC_MAX_PHOTOS_PER_PIN=4
    NEXT_PUBLIC_MAX_PHOTO_RES=1080
-   NEXT_PUBLIC_THEME_BG=#121212
-   NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
+   # Theme keys not currently read by the app; styling uses tokens in app/globals.css
+   # NEXT_PUBLIC_THEME_BG=#121212
+   # NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
    ```
 
 4. **Run the development server**
@@ -41,6 +44,15 @@ This document guides developers to set up and run the Site Survey Tool (SST) loc
 
 5. **Access locally**  
    Visit [http://localhost:3000](http://localhost:3000)
+
+## Documentation
+- Full index: `docs/README.md`
+- Onboarding: `docs/onboarding.md`
+- Offline usage: `docs/offline.md`
+- Manual Sync (Sprint 1 local stub): `docs/sync.md`
+- Export JSON (Sprint 2 target): `docs/export-json.md`
+- iOS PWA Camera FAQ: `docs/faq-ios-pwa-camera.md`
+- Privacy & Data: `docs/privacy.md`
 
 ## Codex CLI Integration
 - Ensure Codex CLI is installed globally (`pipx install codex-cli` or similar).
@@ -60,6 +72,6 @@ This document guides developers to set up and run the Site Survey Tool (SST) loc
 - GitLens
 
 ## Testing Targets
-- Offline capture → queued uploads → manual sync → success/fail handling
+- Offline capture → queued uploads → manual sync → success/fail handling (see `docs/offline.md` and `docs/sync.md`)
 - Max 4 photos per pin (1080p cap)
-- Correct folder creation under My Drive/SST/
+- Correct folder creation under My Drive/SST/ (Sprint 2)

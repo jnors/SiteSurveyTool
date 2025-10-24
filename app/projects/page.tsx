@@ -1,53 +1,207 @@
-"use client"
+'use client'
 
-import { useProjects } from "@/lib/hooks/use-projects"
-import { NavBar } from "@/components/nav-bar"
-import { SyncBanner } from "@/components/sync-banner"
-import { ProjectCard } from "@/components/project-card"
-import { Button } from "@/components/ui/button"
-import { Plus, Loader2 } from "lucide-react"
-import type { SyncStatus } from "@/lib/types"
+import { useEffect, useMemo, useState } from 'react'
+import { Plus, Loader2 } from 'lucide-react'
+
+import { AuthGate } from '@/components/auth-gate'
+import { NavBar } from '@/components/nav-bar'
+import { OfflineBanner } from '@/components/offline-banner'
+import { ProjectCard } from '@/components/project-card'
+import { SyncBanner } from '@/components/sync-banner'
+import { ToastNotification } from '@/components/toast-notification'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import type { SyncStatus } from '@/lib/types'
+import { useAuth } from '@/lib/useAuth'
+import { useOnline } from '@/lib/useOnline'
+import { useProjects, type EnsureIssue, type SyncResult } from '@/lib/hooks/use-projects'
+import { useRouter } from 'next/navigation'
+
+function buildSummaryMessage(result: SyncResult) {
+  const totalProjects = result.projectSummaries.length
+  const totalPhotos = result.projectSummaries.reduce((sum, summary) => sum + summary.photoStats.total, 0)
+  const uploadedPhotos = result.projectSummaries.reduce((sum, summary) => sum + summary.photoStats.success, 0)
+  const failedPhotos = result.projectSummaries.reduce((sum, summary) => sum + summary.photoStats.failed, 0)
+  const jsonCount = result.projectSummaries.filter((summary) => summary.projectJsonWritten).length
+
+  const parts: string[] = []
+  if (totalPhotos > 0) {
+    parts.push(`${uploadedPhotos}/${totalPhotos} photos`)
+  }
+  if (failedPhotos > 0) {
+    parts.push(`${failedPhotos} failed`)
+  }
+  parts.push(`${jsonCount} project.json`)
+
+  const base = `Synced ${totalProjects} project${totalProjects === 1 ? '' : 's'}`
+  const detail = parts.length ? `: ${parts.join(' | ')}` : ''
+  const errors = result.errors > 0 ? ` (${result.errors} error${result.errors === 1 ? '' : 's'})` : ''
+  return `${base}${detail}${errors}`
+}
+
+function buildSummaryFromProjects(summaries: SyncResult['projectSummaries']): string {
+  const errors = summaries.reduce((sum, summary) => sum + summary.errors.length, 0)
+  return buildSummaryMessage({
+    ensured: summaries.length,
+    movedOrMissing: [],
+    errors,
+    projectSummaries: summaries,
+  })
+}
 
 export default function ProjectsPage() {
-  const { projects, isLoading, syncAll } = useProjects()
+  const { projects, isLoading, syncAll, recreateProjectFolder } = useProjects()
+  const router = useRouter()
+  const isOnline = useOnline()
+  const auth = useAuth('/projects')
 
-  // Calculate overall sync status
-  const getOverallStatus = (): SyncStatus => {
-    if (projects.some((p) => p.status === "error")) return "error"
-    if (projects.some((p) => p.status === "syncing")) return "syncing"
-    if (projects.some((p) => p.status === "pending")) return "pending"
-    return "synced"
-  }
+  const [toast, setToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' })
+  const [issues, setIssues] = useState<EnsureIssue[]>([])
+  const [issuesOpen, setIssuesOpen] = useState(false)
+
+  // Warm the service worker cache for project detail pages when online
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('serviceWorker' in navigator)) return
+    if (!projects.length) return
+    if (!isOnline) return
+
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        const urls = projects.map((p) => `/projects/${p.projectId}`)
+        reg.active?.postMessage({ type: 'CACHE_URLS', urls })
+      })
+      .catch(() => undefined)
+  }, [isOnline, projects])
+
+  // Prefetch project detail routes when online to enable offline navigation
+  useEffect(() => {
+    if (!isOnline || !projects.length) return
+    try {
+      for (const p of projects) {
+        router.prefetch(`/projects/${p.projectId}`)
+      }
+    } catch {}
+  }, [isOnline, projects, router])
+
+  const overallStatus: SyncStatus = useMemo(() => {
+    if (projects.some((p) => p.status === 'error')) return 'error'
+    if (projects.some((p) => p.status === 'syncing')) return 'syncing'
+    if (projects.some((p) => p.status === 'pending')) return 'pending'
+    return 'synced'
+  }, [projects])
+
+  const syncDisabledReason = !auth.isAuthenticated
+    ? 'Sign in to sync with Google Drive'
+    : !isOnline
+      ? 'Offline - sync resumes when you reconnect'
+      : undefined
+
+  const actionDisabled = Boolean(syncDisabledReason)
 
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
-      <SyncBanner status={getOverallStatus()} onSync={syncAll} />
+      <OfflineBanner />
+      <AuthGate status={auth.status} isAuthenticated={auth.isAuthenticated}>
+        <SyncBanner
+          status={overallStatus}
+          onSync={async () => {
+            console.log('[sync] Sync Now clicked')
+            const result = await syncAll()
+            if (result.movedOrMissing.length) {
+              setIssues(result.movedOrMissing)
+              setIssuesOpen(true)
+            } else {
+              setIssues([])
+            }
+            setToast({ show: true, message: buildSummaryMessage(result) })
+          }}
+          actionDisabled={actionDisabled}
+          disabledReason={syncDisabledReason}
+        />
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="mb-2 font-bold text-3xl text-foreground">Projects</h1>
-            <p className="text-foreground-muted">Manage your site survey projects</p>
+        <main className="mx-auto max-w-7xl px-6 py-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="mb-2 text-3xl font-bold text-foreground">Projects</h1>
+              <p className="text-foreground-muted">Manage your site survey projects</p>
+            </div>
+            <Button className="gap-2 bg-primary hover:bg-primary-hover">
+              <Plus className="h-4 w-4" />
+              Create New Project
+            </Button>
           </div>
-          <Button className="gap-2 bg-primary hover:bg-primary-hover">
-            <Plus className="h-4 w-4" />
-            Create New Project
-          </Button>
-        </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-foreground-muted" />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-foreground-muted" />
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project) => {
+                const isIssue = issues.some((issue) => issue.projectId === project.projectId)
+                return <ProjectCard key={project.projectId} project={project} movedOrMissing={isIssue} />
+              })}
+            </div>
+          )}
+        </main>
+      </AuthGate>
+
+      <ToastNotification
+        message={toast.message}
+        show={toast.show}
+        onClose={() => setToast({ show: false, message: '' })}
+      />
+
+      <Dialog open={issuesOpen} onOpenChange={setIssuesOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Drive folder moved or missing</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm text-foreground">
+            <p>We couldn't find the linked Drive folder for:</p>
+            <ul className="list-disc pl-5">
+              {issues.map((issue) => (
+                <li key={issue.projectId}>
+                  {issue.projectName} ({issue.projectId})
+                </li>
+              ))}
+            </ul>
+            <p className="text-foreground-muted">You can re-create the folder under /My Drive/SST/ now or do it later.</p>
           </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-              <ProjectCard key={project.projectId} project={project} />
-            ))}
-          </div>
-        )}
-      </main>
+          <DialogFooter>
+            <button
+              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-black"
+              onClick={async () => {
+                const summaries: SyncResult['projectSummaries'] = []
+                for (const issue of issues) {
+                  const summary = await recreateProjectFolder(issue.projectId)
+                  if (summary) summaries.push(summary)
+                }
+                setIssues([])
+                setIssuesOpen(false)
+                const toastMessage = summaries.length
+                  ? buildSummaryFromProjects(summaries)
+                  : 'Re-created Drive folder(s).'
+                setToast({ show: true, message: toastMessage })
+              }}
+            >
+              Re-create here
+            </button>
+            <button
+              className="rounded border border-border px-3 py-1.5 text-sm text-foreground"
+              onClick={() => setIssuesOpen(false)}
+            >
+              Later
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+
+
+
+

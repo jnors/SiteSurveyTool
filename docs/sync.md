@@ -1,6 +1,6 @@
 # Manual Sync
 
-- Mode: Manual only in Sprint 1 (no network calls; local simulation)
+- Mode: Manual-only; Sprint 1 used local simulation and Sprint 2 adds Google OAuth gating ahead of real Drive uploads.
 - Entry point: Sync banner at the top of Projects and Project Detail screens
 
 ## How It Works (Sprint 1)
@@ -24,7 +24,7 @@
 
 ## Sprint 2 (Preview)
 - Google OAuth (openid, email, profile, Drive scope)
-- Ensure `/My Drive/SST/` root and `<ProjectName>__<projectId>` project folder
+- Ensure `/My Drive/SST/` root and `<ProjectName>__<projectId>` project folder (Story 2)
 - Upload photos first, then write project.json last
 - Exponential backoff and error surfacing (quota, moved folder, offline)
 

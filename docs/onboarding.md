@@ -2,7 +2,7 @@
 
 - App name: SST (Site Survey Tool)
 - Platform: Next.js PWA, offline-first with local Dexie DB
-- Auth: Google OAuth planned (Sprint 2); Sprint 1 uses local data only
+- Auth: Google OAuth (Sprint 2) with manual sign-in/out; data still stored locally first
 
 ## Prerequisites
 - Browser: Chrome (Android), Safari (iOS), or modern desktop browser
@@ -25,12 +25,13 @@
 - Select up to 4 images. They are resized to a maximum 1080px longest edge (JPEG q≈0.75) and saved locally.
 - Tap a thumbnail to preview it larger; resolution details are shown.
 
-## Manual Sync (Local Stub in Sprint 1)
+## Manual Sync (Google Sign-in Required)
 - The banner at the top shows overall sync state.
-- Click “Sync Now” to process the local queue (no network in Sprint 1). Items move pending → syncing → synced or error.
-- Retry by tapping “Sync Now” again.
+- Sign in with Google to enable Drive uploads; the button disables if offline or signed out.
+- Click “Sync Now” to process the local queue. Items move pending → syncing → synced or error with retries.
+- Retry by tapping “Sync Now” again once issues are resolved.
 
 ## Notes
-- Sprint 1 does not include Google OAuth or Drive uploads.
-- Service worker and shell/image caching are not yet implemented; offline capture works via Dexie.
+- Manual sync remains user-triggered; Drive integration writes to `/My Drive/SST/<Project>` once signed in.
+- Offline mode keeps capture/editing available; sync waits until a connection returns.
 

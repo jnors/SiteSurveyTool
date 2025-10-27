@@ -34,6 +34,8 @@ export function ProjectCard({ project, movedOrMissing = false }: ProjectCardProp
     }).format(date)
   }
 
+  const totalPins = project.floorplans.reduce((sum, floorplan) => sum + floorplan.pinCount, 0)
+
   return (
     <Link href={`/projects/${project.projectId}`} prefetch>
       <Card className="group cursor-pointer border-border bg-background-card p-6 transition-colors hover:border-border-hover hover:bg-background-hover">
@@ -42,7 +44,8 @@ export function ProjectCard({ project, movedOrMissing = false }: ProjectCardProp
             <h3 className="mb-2 font-semibold text-foreground text-lg">{project.name}</h3>
             <p className="text-foreground-muted text-sm">Last synced: {formatDate(project.lastSynced)}</p>
             <p className="mt-1 text-foreground-subtle text-xs">
-              {project.pins.length} pin{project.pins.length !== 1 ? "s" : ""}
+              {totalPins} pin{totalPins !== 1 ? "s" : ""} · {project.floorplans.length} floorplan
+              {project.floorplans.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div className={`flex items-center gap-2 ${getSyncStatusTextColor(project.status)}`}>

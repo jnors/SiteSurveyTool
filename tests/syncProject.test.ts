@@ -80,5 +80,66 @@ describe('syncProject', () => {
     expect(summary.errors).toHaveLength(0)
     const outboxCount = await db.outbox.count()
     expect(outboxCount).toBe(0)
+
+    const writeCall = vi.mocked(writeProjectJsonClient).mock.calls[0]?.[0]
+    expect(writeCall?.payload.project.activeFloorplanId).toBe('fp-1')
+    expect(writeCall?.payload.floorplan?.id).toBe('fp-1')
+  })
+
+  it('writes project.json with only the selected floorplan', async () => {
+    const now = new Date().toISOString()
+    await db.projects.add({ id: 'proj-2', name: 'Project 2', createdAt: now, updatedAt: now })
+    await db.floorplans.bulkAdd([
+      {
+        id: 'fp-a',
+        projectId: 'proj-2',
+        name: 'Ground',
+        type: 'image/jpeg',
+        width: 100,
+        height: 100,
+        localUri: dataUrl,
+      },
+      {
+        id: 'fp-b',
+        projectId: 'proj-2',
+        name: 'Second',
+        type: 'image/jpeg',
+        width: 200,
+        height: 200,
+        localUri: dataUrl,
+      },
+    ])
+    await db.pins.bulkAdd([
+      {
+        id: 'pin-a',
+        floorplanId: 'fp-a',
+        title: 'Pin A',
+        note: '',
+        xPct: 25,
+        yPct: 25,
+        updatedAt: now,
+      },
+      {
+        id: 'pin-b',
+        floorplanId: 'fp-b',
+        title: 'Pin B',
+        note: '',
+        xPct: 75,
+        yPct: 75,
+        updatedAt: now,
+      },
+    ])
+
+    vi.mocked(uploadFloorplanClient).mockResolvedValue({ driveFileId: 'drive-floor-selected' })
+    vi.mocked(writeProjectJsonClient).mockResolvedValue({ driveFileId: 'json-selected' })
+
+    await syncProject('proj-2', 'drive-folder-2', { floorplanId: 'fp-b' })
+
+    expect(uploadFloorplanClient).toHaveBeenCalledTimes(1)
+    const writeArgs = vi.mocked(writeProjectJsonClient).mock.calls[0]?.[0]
+    expect(writeArgs?.payload.project.activeFloorplanId).toBe('fp-b')
+    expect(writeArgs?.payload.floorplan?.id).toBe('fp-b')
+    expect(writeArgs?.payload.pins).toHaveLength(1)
+    expect(writeArgs?.payload.pins[0]?.id).toBe('pin-b')
   })
 })

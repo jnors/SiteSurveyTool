@@ -22,6 +22,31 @@ Scope: Add a mobile-first Landing page that highlights offline-first usage befor
   - iOS Safari PWA and Android Chrome: verify offline-unauth flow, CTA disabled state, and navigation to `/projects` works offline.
   - Lighthouse PWA: page cached; no blocking network calls in offline state.
 
+## Story 2 — Offline Floorplan Switching (Client-Only)
+- Status: [ ] Pending
+- Tags: state-UX, data-contract
+- Data Contract Touched: none (uses existing Dexie tables)
+- UX States: online, offline, switching-disabled
+- Problem: In Sprint 3, switching between floorplans while offline is not supported and can cause navigation bounce. Users need to review different floorplans and their pins offline within a project without network calls.
+- Scenarios (Given/When/Then):
+  - Given I am viewing a project with multiple floorplans and I am offline, when I tap another floorplan chip, then the main canvas updates to that floorplan and the pin list updates accordingly, without network requests or route reloads.
+  - Given I switch floorplans offline, then the selection persists locally for this project and is restored on reload; when back online, the URL’s `fp` query reflects the active floorplan without forcing a full navigation.
+  - Given a project route was never opened online (assets not cached), when offline, then navigation to that project is blocked with an explanatory banner; already-opened projects remain navigable offline.
+  - Given I am offline and a floorplan image asset is not available locally, then a placeholder is shown with “Loads when online” copy; no spinner hang.
+- Approach (client-only):
+  - Selection: keep `activeFloorplanId` in memory + Dexie; when offline, apply `history.replaceState` to update `fp` without triggering navigation; when online, router updates can resume.
+  - Data: read pins/photos strictly from Dexie scoped by `activeFloorplanId`; avoid any server/data dependencies coupled to searchParams.
+  - Caching (P2 dependency): pre-cache detail route shell and assets in SW; not a hard blocker for this story but recommended.
+- Acceptance Criteria:
+  - Offline floorplan switching updates canvas + pins within ≤150ms; no page bounce; no network calls while offline.
+  - Selection persists across reloads offline and reconciles to URL `fp` when back online.
+  - If route not cached, prevent offline navigation and present a clear message; current project remains usable.
+  - Dark-mode tokens, 8‑pt grid, Inter, state feedback as per AGENTS.md.
+- Test Notes:
+  - Unit: selection hook persists to Dexie; offline URL updates use `history.replaceState`.
+  - Component: chips reflect active state via `aria-pressed`; pins/canvas reflect the selected floorplan.
+  - Device: iOS Safari PWA + Android Chrome — switch floorplans offline repeatedly; verify no bounce and zero network.
+
 ## Story 4 — Docs & Links Refresh
 - Status: [ ] Pending
 - Tags: docs
@@ -54,4 +79,3 @@ Scope: Add a mobile-first Landing page that highlights offline-first usage befor
 ## Labels & Routing
 - PO → UX/FE: Story 1 (Landing), Story 4 (Docs).
 - Tags: `state-UX`, `docs`.
-

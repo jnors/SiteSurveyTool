@@ -17,6 +17,62 @@ describe('createProjectRecord', () => {
     vi.resetAllMocks()
   })
 
+  it('maps pins for the selected floorplan and surfaces pin counts', async () => {
+    const now = new Date().toISOString()
+    await db.projects.add({ id: 'proj-1', name: 'Multi', createdAt: now, updatedAt: now })
+    await db.floorplans.bulkAdd([
+      {
+        id: 'fp-1',
+        projectId: 'proj-1',
+        name: 'Ground',
+        type: 'image/jpeg',
+        width: 100,
+        height: 100,
+        localUri: 'data:image/jpeg;base64,AAA',
+      },
+      {
+        id: 'fp-2',
+        projectId: 'proj-1',
+        name: 'Level 2',
+        type: 'image/jpeg',
+        width: 100,
+        height: 100,
+        localUri: 'data:image/jpeg;base64,AAA',
+      },
+    ])
+    await db.pins.bulkAdd([
+      {
+        id: 'pin-1',
+        floorplanId: 'fp-1',
+        title: 'Pin Ground',
+        note: '',
+        xPct: 10,
+        yPct: 20,
+        updatedAt: now,
+      },
+      {
+        id: 'pin-2',
+        floorplanId: 'fp-2',
+        title: 'Pin Level 2',
+        note: '',
+        xPct: 30,
+        yPct: 40,
+        updatedAt: now,
+      },
+    ])
+
+    const project = await db.projects.get('proj-1')
+    const floorplans = await db.floorplans.where('projectId').equals('proj-1').toArray()
+
+    const uiProject = await mapToUIProject(project!, floorplans, { activeFloorplanId: 'fp-2' })
+
+    expect(uiProject.activeFloorplanId).toBe('fp-2')
+    expect(uiProject.pins).toHaveLength(1)
+    expect(uiProject.pins[0]?.pinId).toBe('pin-2')
+    expect(uiProject.floorplans.find((fp) => fp.floorplanId === 'fp-1')?.pinCount).toBe(1)
+    expect(uiProject.floorplans.find((fp) => fp.floorplanId === 'fp-2')?.pinCount).toBe(1)
+  })
+
   it('creates project and floorplan rows in Dexie', async () => {
     vi.mocked(compressImageToJpeg).mockResolvedValue({
       blob: new Blob(),
@@ -58,12 +114,14 @@ describe('createProjectRecord', () => {
     const { projectId } = await createProjectRecord({ name: 'Pending Site', file })
 
     const project = await db.projects.get(projectId)
-    const floorplan = await db.floorplans.where('projectId').equals(projectId).first()
+    const floorplans = await db.floorplans.where('projectId').equals(projectId).toArray()
 
     expect(project).toBeDefined()
-    expect(floorplan).toBeDefined()
+    expect(floorplans).toHaveLength(1)
 
-    const uiProject = await mapToUIProject(project!, floorplan!)
+    const uiProject = await mapToUIProject(project!, floorplans)
     expect(uiProject.status).toBe('pending')
+    expect(uiProject.activeFloorplanId).toBe(floorplans[0]?.id ?? null)
+    expect(uiProject.floorplans[0]?.pinCount).toBe(0)
   })
 })

@@ -80,6 +80,7 @@ function buildProjectJsonPayload(
   pins: PinRow[],
   photosByPin: Map<string, PhotoRow[]>,
   syncedAt: string,
+  activeFloorplanId: string | null,
 ) {
   return {
     project: {
@@ -87,6 +88,7 @@ function buildProjectJsonPayload(
       name: project.name,
       syncedAt,
       driveFolderId: project.driveFolderId,
+      activeFloorplanId,
     },
     floorplan: floorplan
       ? {
@@ -120,7 +122,11 @@ function buildProjectJsonPayload(
   }
 }
 
-export async function syncProject(projectId: string, projectFolderId: string): Promise<ProjectSyncSummary> {
+export async function syncProject(
+  projectId: string,
+  projectFolderId: string,
+  options: { floorplanId?: string } = {},
+): Promise<ProjectSyncSummary> {
   const project = (await db.projects.get(projectId)) as ProjectRow | undefined
   if (!project) {
     throw new Error(`Project ${projectId} not found`)
@@ -129,10 +135,10 @@ export async function syncProject(projectId: string, projectFolderId: string): P
     throw new Error('Missing Drive project folder id')
   }
 
-  const floorplan = (await db.floorplans.where('projectId').equals(projectId).first()) as FloorplanRow | undefined
-  const pins = floorplan
-    ? await db.pins.where('floorplanId').equals(floorplan.id).toArray()
-    : []
+  const floorplans = await db.floorplans.where('projectId').equals(projectId).toArray()
+  const floorplan =
+    (options.floorplanId && floorplans.find((fp) => fp.id === options.floorplanId)) ?? floorplans[0]
+  const pins = floorplan ? await db.pins.where('floorplanId').equals(floorplan.id).toArray() : []
 
   const photoMap = new Map<string, PhotoRow>()
   const photosByPin = new Map<string, PhotoRow[]>()
@@ -233,7 +239,14 @@ export async function syncProject(projectId: string, projectFolderId: string): P
     photosByPin.set(pin.id, photos)
   }
 
-  const payload = buildProjectJsonPayload(project, floorplan ?? null, pins, photosByPin, nowIso)
+  const payload = buildProjectJsonPayload(
+    project,
+    floorplan ?? null,
+    pins,
+    photosByPin,
+    nowIso,
+    floorplan?.id ?? null,
+  )
 
   let projectJsonWritten = false
   try {

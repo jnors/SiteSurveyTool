@@ -34,14 +34,43 @@ Scope: Close Sprint 2 gaps and harden core creation/capture flows. Prioritize: C
   - Given Project Detail, when the user adds another floorplan (image picker), then the image is compressed to 1080p JPEG, a new Floorplan row is created, and it becomes the selected floorplan.
   - Given multiple floorplans exist, when the user switches between them (chips/list), then pins/photos update context to the selected floorplan.
   - Given sync during Sprint 3, then project.json includes the selected floorplan (Phase 1); uploading all floorplans is a P2 (follow-up) with `data-contract` tag.
-  - Given offline, adding/switching floorplans works locally; manual sync later.
+  - Given offline, adding new floorplans works locally; switching floorplans is not supported in Sprint 3 (see Sprint 4 for offline switching).
 - Acceptance Criteria:
   - Add Floorplan action present on Project Detail; selection UI clearly indicates the active floorplan.
   - Pins are scoped per floorplan; 4-photo limit per pin enforced.
   - No Drive deletions; write `project.json` last.
+  - Offline switching is explicitly out of scope for Sprint 3; attempting to switch while offline should be prevented with a clear message.
 - Test Notes:
   - Seed 2 floorplans; assert selection switches pin sets.
-  - Create additional floorplan offline; verify Dexie row; confirm selection persists across reloads.
+  - Create additional floorplan offline; verify Dexie row; confirm selection persists across reloads when back online.
+
+Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the dedicated implementation.
+
+#### Switching‑Disabled UX Chip (Offline)
+- Purpose: Provide a clear, field‑friendly indicator that switching floorplans is unavailable while offline (until Sprint 4), without confusing taps or navigation bounce.
+- Visual spec (dark‑mode first):
+  - Chip base: rounded‑full, 44×44 min touch target; 8‑pt grid; Inter font.
+  - Disabled state: border `#1E1E1E` → `border-border/60`, text `text-foreground-muted`, 50% opacity; no hover glow.
+  - Active (current) chip remains styled as active: blue ring/glow `#8AB4F8` at ≤150ms pulse; shows name + count.
+  - Tooltip (on disabled chips): “Offline—switching floorplans isn’t available yet.”
+  - Accessibility: `aria-disabled="true"`, `aria-pressed` only on the active chip, focus ring still visible on active chip.
+- Behavior:
+  - When offline, only the active chip is interactive (no‑op on tap) and other chips are disabled with the above tooltip.
+  - When online, all chips are enabled and switching updates pins/photos immediately.
+- Acceptance:
+  - Offline: non‑active chips show disabled visual + tooltip; no route/URL change; no network activity.
+  - Online: chips behave as normal; switching completes ≤150ms with stateful feedback.
+- Test Notes:
+  - Force offline: verify disabled chip styling and tooltip; tapping a disabled chip does not change floorplan or URL.
+
+### Implementation Tasks
+- [x] **FE**: Expand `Project` UI types (`lib/types.ts`, `lib/mappers.ts`) to return `floorplans[]` and `activeFloorplanId`; ensure pins are scoped to a floorplan.
+- [x] **FE**: Add hooks (`useFloorplans`, `useActiveFloorplan`) to load multiple floorplans, persist selection via `fp` query param, and handle defaults.
+- [x] **FE**: Update `useProject` to accept an explicit `floorplanId`, load scoped pins/photos, and short-circuit add-pin when the floorplan changes.
+- [x] **FE**: Build `AddFloorplanButton` (image picker + 1080p compression + Dexie insert) and `FloorplanSwitcher` (chips + thumbnails, state styling ≤150ms).
+- [x] **FE**: Integrate switcher/button into `app/projects/[projectId]/page.tsx`, wire query param handling, and ensure UI resets add-pin mode on switch.
+- [x] **GDrive**: Thread selected `floorplanId` into `syncProject`, include `activeFloorplanId` and only the active floorplan’s pins/photos in `project.json`; preserve write-last ordering.
+- [x] **QA**: Add Vitest coverage for floorplan selection (hooks + sync payload) and an offline add-floorplan scenario; update E2E seed to validate chip switching.
 
 ## Story 3 — Delete Photos (Per Pin)
 - Status: [ ] Pending

@@ -19,3 +19,7 @@ declare module 'next-auth/jwt' {
     error?: string
   }
 }
+
+declare module 'next-auth/react' {
+  export * from 'next-auth/react/index'
+}

@@ -6,6 +6,7 @@ import { Plus, Loader2 } from 'lucide-react'
 import { AuthGate } from '@/components/auth-gate'
 import { NavBar } from '@/components/nav-bar'
 import { OfflineBanner } from '@/components/offline-banner'
+import { ProjectCreateDialog } from '@/components/project-create-dialog'
 import { ProjectCard } from '@/components/project-card'
 import { SyncBanner } from '@/components/sync-banner'
 import { ToastNotification } from '@/components/toast-notification'
@@ -50,7 +51,7 @@ function buildSummaryFromProjects(summaries: SyncResult['projectSummaries']): st
 }
 
 export default function ProjectsPage() {
-  const { projects, isLoading, syncAll, recreateProjectFolder } = useProjects()
+  const { projects, isLoading, syncAll, recreateProjectFolder, createProject } = useProjects()
   const router = useRouter()
   const isOnline = useOnline()
   const auth = useAuth('/projects')
@@ -58,6 +59,38 @@ export default function ProjectsPage() {
   const [toast, setToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' })
   const [issues, setIssues] = useState<EnsureIssue[]>([])
   const [issuesOpen, setIssuesOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [projectName, setProjectName] = useState('')
+  const [floorplanFile, setFloorplanFile] = useState<File | null>(null)
+  const [isSavingProject, setIsSavingProject] = useState(false)
+  const [createError, setCreateError] = useState<string | undefined>(undefined)
+
+  const handleCreateOpenChange = (open: boolean) => {
+    setCreateOpen(open)
+    if (!open) {
+      setProjectName('')
+      setFloorplanFile(null)
+      setCreateError(undefined)
+      setIsSavingProject(false)
+    }
+  }
+
+  const handleCreateProject = async () => {
+    if (!floorplanFile) return
+    try {
+      setIsSavingProject(true)
+      setCreateError(undefined)
+      const projectId = await createProject({ name: projectName, file: floorplanFile })
+      handleCreateOpenChange(false)
+      setToast({ show: true, message: 'Project created. Add pins and sync when ready.' })
+      router.push(`/projects/${projectId}`)
+    } catch (error) {
+      console.warn('[projects] createProject failed', error)
+      setCreateError("Couldn't create project. Check your image and try again.")
+    } finally {
+      setIsSavingProject(false)
+    }
+  }
 
   // Warm the service worker cache for project detail pages when online
   useEffect(() => {
@@ -127,7 +160,7 @@ export default function ProjectsPage() {
               <h1 className="mb-2 text-3xl font-bold text-foreground">Projects</h1>
               <p className="text-foreground-muted">Manage your site survey projects</p>
             </div>
-            <Button className="gap-2 bg-primary hover:bg-primary-hover">
+            <Button className="gap-2 bg-primary hover:bg-primary-hover" onClick={() => handleCreateOpenChange(true)}>
               <Plus className="h-4 w-4" />
               Create New Project
             </Button>
@@ -152,6 +185,18 @@ export default function ProjectsPage() {
         message={toast.message}
         show={toast.show}
         onClose={() => setToast({ show: false, message: '' })}
+      />
+
+      <ProjectCreateDialog
+        open={createOpen}
+        onOpenChange={handleCreateOpenChange}
+        projectName={projectName}
+        onProjectNameChange={(value) => setProjectName(value)}
+        floorplanFile={floorplanFile}
+        onFloorplanChange={(file) => setFloorplanFile(file)}
+        onSubmit={handleCreateProject}
+        isSaving={isSavingProject}
+        errorMessage={createError}
       />
 
       <Dialog open={issuesOpen} onOpenChange={setIssuesOpen}>
@@ -201,7 +246,3 @@ export default function ProjectsPage() {
     </div>
   )
 }
-
-
-
-

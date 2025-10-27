@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { SessionContext, signIn, signOut, type SessionContextValue } from 'next-auth/react'
 
 import { useOnline } from '@/lib/useOnline'
 
@@ -17,6 +17,12 @@ type StoredSession = {
 }
 
 const SESSION_STORAGE_KEY = 'sst:last-session'
+
+const FALLBACK_SESSION: SessionContextValue = {
+  data: null,
+  status: 'unauthenticated',
+  update: async () => null,
+}
 
 const readCachedSession = (): StoredSession | null => {
   if (typeof window === 'undefined') return null
@@ -43,7 +49,11 @@ const writeCachedSession = (session: StoredSession | null) => {
 }
 
 export function useAuth(callbackUrl: string = '/') {
-  const { data, status } = useSession()
+  const context = useContext(SessionContext)
+  const fallbackRef = useRef(FALLBACK_SESSION)
+  const sessionValue = context ?? fallbackRef.current
+  const hasSessionProvider = Boolean(context)
+  const { data, status } = sessionValue
   const isOnline = useOnline()
   const [cachedSession, setCachedSession] = useState<StoredSession | null>(() => readCachedSession())
 
@@ -63,7 +73,10 @@ export function useAuth(callbackUrl: string = '/') {
       setCachedSession(null)
       writeCachedSession(null)
     }
-  }, [status, data, isOnline])
+    if (!hasSessionProvider && process.env.NODE_ENV !== 'production') {
+      console.warn('[auth] SessionProvider not found above useAuth; defaulting to unauthenticated state.')
+    }
+  }, [status, data, isOnline, hasSessionProvider])
 
   const sessionLike: StoredSession | null = status === 'authenticated'
     ? {

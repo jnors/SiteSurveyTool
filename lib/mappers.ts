@@ -33,6 +33,7 @@ export async function mapToUIProject(project: ProjectRow, floorplan: FloorplanRo
     if (uiPins.some((p) => p.syncStatus === 'error')) return 'error'
     if (uiPins.some((p) => p.syncStatus === 'syncing')) return 'syncing'
     if (uiPins.some((p) => p.syncStatus === 'pending')) return 'pending'
+    if (!project.driveFolderId || !floorplan.driveFileId) return 'pending'
     return 'synced'
   })()
 
@@ -49,4 +50,3 @@ export async function mapToUIProject(project: ProjectRow, floorplan: FloorplanRo
 
   return uiProject
 }
-

@@ -11,6 +11,46 @@ import type { Project, Pin } from '@/lib/types'
 import { mapToUIProject } from '@/lib/mappers'
 import { compressImageToJpeg } from '@/lib/utils/image'
 
+export type CreateProjectParams = {
+  name: string
+  file: File
+}
+
+function generateId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+export async function createProjectRecord({ name, file }: CreateProjectParams): Promise<{ projectId: string }> {
+  const trimmedName = name.trim()
+  if (!trimmedName) {
+    throw new Error('Project name is required')
+  }
+  const compressed = await compressImageToJpeg(file, 1080, 0.75)
+  const nowIso = new Date().toISOString()
+  const projectId = generateId('project')
+  const floorplanId = generateId('floorplan')
+
+  await db.transaction('rw', db.projects, db.floorplans, async () => {
+    await db.projects.add({
+      id: projectId,
+      name: trimmedName,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    })
+    await db.floorplans.add({
+      id: floorplanId,
+      projectId,
+      name: file.name || `${trimmedName} Floorplan`,
+      type: 'image/jpeg',
+      width: compressed.width,
+      height: compressed.height,
+      localUri: compressed.dataUrl,
+    })
+  })
+
+  return { projectId }
+}
+
 export type EnsureIssue = { projectId: string; projectName: string; driveFolderId?: string }
 export type SyncResult = {
   ensured: number
@@ -155,7 +195,13 @@ export function useProjects() {
     return summary
   }
 
-  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder }
+  const createProject = async (params: CreateProjectParams): Promise<string> => {
+    const { projectId } = await createProjectRecord(params)
+    setProjects(await mapProjectsToUI())
+    return projectId
+  }
+
+  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, createProject }
 }
 
 export function useProject(projectId: string) {

@@ -1,4 +1,15 @@
-import type { Project } from './types'
+import type { Project, SyncStatus } from './types'
+
+function seedPhoto(pinId: string, index: number, localUri: string, status: SyncStatus) {
+  return {
+    photoId: `${pinId}-ph-${index}`,
+    localUri,
+    width: 0,
+    height: 0,
+    sizeBytes: 0,
+    status,
+  }
+}
 
 export const fakeProjects: Project[] = [
   {
@@ -25,10 +36,10 @@ export const fakeProjects: Project[] = [
         title: 'HVAC Unit 1',
         note: 'Check vibration isolation. Unit appears to be functioning normally but requires inspection of mounting brackets.',
         photos: [
-          '/hvac-unit-industrial.jpg',
-          '/hvac-mounting-bracket.jpg',
-          '/hvac-control-panel.jpg',
-          '/hvac-ventilation-duct.jpg',
+          seedPhoto('pin-1', 1, '/hvac-unit-industrial.jpg', 'pending'),
+          seedPhoto('pin-1', 2, '/hvac-mounting-bracket.jpg', 'pending'),
+          seedPhoto('pin-1', 3, '/hvac-control-panel.jpg', 'pending'),
+          seedPhoto('pin-1', 4, '/hvac-ventilation-duct.jpg', 'pending'),
         ],
         syncStatus: 'pending',
       },
@@ -39,10 +50,10 @@ export const fakeProjects: Project[] = [
         title: 'Electrical Panel A',
         note: 'Main distribution panel. All circuits labeled and functioning.',
         photos: [
-          '/electrical-panel-breakers.jpg',
-          '/industrial-electrical-wiring.png',
-          '/circuit-breaker-panel.jpg',
-          '/electrical-conduit.png',
+          seedPhoto('pin-2', 1, '/electrical-panel-breakers.jpg', 'synced'),
+          seedPhoto('pin-2', 2, '/industrial-electrical-wiring.png', 'synced'),
+          seedPhoto('pin-2', 3, '/circuit-breaker-panel.jpg', 'synced'),
+          seedPhoto('pin-2', 4, '/electrical-conduit.png', 'synced'),
         ],
         syncStatus: 'synced',
       },
@@ -53,10 +64,10 @@ export const fakeProjects: Project[] = [
         title: 'Water Damage - NE Corner',
         note: 'Visible water staining on ceiling. Requires immediate attention and source investigation.',
         photos: [
-          '/water-damage-ceiling.jpg',
-          '/ceiling-stain-leak.jpg',
-          '/water-damage-wall.jpg',
-          '/moisture-damage-building.jpg',
+          seedPhoto('pin-3', 1, '/water-damage-ceiling.jpg', 'error'),
+          seedPhoto('pin-3', 2, '/ceiling-stain-leak.jpg', 'error'),
+          seedPhoto('pin-3', 3, '/water-damage-wall.jpg', 'error'),
+          seedPhoto('pin-3', 4, '/moisture-damage-building.jpg', 'error'),
         ],
         syncStatus: 'error',
       },
@@ -86,10 +97,10 @@ export const fakeProjects: Project[] = [
         title: 'Fire Suppression System',
         note: 'Annual inspection due. System appears operational.',
         photos: [
-          '/fire-sprinkler-system.jpg',
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
+          seedPhoto('pin-4', 1, '/fire-sprinkler-system.jpg', 'pending'),
+          seedPhoto('pin-4', 2, '/placeholder.svg?height=400&width=400', 'pending'),
+          seedPhoto('pin-4', 3, '/placeholder.svg?height=400&width=400', 'pending'),
+          seedPhoto('pin-4', 4, '/placeholder.svg?height=400&width=400', 'pending'),
         ],
         syncStatus: 'pending',
       },
@@ -119,10 +130,10 @@ export const fakeProjects: Project[] = [
         title: 'Loading Dock 3',
         note: 'Hydraulic lift mechanism needs servicing.',
         photos: [
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
+          seedPhoto('pin-5', 1, '/placeholder.svg?height=400&width=400', 'error'),
+          seedPhoto('pin-5', 2, '/placeholder.svg?height=400&width=400', 'error'),
+          seedPhoto('pin-5', 3, '/placeholder.svg?height=400&width=400', 'error'),
+          seedPhoto('pin-5', 4, '/placeholder.svg?height=400&width=400', 'error'),
         ],
         syncStatus: 'error',
       },
@@ -152,10 +163,10 @@ export const fakeProjects: Project[] = [
         title: 'Fume Hood Station 2',
         note: 'Airflow test completed. Within acceptable parameters.',
         photos: [
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
-          '/placeholder.svg?height=400&width=400',
+          seedPhoto('pin-6', 1, '/placeholder.svg?height=400&width=400', 'syncing'),
+          seedPhoto('pin-6', 2, '/placeholder.svg?height=400&width=400', 'syncing'),
+          seedPhoto('pin-6', 3, '/placeholder.svg?height=400&width=400', 'syncing'),
+          seedPhoto('pin-6', 4, '/placeholder.svg?height=400&width=400', 'syncing'),
         ],
         syncStatus: 'syncing',
       },

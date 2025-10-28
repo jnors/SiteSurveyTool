@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import type { Pin } from "@/lib/types"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useEffect, useState } from "react"
+import type { DeletePhotoResult, Pin, PinPhoto } from "@/lib/types"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { getSyncStatusTextColor } from "@/lib/utils/sync-status"
-import { CheckCircle2, Clock, AlertCircle, Loader2, Trash2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Loader2, Trash2 } from "lucide-react"
 import Image from "next/image"
 
 interface PinDetailModalProps {
@@ -17,9 +17,18 @@ interface PinDetailModalProps {
   isNewPin?: boolean
   onSaveNewPin?: (pin: Pin) => void
   onAddPhotos?: (pinId: string, files: File[]) => Promise<void> | void
+  onDeletePhoto?: (photoId: string) => Promise<DeletePhotoResult | void> | DeletePhotoResult | void
 }
 
-export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSaveNewPin, onAddPhotos }: PinDetailModalProps) {
+export function PinDetailModal({
+  pin,
+  open,
+  onOpenChange,
+  isNewPin = false,
+  onSaveNewPin,
+  onAddPhotos,
+  onDeletePhoto,
+}: PinDetailModalProps) {
   const [title, setTitle] = useState("")
   const [note, setNote] = useState("")
   const [isUploading, setIsUploading] = useState(false)
@@ -27,13 +36,31 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   const [previewDims, setPreviewDims] = useState<{ w: number; h: number } | null>(null)
+  const [photoToDelete, setPhotoToDelete] = useState<PinPhoto | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteNotice, setDeleteNotice] = useState<{ text: string; tone: "warning" | "error" } | null>(null)
 
   useEffect(() => {
     if (pin) {
       setTitle(pin.title)
       setNote(pin.note)
+      setDeleteNotice(null)
     }
   }, [pin])
+
+  useEffect(() => {
+    if (previewIndex !== null) {
+      const nextPhoto = pin?.photos[previewIndex]
+      if (!nextPhoto) {
+        setPreviewOpen(false)
+        setPreviewIndex(null)
+      }
+    }
+  }, [pin, previewIndex])
+
+  useEffect(() => {
+    setPhotoToDelete(null)
+  }, [pin?.pinId])
 
   if (!pin) return null
 
@@ -70,7 +97,7 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
     return "bg-green-600 hover:bg-green-700"
   }
 
-  const photoSlots = Array.from({ length: 4 }, (_, i) => pin.photos[i] || null)
+  const photoSlots: (PinPhoto | null)[] = Array.from({ length: 4 }, (_, i) => pin.photos[i] ?? null)
 
   const handleSave = () => {
     if (isNewPin && onSaveNewPin) {
@@ -105,6 +132,50 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
     }
   }
 
+  const handleConfirmDeletePhoto = async () => {
+    if (!photoToDelete || !onDeletePhoto) {
+      setPhotoToDelete(null)
+      return
+    }
+    setIsDeleting(true)
+    try {
+      const result = (await onDeletePhoto(photoToDelete.photoId)) as DeletePhotoResult | void
+      if (previewIndex !== null && pin?.photos[previewIndex]?.photoId === photoToDelete.photoId) {
+        setPreviewOpen(false)
+        setPreviewIndex(null)
+      }
+      let notice: { text: string; tone: "warning" | "error" } | null = null
+      if (result && typeof result === "object") {
+        if (!result.deleted) {
+          notice = {
+            text: "Photo could not be removed. It may have already been deleted.",
+            tone: "error",
+          }
+        } else if (result.driveError) {
+          notice = {
+            text: `Photo deleted locally, but Drive removal failed: ${result.driveError}`,
+            tone: "error",
+          }
+        } else if (result.drivePending) {
+          notice = {
+            text: "Photo deleted locally. Drive removal will retry on the next sync while online.",
+            tone: "warning",
+          }
+        }
+      }
+      setDeleteNotice(notice)
+    } catch (error: any) {
+      const message = error instanceof Error ? error.message : "Drive deletion failed"
+      setDeleteNotice({
+        text: `Drive deletion request failed: ${message}`,
+        tone: "error",
+      })
+    } finally {
+      setIsDeleting(false)
+      setPhotoToDelete(null)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border border-border bg-background-card text-foreground shadow-2xl transition-all duration-150">
@@ -130,6 +201,18 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
             <span className="font-medium">{getStatusText()}</span>
           </div>
 
+          {deleteNotice && (
+            <div
+              className={`rounded-md border px-3 py-2 text-xs ${
+                deleteNotice.tone === "error"
+                  ? "border-[#EA4335]/60 bg-[#EA4335]/10 text-[#EA4335]"
+                  : "border-[#F9AB00]/60 bg-[#F9AB00]/10 text-[#F9AB00]"
+              }`}
+            >
+              {deleteNotice.text}
+            </div>
+          )}
+
           {/* Editable Notes */}
           <div className="space-y-2">
             <label htmlFor="pin-note" className="block font-medium text-foreground text-sm">
@@ -153,31 +236,47 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
             <div className="grid grid-cols-2 gap-4">
               {photoSlots.map((photo, index) => (
                 <div
-                  key={index}
+                  key={photo?.photoId ?? index}
                   className="group relative aspect-video overflow-hidden rounded-lg border border-border bg-background-elevated transition-all duration-150 hover:border-border-hover"
                 >
                   {photo ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewIndex(index)
-                        setPreviewDims(null)
-                        setPreviewOpen(true)
-                      }}
-                      className="absolute inset-0"
-                      aria-label={`View photo ${index + 1}`}
-                    >
-                      <Image
-                        src={photo || "/placeholder.svg"}
-                        alt={`${title} photo ${index + 1}`}
-                        fill
-                        className="object-cover transition-transform duration-150 group-hover:scale-105"
-                      />
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewIndex(index)
+                          setPreviewDims(null)
+                          setPreviewOpen(true)
+                        }}
+                        className="absolute inset-0"
+                        aria-label={`View photo ${index + 1}`}
+                      >
+                        <Image
+                          src={photo.localUri || "/placeholder.svg"}
+                          alt={`${title} photo ${index + 1}`}
+                          fill
+                          className="object-cover transition-transform duration-150 group-hover:scale-105"
+                        />
+                      </button>
+                      {!isNewPin && onDeletePhoto && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            setPhotoToDelete(photo)
+                          }}
+                          className="absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full border border-border/80 bg-background-card/90 text-foreground-muted transition-colors duration-150 hover:border-red-500/50 hover:bg-red-500/15 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+                          aria-label={`Delete photo ${index + 1}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </>
                   ) : (
                     <label
                       htmlFor={fileInputId}
-                      className="flex h-full cursor-pointer items-center justify-center text-foreground-muted text-sm hover:text-foreground"
+                      className="flex h-full cursor-pointer items-center justify-center text-foreground-muted text-sm transition-colors duration-150 hover:text-foreground"
                     >
                       {isUploading ? "Uploading..." : "Add photo"}
                     </label>
@@ -219,7 +318,7 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
                 <div className="relative mx-auto aspect-video w-full max-h-[60vh]">
                   {previewIndex !== null && pin.photos[previewIndex] && (
                     <Image
-                      src={pin.photos[previewIndex] || "/placeholder.svg"}
+                      src={pin.photos[previewIndex]?.localUri || "/placeholder.svg"}
                       alt={`${title} large preview`}
                       fill
                       className="object-contain"
@@ -237,6 +336,42 @@ export function PinDetailModal({ pin, open, onOpenChange, isNewPin = false, onSa
                     <Button variant="outline" onClick={() => setPreviewOpen(false)} className="border-border text-foreground hover:bg-background-elevated">Close</Button>
                   </div>
                 </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={Boolean(photoToDelete)} onOpenChange={(next) => {
+            if (!next && !isDeleting) {
+              setPhotoToDelete(null)
+            }
+          }}>
+            <DialogContent
+              className="max-w-sm border border-border bg-background-card text-foreground shadow-2xl"
+              showCloseButton={false}
+            >
+              <DialogHeader>
+                <DialogTitle className="text-lg font-semibold">Delete photo?</DialogTitle>
+                <DialogDescription>
+                  This deletes the photo from this pin. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setPhotoToDelete(null)}
+                  className="border-border text-foreground-muted hover:bg-background-elevated"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDeletePhoto}
+                  className="gap-2"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete photo"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

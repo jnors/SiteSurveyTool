@@ -1,4 +1,10 @@
-import type { Floorplan as UIFloorplan, Project as UIProject, Pin as UIPin, SyncStatus } from '@/lib/types'
+import type {
+  Floorplan as UIFloorplan,
+  Project as UIProject,
+  Pin as UIPin,
+  PinPhoto as UIPinPhoto,
+  SyncStatus,
+} from '@/lib/types'
 import type { FloorplanRow, PinRow, ProjectRow } from '@/lib/db'
 import { db } from '@/lib/db'
 
@@ -54,13 +60,22 @@ export async function mapToUIProject(
   for (const pr of pinRows) {
     const photos = await db.photos.where('pinId').equals(pr.id).toArray()
     const syncStatus = await computePinStatus(pr.id)
+    const pinPhotos: UIPinPhoto[] = photos.slice(0, 4).map((photo) => ({
+      photoId: photo.id,
+      localUri: photo.localUri,
+      width: photo.width,
+      height: photo.height,
+      sizeBytes: photo.sizeBytes,
+      status: photo.status,
+      driveFileId: photo.driveFileId,
+    }))
     uiPins.push({
       pinId: pr.id,
       xPct: pr.xPct,
       yPct: pr.yPct,
       title: pr.title,
       note: pr.note,
-      photos: photos.map((ph) => ph.localUri).slice(0, 4),
+      photos: pinPhotos,
       syncStatus,
     })
   }

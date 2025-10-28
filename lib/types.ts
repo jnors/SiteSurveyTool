@@ -1,13 +1,30 @@
 export type SyncStatus = "synced" | "pending" | "error" | "syncing"
 
+export interface PinPhoto {
+  photoId: string
+  localUri: string
+  width: number
+  height: number
+  sizeBytes: number
+  status: SyncStatus
+  driveFileId?: string
+}
+
 export interface Pin {
   pinId: string
   xPct: number
   yPct: number
   title: string
   note: string
-  photos: string[]
+  photos: PinPhoto[]
   syncStatus: SyncStatus
+}
+
+export interface DeletePhotoResult {
+  deleted: boolean
+  driveDeleted: boolean
+  drivePending: boolean
+  driveError?: string
 }
 
 export interface Floorplan {

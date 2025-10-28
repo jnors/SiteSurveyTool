@@ -47,16 +47,18 @@ export async function seedIfEmpty() {
         await db.pins.add(pinRow)
 
         // Create photo rows. For seed, mirror pin syncStatus to each photo.
-        const photoUris = pin.photos
-        for (let i = 0; i < photoUris.length; i++) {
+        const photoEntries = pin.photos
+        for (let i = 0; i < photoEntries.length; i++) {
+          const photoEntry = photoEntries[i]!
           const photo: PhotoRow = {
-            id: `${pin.pinId}-ph-${i + 1}`,
+            id: photoEntry.photoId,
             pinId: pin.pinId,
-            localUri: photoUris[i]!,
-            width: 0,
-            height: 0,
-            sizeBytes: 0,
-            status: pin.syncStatus,
+            localUri: photoEntry.localUri,
+            width: photoEntry.width,
+            height: photoEntry.height,
+            sizeBytes: photoEntry.sizeBytes,
+            driveFileId: photoEntry.driveFileId,
+            status: photoEntry.status ?? pin.syncStatus,
           }
           await db.photos.add(photo)
         }

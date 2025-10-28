@@ -1,7 +1,7 @@
 "use client"
 
 import { db, type FloorplanRow, type OutboxRow, type PhotoRow, type PinRow, type ProjectRow } from '@/lib/db'
-import { uploadFloorplanClient, uploadPhotoClient, writeProjectJsonClient } from '@/lib/google'
+import { deletePhotoClient, uploadFloorplanClient, uploadPhotoClient, writeProjectJsonClient } from '@/lib/google'
 
 type PhotoUploadStats = {
   total: number
@@ -156,7 +156,10 @@ export async function syncProject(
     .equals('photo')
     .toArray()
 
-  const projectPhotoIds = outboxPhotoRows
+  const deleteOutboxRows = outboxPhotoRows.filter((row) => row.kind === 'delete_photo_drive')
+  const uploadOutboxRows = outboxPhotoRows.filter((row) => row.kind === 'upload_photo')
+
+  const projectPhotoIds = uploadOutboxRows
     .filter((row) => photoMap.has(row.entityId))
     .map((row) => row.entityId)
 
@@ -171,6 +174,25 @@ export async function syncProject(
 
   const errors: string[] = []
   const nowIso = new Date().toISOString()
+
+  for (const row of deleteOutboxRows) {
+    const driveFileId = row.payload?.driveFileId as string | undefined
+    if (!driveFileId) {
+      await db.outbox.delete(row.id)
+      continue
+    }
+    try {
+      console.log('[sync] deleting Drive photo', projectId, row.entityId, driveFileId)
+      await withBackoff(() => deletePhotoClient({ driveFileId }))
+      await db.outbox.delete(row.id)
+    } catch (error: any) {
+      const message = error instanceof Error ? error.message : 'Drive photo delete failed'
+      errors.push(message)
+      console.warn('[sync] photo delete failed', projectId, row.entityId, error)
+      const now = new Date().toISOString()
+      await db.outbox.update(row.id, { retries: row.retries + 1, lastTriedAt: now })
+    }
+  }
 
   for (const photoId of photoTargets) {
     const photo = photoMap.get(photoId)

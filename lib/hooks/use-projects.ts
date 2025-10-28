@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { db, type FloorplanRow, type ProjectRow } from '@/lib/db'
-import { ensureProjectFolderClient } from '@/lib/google'
-import { enqueue, enqueuePhotoUpload } from '@/lib/outbox'
+import { deletePhotoClient, ensureProjectFolderClient } from '@/lib/google'
+import { enqueue, enqueuePhotoDriveDelete, enqueuePhotoUpload, removePhotoOutboxEntries } from '@/lib/outbox'
 import { seedIfEmpty } from '@/lib/seed'
 import { syncProject, type ProjectSyncSummary } from '@/lib/sync'
-import type { Project, Pin } from '@/lib/types'
+import type { DeletePhotoResult, Project, Pin } from '@/lib/types'
 import { mapToUIProject } from '@/lib/mappers'
 import { compressImageToJpeg } from '@/lib/utils/image'
 
@@ -448,6 +448,17 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     [projectId, load],
   )
 
+  const deletePhoto = useCallback(
+    async (photoId: string) => {
+      const result = await deletePhotoRecord(projectId, photoId)
+      if (result.deleted) {
+        await load()
+      }
+      return result
+    },
+    [projectId, load],
+  )
+
   const syncAll = useCallback(async (): Promise<ProjectSyncSummary | null> => {
     const projectRow = await db.projects.get(projectId)
     if (!projectRow) return null
@@ -473,7 +484,51 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     activeFloorplanId: project?.activeFloorplanId ?? null,
     addPin,
     addPhotos,
+    deletePhoto,
     addFloorplan,
     syncAll,
+  }
+}
+
+export async function deletePhotoRecord(projectId: string, photoId: string): Promise<DeletePhotoResult> {
+  const photo = await db.photos.get(photoId)
+  if (!photo) {
+    return { deleted: false, driveDeleted: false, drivePending: false }
+  }
+  const nowIso = new Date().toISOString()
+  const driveFileId = photo.driveFileId
+  let driveDeleted = false
+  let driveError: string | undefined
+
+  if (driveFileId) {
+    try {
+      await deletePhotoClient({ driveFileId })
+      driveDeleted = true
+    } catch (error: any) {
+      driveError = error instanceof Error ? error.message : 'Drive delete failed'
+    }
+  }
+
+  let enqueueDriveDelete = false
+
+  await db.transaction('rw', db.photos, db.outbox, db.pins, db.projects, async () => {
+    await db.photos.delete(photoId)
+    await removePhotoOutboxEntries(photoId)
+    await db.pins.update(photo.pinId, { updatedAt: nowIso })
+    await db.projects.update(projectId, { updatedAt: nowIso })
+    if (driveFileId && !driveDeleted) {
+      enqueueDriveDelete = true
+    }
+  })
+
+  if (enqueueDriveDelete && driveFileId) {
+    await enqueuePhotoDriveDelete(photoId, driveFileId)
+  }
+
+  return {
+    deleted: true,
+    driveDeleted,
+    drivePending: enqueueDriveDelete,
+    driveError,
   }
 }

@@ -44,18 +44,18 @@ export function PinSidebar({ pin, onViewDetails }: PinSidebarProps) {
         <p className="text-foreground-muted text-sm leading-relaxed">{pin.note}</p>
 
         <div>
-          <p className="mb-2 font-medium text-foreground-muted text-xs">PHOTOS ({pin.photos.length})</p>
-          <div className="grid grid-cols-2 gap-2">
-            {pin.photos.slice(0, 4).map((photo, index) => (
-              <div
-                key={index}
-                className="relative aspect-square overflow-hidden rounded border border-border bg-background-elevated"
-              >
-                <Image src={photo || "/placeholder.svg"} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
-              </div>
-            ))}
-          </div>
+        <p className="mb-2 font-medium text-foreground-muted text-xs">PHOTOS ({pin.photos.length})</p>
+        <div className="grid grid-cols-2 gap-2">
+          {pin.photos.slice(0, 4).map((photo, index) => (
+            <div
+              key={photo.photoId ?? index}
+              className="relative aspect-square overflow-hidden rounded border border-border bg-background-elevated"
+            >
+              <Image src={photo.localUri || "/placeholder.svg"} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
+            </div>
+          ))}
         </div>
+      </div>
 
         <button
           onClick={onViewDetails}

@@ -26,7 +26,7 @@ Scope: Close Sprint 2 gaps and harden core creation/capture flows. Prioritize: C
   - E2E happy path: create offline → appears with Pending; after manual sync → Synced.
 
 ## Story 2 — Multiple Floorplans (Phase 1: Local + Selection)
-- Status: [ ] Pending
+- Status: [x] Completed
 - Tags: state-UX, data-contract
 - Data Contract Touched: none (existing Floorplan table supports N per project)
 - UX States: idle, selecting, offline
@@ -73,21 +73,21 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
 - [x] **QA**: Add Vitest coverage for floorplan selection (hooks + sync payload) and an offline add-floorplan scenario; update E2E seed to validate chip switching.
 
 ## Story 3 — Delete Photos (Per Pin)
-- Status: [ ] Pending
+- Status: [x] Completed
 - Tags: state-UX
 - Data Contract Touched: Photo, Outbox (no schema change)
 - UX States: idle, deleting, offline
 - Scenarios:
   - Given a pin with photos, when the user taps “Delete” on a photo, then the photo is removed from Dexie and any matching Outbox `upload_photo` rows are removed.
-  - Given the deleted photo was already uploaded to Drive, then deletion is local-only for MVP (file not deleted on Drive); the next `project.json` omits the photo.
+  - Given the deleted photo was already uploaded to Drive, delete photo from Drive as well; the next `project.json` omits the photo.
   - Given offline, deletion works locally and reflects immediately in UI.
 - Acceptance Criteria:
   - Delete control visible per photo in Pin Detail; confirm affordance (dialog or clear undo toast) shown.
   - Post-delete, the pin’s photo count updates and user can attach a new photo up to 4 total.
-  - Outbox has no lingering entries for the deleted photo; pin/project statuses recompute correctly.
+- Outbox has no lingering entries for the deleted photo; pin/project statuses recompute correctly; Drive deletion triggered for any `driveFileId` with retry queued when offline/errors occur.
 - Test Notes:
   - Create 2 pending photos → delete one → Dexie photo count decrements; related Outbox row removed.
-  - Delete a synced photo → Dexie row removed; sync writes project.json without that photo.
+- Delete a synced photo → Dexie row removed; Drive delete invoked (mock/queued); sync writes project.json without that photo.
 
 ---
 

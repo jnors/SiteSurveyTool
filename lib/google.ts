@@ -84,3 +84,16 @@ export async function writeProjectJsonClient(params: WriteProjectJsonParams): Pr
   }
   return (await res.json()) as { driveFileId: string }
 }
+
+export async function deletePhotoClient(params: { driveFileId: string }): Promise<{ deleted: boolean }> {
+  const res = await fetch('/api/drive/delete/photo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`deletePhoto failed: ${res.status} ${text}`)
+  }
+  return (await res.json()) as { deleted: boolean }
+}

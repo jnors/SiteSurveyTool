@@ -35,6 +35,7 @@ export default function ProjectDetailPage() {
     activeFloorplanId: resolvedActiveFloorplanId,
     addPin,
     addPhotos,
+    deletePhoto,
     addFloorplan,
     syncAll,
   } = useProject(projectId, selectedFloorplanId)
@@ -277,6 +278,7 @@ export default function ProjectDetailPage() {
           onAddPhotos={async (pinId, files) => {
             await addPhotos(pinId, files)
           }}
+          onDeletePhoto={deletePhoto}
         />
       </AuthGate>
     </div>

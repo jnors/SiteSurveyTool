@@ -186,3 +186,17 @@ export function extensionFromMime(mimeType: string) {
       return 'bin'
   }
 }
+
+export async function deleteDriveFile(token: string, fileId: string) {
+  const res = await driveFetch(token, `/files/${fileId}`, {
+    method: 'DELETE',
+  })
+  if (res.status === 404) {
+    return false
+  }
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Drive delete failed (${res.status}): ${text}`)
+  }
+  return true
+}

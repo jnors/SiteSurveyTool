@@ -1,20 +1,37 @@
 # Offline Usage
 
-- Local storage: Dexie (IndexedDB)
-- Network: Manual sync only in Sprint 1 (stubbed)
+SST is built to run completely offline in the field. All data lands in Dexie/IndexedDB first and only syncs to Google Drive when you trigger it.
 
-## What Works Offline
-- Creating and editing projects, pins, and notes (seeded data persists locally).
-- Adding photos to pins (compressed to 1080p, stored locally).
-- Sync queueing (Outbox) persists offline until you trigger “Sync Now”.
+## Core Flows That Work Offline
 
-## What Requires Network (Sprint 2)
-- Google OAuth sign-in
-- Google Drive folder discovery and uploads
-- Writing project.json to Drive
+- **Browse & capture:** Projects, floorplans, pins, notes, and photos (≤4 per pin) all read/write locally. No network calls are made while offline.
+- **Use Offline Now:** From the landing page, choose `Use Offline Now` to skip auth. You can sign in later for sync without losing edits.
+- **Floorplan switching:** Once a project detail page is cached, switching between floorplans and reviewing pins works offline (Sprint 4 enhancement).
+- **Outbox queueing:** Every create/update/delete operation enqueues to `Outbox`. The queue persists and retries automatically once you tap `Sync Now` online.
 
-## Tips
-- Allow camera permissions to capture photos.
-- If assets fail to load the first time, revisit screens once online; shell/image caching is planned for later.
-- If the banner shows “Error”, tap “Sync Now” again to retry.
+## Queueing and Retries
 
+1. Work offline; banners stay yellow (`Pending`) showing items waiting to sync.
+2. When back online, sign in with Google and hit `Sync Now`.
+3. SST revalidates the Drive folder (`ensure`) before uploading photos, floorplans, and finally `project.json`.
+4. Failures surface as red (`Failed`) with guidance—tap `Sync Now` again after resolving Drive or connectivity issues.
+
+## Assets & Caching
+
+- Open critical projects while online to let the Service Worker cache the shell and floorplan images.
+- If you load a new project offline that hasn’t been cached, SST blocks navigation and shows “Loads when online” so you’re not stuck on a spinner.
+- Photos stay in Dexie as base64 data URLs until uploaded; storage is client-owned.
+
+## When You Need Network
+
+- Google OAuth (sign-in/out).
+- Google Drive ensure/relink operations and uploads.
+- Writing or patching `project.json`.
+
+## Troubleshooting
+
+- **Offline but Google button active:** ensure system connection toggle is truly off; the app follows `navigator.onLine`.
+- **Missing floorplan image:** look for the “Loads when online” placeholder, reconnect, open the project, then go back offline.
+- **Relink badge won’t clear:** The Drive folder likely moved. Use the Relink dialog (Projects > “Relink”) while online to point SST at the correct `/My Drive/SST/<ProjectName>__<projectId>` folder.
+
+See [Onboarding](./onboarding.md) for the full capture flow and [Privacy](./privacy.md) for Drive scope details.

@@ -92,7 +92,7 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
 ---
 
 ## Story 4 — Relink Existing Drive Folder (Moved/Renamed)
-- Status: [ ] Pending
+- Status: [x] Completed
 - Tags: state-UX, data-contract
 - Data Contract Touched: Project.driveFolderId (re-validated/replaced)
 - UX States: syncing/success/fail; relink prompt
@@ -106,6 +106,7 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
   - On success, relink persists to Dexie and badge clears on next ensure.
 - Test Notes:
   - Mock ensure API returning `movedOrMissing: true` then simulate relink path; verify Dexie update and subsequent ensure call passes.
+  - Manual QA reference: [`docs/qa-sync.md`](../docs/qa-sync.md) covers relink, recreate, and retry paths across devices.
 
 ## Story 5 — Persist Sync Anomalies Across Reloads
 - Status: [ ] Pending

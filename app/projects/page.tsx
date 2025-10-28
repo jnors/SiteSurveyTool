@@ -12,6 +12,7 @@ import { SyncBanner } from '@/components/sync-banner'
 import { ToastNotification } from '@/components/toast-notification'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import type { SyncStatus } from '@/lib/types'
 import { useAuth } from '@/lib/useAuth'
 import { useOnline } from '@/lib/useOnline'
@@ -51,7 +52,7 @@ function buildSummaryFromProjects(summaries: SyncResult['projectSummaries']): st
 }
 
 export default function ProjectsPage() {
-  const { projects, isLoading, syncAll, recreateProjectFolder, createProject } = useProjects()
+  const { projects, isLoading, syncAll, recreateProjectFolder, relinkProjectFolder, createProject } = useProjects()
   const router = useRouter()
   const isOnline = useOnline()
   const auth = useAuth('/projects')
@@ -59,6 +60,10 @@ export default function ProjectsPage() {
   const [toast, setToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' })
   const [issues, setIssues] = useState<EnsureIssue[]>([])
   const [issuesOpen, setIssuesOpen] = useState(false)
+  const [relinkTarget, setRelinkTarget] = useState<EnsureIssue | null>(null)
+  const [relinkInput, setRelinkInput] = useState('')
+  const [relinkError, setRelinkError] = useState<string | null>(null)
+  const [isRelinking, setIsRelinking] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [floorplanFile, setFloorplanFile] = useState<File | null>(null)
@@ -206,18 +211,42 @@ export default function ProjectsPage() {
           </DialogHeader>
           <div className="space-y-2 text-sm text-foreground">
             <p>We couldn't find the linked Drive folder for:</p>
-            <ul className="list-disc pl-5">
+            <ul className="space-y-2">
               {issues.map((issue) => (
-                <li key={issue.projectId}>
-                  {issue.projectName} ({issue.projectId})
+                <li
+                  key={issue.projectId}
+                  className="flex flex-col gap-2 rounded-md border border-border bg-background-card px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm">
+                      <p className="font-medium text-foreground">{issue.projectName}</p>
+                      <p className="text-xs text-foreground-muted">{issue.projectId}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRelinkTarget(issue)
+                        setRelinkInput('')
+                        setRelinkError(null)
+                      }}
+                    >
+                      Relink
+                    </Button>
+                  </div>
+                  <p className="text-xs text-foreground-muted">
+                    Expected folder name:{' '}
+                    <code className="rounded bg-muted px-1 py-0.5">
+                      {`${issue.projectName}__${issue.projectId}`}
+                    </code>
+                  </p>
                 </li>
               ))}
             </ul>
             <p className="text-foreground-muted">You can re-create the folder under /My Drive/SST/ now or do it later.</p>
           </div>
-          <DialogFooter>
-            <button
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-black"
+          <DialogFooter className="gap-2">
+            <Button
               onClick={async () => {
                 const summaries: SyncResult['projectSummaries'] = []
                 for (const issue of issues) {
@@ -233,13 +262,95 @@ export default function ProjectsPage() {
               }}
             >
               Re-create here
-            </button>
-            <button
-              className="rounded border border-border px-3 py-1.5 text-sm text-foreground"
-              onClick={() => setIssuesOpen(false)}
-            >
+            </Button>
+            <Button variant="ghost" onClick={() => setIssuesOpen(false)}>
               Later
-            </button>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(relinkTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRelinkTarget(null)
+            setRelinkInput('')
+            setRelinkError(null)
+            setIsRelinking(false)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Relink Drive folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-foreground">
+            {relinkTarget && (
+              <p className="text-foreground-muted">
+                Paste the Drive folder link or ID for <span className="text-foreground">{relinkTarget.projectName}</span>.
+                The folder must live under <code className="rounded bg-muted px-1 py-0.5">/My Drive/SST/</code> and match&nbsp;
+                <code className="rounded bg-muted px-1 py-0.5">
+                  {`${relinkTarget.projectName}__${relinkTarget.projectId}`}
+                </code>
+                .
+              </p>
+            )}
+            <Input
+              placeholder="https://drive.google.com/drive/folders/..."
+              value={relinkInput}
+              onChange={(event) => setRelinkInput(event.target.value)}
+              aria-invalid={Boolean(relinkError)}
+            />
+            {relinkError && <p className="text-sm text-destructive">{relinkError}</p>}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setRelinkTarget(null)
+                setRelinkInput('')
+                setRelinkError(null)
+                setIsRelinking(false)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!relinkTarget) return
+                try {
+                  setIsRelinking(true)
+                  setRelinkError(null)
+                  await relinkProjectFolder(relinkTarget.projectId, relinkInput)
+                  setIssues((prev) => {
+                    const next = prev.filter((issue) => issue.projectId !== relinkTarget.projectId)
+                    if (!next.length) {
+                      setIssuesOpen(false)
+                    }
+                    return next
+                  })
+                  setToast({ show: true, message: 'Drive folder relinked. Ready to sync.' })
+                  setRelinkTarget(null)
+                  setRelinkInput('')
+                } catch (error) {
+                  const message = error instanceof Error ? error.message : 'Failed to relink folder.'
+                  setRelinkError(message)
+                } finally {
+                  setIsRelinking(false)
+                }
+              }}
+              disabled={isRelinking}
+            >
+              {isRelinking ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Relinking...
+                </span>
+              ) : (
+                'Save'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

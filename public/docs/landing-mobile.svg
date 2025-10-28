@@ -1,0 +1,20 @@
+<svg width="360" height="640" viewBox="0 0 360 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SST landing page mobile mock</title>
+  <desc id="desc">Dark landing illustration showing Continue with Google and Use Offline Now actions.</desc>
+  <rect width="360" height="640" fill="#121212" rx="32"/>
+  <rect x="24" y="32" width="312" height="72" rx="16" fill="#1E1E1E" opacity="0.9"/>
+  <text x="180" y="78" fill="#E8EAED" text-anchor="middle" font-family="Inter" font-size="20" font-weight="600">SST — Site Survey Tool</text>
+  <text x="24" y="146" fill="#8AB4F8" font-family="Inter" font-size="12" letter-spacing="0.2em">OFFLINE FIRST</text>
+  <text x="24" y="182" fill="#E8EAED" font-family="Inter" font-size="28" font-weight="600">Capture floorplans.</text>
+  <text x="24" y="222" fill="#E8EAED" font-family="Inter" font-size="28" font-weight="600">Sync to Drive later.</text>
+  <text x="24" y="262" fill="#B0B3B8" font-family="Inter" font-size="16">Add pins, notes, and photos in the field without waiting on signal.</text>
+  <rect x="24" y="320" width="312" height="52" rx="12" fill="#8AB4F8"/>
+  <text x="180" y="352" fill="#121212" text-anchor="middle" font-family="Inter" font-size="18" font-weight="600">Continue with Google</text>
+  <rect x="24" y="384" width="312" height="52" rx="12" fill="#1E1E1E" stroke="#8AB4F8" stroke-dasharray="6 6"/>
+  <text x="180" y="416" fill="#8AB4F8" text-anchor="middle" font-family="Inter" font-size="18" font-weight="600">Use Offline Now</text>
+  <rect x="24" y="456" width="312" height="80" rx="16" fill="#1E1E1E" opacity="0.95"/>
+  <circle cx="48" cy="496" r="12" fill="#F9AB00"/>
+  <text x="68" y="492" fill="#E8EAED" font-family="Inter" font-size="16" font-weight="600">Offline ready</text>
+  <text x="68" y="514" fill="#B0B3B8" font-family="Inter" font-size="14">Assets cached for Projects you opened online.</text>
+  <text x="180" y="600" fill="#5F6368" text-anchor="middle" font-family="Inter" font-size="12">Mock only — capture actual screenshot before ship.</text>
+</svg>

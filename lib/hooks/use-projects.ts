@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { db, type FloorplanRow, type ProjectRow } from '@/lib/db'
-import { deletePhotoClient, ensureProjectFolderClient } from '@/lib/google'
+import { deletePhotoClient, ensureProjectFolderClient, validateProjectFolderClient } from '@/lib/google'
 import { enqueue, enqueuePhotoDriveDelete, enqueuePhotoUpload, removePhotoOutboxEntries } from '@/lib/outbox'
 import { seedIfEmpty } from '@/lib/seed'
 import { syncProject, type ProjectSyncSummary } from '@/lib/sync'
@@ -326,13 +326,42 @@ export function useProjects() {
     return summary
   }
 
+  const relinkProjectFolder = async (projectId: string, folderInput: string): Promise<string | null> => {
+    const projectRow = (await db.projects.get(projectId)) as ProjectRow | undefined
+    if (!projectRow) {
+      throw new Error('Project not found locally.')
+    }
+    const { folderId } = await validateProjectFolderClient({
+      projectId: projectRow.id,
+      projectName: projectRow.name,
+      folderInput,
+    })
+
+    const ensureRes = await ensureProjectFolderClient({
+      projectId: projectRow.id,
+      projectName: projectRow.name,
+      driveFolderId: folderId,
+    })
+
+    if (ensureRes.movedOrMissing) {
+      throw new Error('Drive still reports this folder as moved or missing.')
+    }
+
+    const resolvedFolderId = ensureRes.projectFolderId ?? folderId
+    const nowIso = new Date().toISOString()
+    await db.projects.update(projectId, { driveFolderId: resolvedFolderId, updatedAt: nowIso })
+    setEnsureIssues((prev) => prev.filter((issue) => issue.projectId !== projectId))
+    setProjects(await mapProjectsToUI())
+    return resolvedFolderId
+  }
+
   const createProject = async (params: CreateProjectParams): Promise<string> => {
     const { projectId } = await createProjectRecord(params)
     setProjects(await mapProjectsToUI())
     return projectId
   }
 
-  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, createProject }
+  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, relinkProjectFolder, createProject }
 }
 
 export function useProject(projectId: string, preferredFloorplanId: string | null) {

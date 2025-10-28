@@ -7,6 +7,10 @@ export type EnsureFoldersResponse = {
   movedOrMissing?: boolean
 }
 
+export type ValidateFolderResponse = {
+  folderId: string
+}
+
 export async function ensureProjectFolderClient(params: {
   projectId: string
   projectName: string
@@ -23,6 +27,30 @@ export async function ensureProjectFolderClient(params: {
     throw new Error(`ensureProjectFolder failed: ${res.status} ${text}`)
   }
   return (await res.json()) as EnsureFoldersResponse
+}
+
+export async function validateProjectFolderClient(params: {
+  projectId: string
+  projectName: string
+  folderInput: string
+}): Promise<ValidateFolderResponse> {
+  const res = await fetch('/api/drive/relink', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const message = typeof data?.error === 'string' ? data.error : 'Unable to validate Drive folder.'
+    const error = new Error(message)
+    if (data?.code) {
+      ;(error as any).code = data.code
+    }
+    throw error
+  }
+
+  return data as ValidateFolderResponse
 }
 
 type UploadPhotoParams = {

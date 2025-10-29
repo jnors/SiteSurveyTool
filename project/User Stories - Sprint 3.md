@@ -123,7 +123,7 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
   - Seed one project with `syncAnomaly='moved'`; render ProjectCard list and assert chip visible; run relink flow and assert cleared.
 
 ## Story 6 — Gate Demo Normalizer and Remove For Prod
-- Status: [ ] Pending
+- Status: [x] Completed
 - Tags: state-UX
 - Data Contract Touched: none
 - Scenarios:
@@ -131,8 +131,11 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
   - Given production (flag off), then statuses reflect actual upload outcomes (no normalization).
 - Acceptance Criteria:
   - Feature-flagged behavior; default OFF; no normalization in production builds.
+  - Demo flag ON: failed/pending/syncing photos flip to `synced`, outbox rows cleared, and `Project.syncedAt` refreshes after manual sync without altering Drive sequencing (`project.json` still writes last).
+  - Demo flag OFF: sync reports real upload outcomes and leaves failed photos queued for retry with surfaced error text.
+  - Docs note the flag for demo-only builds; QA guidance keeps the flag OFF during testing.
 - Test Notes:
-  - Unit tests toggle flag and assert state transitions accordingly.
+  - Unit tests toggle the flag to cover demo normalization vs. production failure handling without mutating Drive call order.
 
 ## Story 7 — SW Pre-cache Enhancements (Optional, P2)
 - Status: [ ] Pending

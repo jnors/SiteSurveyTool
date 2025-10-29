@@ -229,6 +229,11 @@ sequenceDiagram
       Sync->>OB: Mark delete done
     end
   end
+  opt Demo normalization (NEXT_PUBLIC_DEMO_SYNC=1)
+    Sync->>DB: Set remaining photo.status = synced
+    Sync->>OB: Clear lingering photo outbox rows
+    Sync->>DB: Update Project.syncedAt
+  end
   Sync->>DB: Gather project data
   Sync->>API: /write/project-json (write last)
   API->>GD: files.create/update project.json

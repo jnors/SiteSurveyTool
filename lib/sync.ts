@@ -9,6 +9,17 @@ type PhotoUploadStats = {
   failed: number
 }
 
+function isDemoSyncEnabled(): boolean {
+  const raw = process.env.NEXT_PUBLIC_DEMO_SYNC
+  if (!raw) {
+    return false
+  }
+  if (raw === '1') {
+    return true
+  }
+  return raw.toLowerCase() === 'true'
+}
+
 export type ProjectSyncSummary = {
   projectId: string
   projectName: string
@@ -122,6 +133,43 @@ function buildProjectJsonPayload(
   }
 }
 
+async function normalizeDemoPhotoStatuses(params: {
+  projectId: string
+  photoMap: Map<string, PhotoRow>
+  nowIso: string
+  stats: PhotoUploadStats
+}): Promise<number> {
+  const { projectId, photoMap, nowIso, stats } = params
+  const idsToNormalize: string[] = []
+
+  for (const [photoId, photo] of photoMap) {
+    if (photo.status !== 'synced') {
+      await db.photos.update(photoId, { status: 'synced' })
+      photo.status = 'synced'
+      idsToNormalize.push(photoId)
+    }
+  }
+
+  if (!idsToNormalize.length) {
+    return 0
+  }
+
+  stats.success = stats.total
+  stats.failed = 0
+
+  for (const photoId of idsToNormalize) {
+    await db.outbox
+      .where('entityType')
+      .equals('photo')
+      .and((row) => row.entityId === photoId)
+      .delete()
+  }
+
+  await db.projects.update(projectId, { syncedAt: nowIso })
+  console.log('[sync] demo normalization applied', projectId, idsToNormalize.length)
+  return idsToNormalize.length
+}
+
 export async function syncProject(
   projectId: string,
   projectFolderId: string,
@@ -199,6 +247,7 @@ export async function syncProject(
     if (!photo) continue
 
     await db.photos.update(photo.id, { status: 'syncing' })
+    photo.status = 'syncing'
     try {
       const dataUrl = await ensureDataUrl(photo.localUri)
       console.log('[sync] uploading photo', projectId, photo.id)
@@ -211,6 +260,8 @@ export async function syncProject(
         }),
       )
       await db.photos.update(photo.id, { status: 'synced', driveFileId: res.driveFileId })
+      photo.status = 'synced'
+      photo.driveFileId = res.driveFileId
       await db.outbox.where('entityType').equals('photo').and((row) => row.entityId === photo.id).delete()
       photoStats.success += 1
       console.log('[sync] uploaded photo', projectId, photo.id)
@@ -219,6 +270,7 @@ export async function syncProject(
       errors.push(message)
       photoStats.failed += 1
       await db.photos.update(photo.id, { status: 'error' })
+      photo.status = 'error'
       console.warn('[sync] photo upload failed', projectId, photo.id, error)
       const now = new Date().toISOString()
       await db.outbox
@@ -253,6 +305,15 @@ export async function syncProject(
       const message = error instanceof Error ? error.message : 'Floorplan upload failed'
       errors.push(message)
     }
+  }
+
+  if (isDemoSyncEnabled()) {
+    await normalizeDemoPhotoStatuses({
+      projectId,
+      photoMap,
+      nowIso,
+      stats: photoStats,
+    })
   }
 
   // Refresh photos map after potential updates

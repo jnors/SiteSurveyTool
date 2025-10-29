@@ -28,14 +28,16 @@ Note on Sprint 1: Manual sync is local-only (no Google OAuth/Drive yet). OAuth +
    GOOGLE_OAUTH_CLIENT_ID=
    GOOGLE_OAUTH_CLIENT_SECRET=
    GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
-   GOOGLE_DRIVE_SCOPE="openid email profile https://www.googleapis.com/auth/drive"
-   NEXT_PUBLIC_APP_NAME="SST"
-   NEXT_PUBLIC_MAX_PHOTOS_PER_PIN=4
-   NEXT_PUBLIC_MAX_PHOTO_RES=1080
-   # Theme keys not currently read by the app; styling uses tokens in app/globals.css
-   # NEXT_PUBLIC_THEME_BG=#121212
-   # NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
-   ```
+GOOGLE_DRIVE_SCOPE="openid email profile https://www.googleapis.com/auth/drive"
+NEXT_PUBLIC_APP_NAME="SST"
+NEXT_PUBLIC_MAX_PHOTOS_PER_PIN=4
+NEXT_PUBLIC_MAX_PHOTO_RES=1080
+# Optional: enable demo-only sync normalization (flags unsynced photos as synced for presentations)
+# NEXT_PUBLIC_DEMO_SYNC=1
+# Theme keys not currently read by the app; styling uses tokens in app/globals.css
+# NEXT_PUBLIC_THEME_BG=#121212
+# NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
+```
 
 4. **Run the development server**
    ```bash

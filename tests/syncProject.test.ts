@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer'
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { db } from '@/lib/db'
 import { syncProject } from '@/lib/sync'
@@ -19,6 +19,10 @@ beforeEach(async () => {
   await db.delete()
   await db.open()
   vi.resetAllMocks()
+})
+
+afterEach(() => {
+  delete process.env.NEXT_PUBLIC_DEMO_SYNC
 })
 
 describe('syncProject', () => {
@@ -141,5 +145,143 @@ describe('syncProject', () => {
     expect(writeArgs?.payload.floorplan?.id).toBe('fp-b')
     expect(writeArgs?.payload.pins).toHaveLength(1)
     expect(writeArgs?.payload.pins[0]?.id).toBe('pin-b')
+  })
+
+  it('normalizes photo statuses when demo sync flag is enabled', async () => {
+    process.env.NEXT_PUBLIC_DEMO_SYNC = '1'
+
+    const now = new Date().toISOString()
+    await db.projects.add({ id: 'proj-demo', name: 'Demo Project', createdAt: now, updatedAt: now })
+    await db.floorplans.add({
+      id: 'fp-demo',
+      projectId: 'proj-demo',
+      name: 'Floor',
+      type: 'image/jpeg',
+      width: 100,
+      height: 100,
+      localUri: dataUrl,
+    })
+    await db.pins.add({
+      id: 'pin-demo',
+      floorplanId: 'fp-demo',
+      title: 'Pin Demo',
+      note: '',
+      xPct: 10,
+      yPct: 20,
+      updatedAt: now,
+    })
+    await db.photos.add({
+      id: 'photo-demo',
+      pinId: 'pin-demo',
+      localUri: dataUrl,
+      width: 100,
+      height: 100,
+      sizeBytes: 1111,
+      status: 'pending',
+    })
+    await db.outbox.add({
+      id: 'outbox-demo',
+      kind: 'upload_photo',
+      entityType: 'photo',
+      entityId: 'photo-demo',
+      payload: {},
+      retries: 0,
+    })
+
+    vi.mocked(uploadPhotoClient).mockRejectedValue(new Error('Drive unavailable'))
+    vi.mocked(uploadFloorplanClient).mockResolvedValue({ driveFileId: 'drive-floor-demo' })
+    vi.mocked(writeProjectJsonClient).mockResolvedValue({ driveFileId: 'json-demo' })
+
+    vi.useFakeTimers()
+    let summary: Awaited<ReturnType<typeof syncProject>>
+    try {
+      const syncPromise = syncProject('proj-demo', 'drive-folder-demo')
+      await vi.runAllTimersAsync()
+      summary = await syncPromise
+    } finally {
+      vi.useRealTimers()
+    }
+
+    const normalizedPhoto = await db.photos.get('photo-demo')
+    expect(normalizedPhoto?.status).toBe('synced')
+    expect(summary.photoStats.success).toBe(1)
+    expect(summary.photoStats.failed).toBe(0)
+    expect(uploadPhotoClient).toHaveBeenCalled()
+
+    const remainingOutbox = await db.outbox.count()
+    expect(remainingOutbox).toBe(0)
+
+    const projectRow = await db.projects.get('proj-demo')
+    expect(projectRow?.syncedAt).toBeDefined()
+    expect(summary.errors).toContain('Drive unavailable')
+  })
+
+  it('keeps photo errors when demo sync flag is disabled', async () => {
+    delete process.env.NEXT_PUBLIC_DEMO_SYNC
+
+    const now = new Date().toISOString()
+    await db.projects.add({ id: 'proj-prod', name: 'Prod Project', createdAt: now, updatedAt: now })
+    await db.floorplans.add({
+      id: 'fp-prod',
+      projectId: 'proj-prod',
+      name: 'Floor',
+      type: 'image/jpeg',
+      width: 100,
+      height: 100,
+      localUri: dataUrl,
+    })
+    await db.pins.add({
+      id: 'pin-prod',
+      floorplanId: 'fp-prod',
+      title: 'Pin Prod',
+      note: '',
+      xPct: 20,
+      yPct: 40,
+      updatedAt: now,
+    })
+    await db.photos.add({
+      id: 'photo-prod',
+      pinId: 'pin-prod',
+      localUri: dataUrl,
+      width: 100,
+      height: 100,
+      sizeBytes: 2222,
+      status: 'pending',
+    })
+    await db.outbox.add({
+      id: 'outbox-prod',
+      kind: 'upload_photo',
+      entityType: 'photo',
+      entityId: 'photo-prod',
+      payload: {},
+      retries: 0,
+    })
+
+    vi.mocked(uploadPhotoClient).mockRejectedValue(new Error('Drive still offline'))
+    vi.mocked(uploadFloorplanClient).mockResolvedValue({ driveFileId: 'drive-floor-prod' })
+    vi.mocked(writeProjectJsonClient).mockResolvedValue({ driveFileId: 'json-prod' })
+
+    vi.useFakeTimers()
+    let summary: Awaited<ReturnType<typeof syncProject>>
+    try {
+      const syncPromise = syncProject('proj-prod', 'drive-folder-prod')
+      await vi.runAllTimersAsync()
+      summary = await syncPromise
+    } finally {
+      vi.useRealTimers()
+    }
+
+    const photo = await db.photos.get('photo-prod')
+    expect(photo?.status).toBe('error')
+    expect(summary.photoStats.failed).toBe(1)
+    expect(summary.photoStats.success).toBe(0)
+    expect(summary.errors).toContain('Drive still offline')
+
+    const remainingOutbox = await db.outbox
+      .where('entityType')
+      .equals('photo')
+      .and((row) => row.entityId === 'photo-prod')
+      .count()
+    expect(remainingOutbox).toBe(1)
   })
 })

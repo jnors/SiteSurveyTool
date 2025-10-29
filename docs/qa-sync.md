@@ -9,6 +9,7 @@
 - Seed projects or create a fresh one with ≥1 floorplan, pins, and photos (≤4 per pin, 1080p JPEG limit).
 - Google test account with Drive access; SST `/My Drive/SST/` root may already exist.
 - Ability to toggle network offline (DevTools, OS airplane mode).
+- Demo toggle awareness: leave `NEXT_PUBLIC_DEMO_SYNC` **unset** during QA so sync errors surface normally. Enable (`NEXT_PUBLIC_DEMO_SYNC=1`) only for field demos where pending/error photos should appear green after a manual sync.
 
 ## Test Scenarios
 1. **Happy Path Sync**

@@ -65,5 +65,28 @@ describe('POST /api/drive/ensure', () => {
     expect(res.status).toBe(200)
     expect(data.movedOrMissing).toBe(true)
     expect(data.projectFolderId).toBe('newProj')
+    expect(data.anomaly).toBe('moved')
+  })
+
+  it('surfaces a missing anomaly when cached folder cannot be found', async () => {
+    vi.mocked(requireServerAccessToken).mockResolvedValue('token')
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ files: [{ id: 'root123' }] })) // root lookup
+      .mockResolvedValueOnce(new Response('', { status: 404 })) // getFileById missing
+      .mockResolvedValueOnce(jsonResponse({ files: [] })) // project lookup
+      .mockResolvedValueOnce(jsonResponse({ id: 'recreated' })) // create project
+
+    const req = new Request('http://localhost/api/drive/ensure', {
+      method: 'POST',
+      body: JSON.stringify({ projectId: 'proj-2', projectName: 'Missing Case', driveFolderId: 'stale-folder' }),
+    })
+
+    const res = (await POST(req)) as NextResponse
+    const data = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(data.movedOrMissing).toBe(true)
+    expect(data.anomaly).toBe('missing')
+    expect(data.projectFolderId).toBe('recreated')
   })
 })

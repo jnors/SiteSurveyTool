@@ -1,0 +1,26 @@
+@startuml AddPinPhotos
+skinparam backgroundColor #121212
+skinparam sequenceMessageAlign center
+skinparam sequenceArrowColor #8AB4F8
+skinparam sequenceLifeLineBorderColor #444444
+skinparam sequenceLifeLineBackgroundColor #1E1E1E
+skinparam ParticipantFontColor #E8EAED
+
+actor User as U
+participant "Floorplan Viewer" as FP
+participant "PinDetailModal" as Modal
+participant "compressImageToJpeg" as PP
+database Dexie as DB
+collections Outbox as OB
+
+U -> FP: Tap to add pin (xPct,yPct)
+FP -> Modal: Open modal (title, note)
+U -> Modal: Enter details
+U -> Modal: Attach up to 4 photos
+Modal -> PP: compressImageToJpeg(1080, q≈0.75)
+PP -> DB: Save Photo{ localUri, dims, sizeBytes, status=pending }
+Modal -> DB: Save Pin{...}
+Modal -> OB: enqueue upload_photo per photo
+note over Modal,DB: Autosave on close; last-write-wins
+@enduml
+

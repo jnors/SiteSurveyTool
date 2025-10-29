@@ -15,6 +15,7 @@ export async function seedIfEmpty() {
       createdAt: nowIso,
       updatedAt: nowIso,
       syncedAt: p.lastSynced,
+      syncAnomaly: p.syncAnomaly ?? null,
     }
     await db.projects.add(project)
 

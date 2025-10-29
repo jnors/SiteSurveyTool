@@ -103,5 +103,6 @@ export async function mapToUIProject(
     activeFloorplanId,
     floorplans: uiFloorplans,
     pins: uiPins,
+    syncAnomaly: project.syncAnomaly ?? null,
   }
 }

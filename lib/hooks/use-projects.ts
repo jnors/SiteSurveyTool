@@ -167,6 +167,7 @@ export async function createProjectRecord({ name, file }: CreateProjectParams): 
       name: trimmedName,
       createdAt: nowIso,
       updatedAt: nowIso,
+      syncAnomaly: null,
     })
     await db.floorplans.add({
       id: floorplanId,
@@ -240,12 +241,22 @@ export function useProjects() {
           driveFolderId: projectRow.driveFolderId,
         })
         ensuredCount += 1
+        const ensureAnomaly = ensureRes.movedOrMissing ? ensureRes.anomaly ?? 'missing' : null
+
         if (ensureRes.movedOrMissing) {
           issues.push({ projectId: projectRow.id, projectName: projectRow.name, driveFolderId: projectRow.driveFolderId })
+          if (projectRow.syncAnomaly !== ensureAnomaly) {
+            await db.projects.update(projectRow.id, { syncAnomaly: ensureAnomaly })
+            projectRow.syncAnomaly = ensureAnomaly ?? null
+          }
+        } else if (projectRow.syncAnomaly) {
+          await db.projects.update(projectRow.id, { syncAnomaly: null })
+          projectRow.syncAnomaly = null
         }
         if (ensureRes.projectFolderId && ensureRes.projectFolderId !== projectRow.driveFolderId) {
           await db.projects.update(projectRow.id, { driveFolderId: ensureRes.projectFolderId })
           folderId = ensureRes.projectFolderId
+          projectRow.driveFolderId = ensureRes.projectFolderId
         } else {
           folderId = ensureRes.projectFolderId ?? projectRow.driveFolderId
         }
@@ -285,8 +296,17 @@ export function useProjects() {
     if (!projectRow) return null
     const res = await ensureProjectFolderClient({ projectId: projectRow.id, projectName: projectRow.name })
     const folderId = res.projectFolderId ?? projectRow.driveFolderId
+    const updates: Partial<ProjectRow> = {}
     if (res.projectFolderId && res.projectFolderId !== projectRow.driveFolderId) {
-      await db.projects.update(projectId, { driveFolderId: res.projectFolderId })
+      updates.driveFolderId = res.projectFolderId
+      projectRow.driveFolderId = res.projectFolderId
+    }
+    if (projectRow.syncAnomaly) {
+      updates.syncAnomaly = null
+      projectRow.syncAnomaly = null
+    }
+    if (Object.keys(updates).length) {
+      await db.projects.update(projectId, updates)
     }
     setEnsureIssues((prev) => prev.filter((issue) => issue.projectId !== projectId))
     if (!folderId) {
@@ -349,7 +369,12 @@ export function useProjects() {
 
     const resolvedFolderId = ensureRes.projectFolderId ?? folderId
     const nowIso = new Date().toISOString()
-    await db.projects.update(projectId, { driveFolderId: resolvedFolderId, updatedAt: nowIso })
+    await db.projects.update(projectId, {
+      driveFolderId: resolvedFolderId,
+      updatedAt: nowIso,
+      syncAnomaly: null,
+    })
+    projectRow.syncAnomaly = null
     setEnsureIssues((prev) => prev.filter((issue) => issue.projectId !== projectId))
     setProjects(await mapProjectsToUI())
     return resolvedFolderId

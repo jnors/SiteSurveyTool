@@ -1,0 +1,64 @@
+@startuml ClassModel
+skinparam backgroundColor #121212
+skinparam classBackgroundColor #1E1E1E
+skinparam classBorderColor #444444
+skinparam classFontColor #E8EAED
+skinparam shadowing false
+
+class Project {
+  +id: string
+  +name: string
+  +createdAt: string
+  +updatedAt: string
+  +driveFolderId: string?
+  +syncedAt: string?
+  +syncAnomaly: "moved"|"missing"|null
+}
+
+class Floorplan {
+  +id: string
+  +projectId: string
+  +name: string
+  +type: string
+  +width: number
+  +height: number
+  +localUri: string
+  +driveFileId: string?
+}
+
+class Pin {
+  +id: string
+  +floorplanId: string
+  +title: string
+  +note: string
+  +xPct: number
+  +yPct: number
+  +updatedAt: string
+}
+
+class Photo {
+  +id: string
+  +pinId: string
+  +localUri: string
+  +width: number
+  +height: number
+  +sizeBytes: number
+  +driveFileId: string?
+  +status: "pending"|"synced"|"error"|"syncing"
+}
+
+class Outbox {
+  +id: string
+  +kind: string
+  +entityType: "project"|"floorplan"|"pin"|"photo"
+  +entityId: string
+  +payload: any
+  +retries: number
+  +lastTriedAt: string?
+}
+
+Project "1" --* "*" Floorplan
+Floorplan "1" --* "*" Pin
+Pin "1" --* "*" Photo
+@enduml
+

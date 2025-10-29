@@ -104,6 +104,7 @@ NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
 * If a change **affects data contract** → tag `data-contract`.
 * If a change **adds a new state** (syncing/success/fail/offline) → tag `state-UX`.
 * If scope creeps into **non-goals** → “PO CUT” label + rationale. 
+* If a change **modifies flows/contracts/Drive ops** → tag `uml-update` (Mermaid/PlantUML diagrams must be updated).
 
 ---
 
@@ -123,6 +124,37 @@ NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
 * Respects limits: 4 photos, 1080p, manual sync, last-write-wins, autosave. 
 * Export `project.json` validates against schema. 
 * Docs updated (user-facing if flow changed).
+* UML diagrams updated in `docs/uml/` (Mermaid) and `docs/uml/plantuml/` (PlantUML) to reflect any changes to:
+  - Components/services boundaries (overview component diagram)
+  - Affected sequences (e.g., Login+Ensure, Add Pin+Photos, Manual Sync, Moved/Relink)
+  - Data model snapshot (Dexie tables/fields and statuses)
+  Render check passes locally for Mermaid/PlantUML (no parser errors).
+
+---
+
+## 11) Docs & Diagrams (Process)
+
+When to update
+- On completion of any User Story that alters data contracts, API routes, Drive flows (ensure/relink/upload/write/delete), sync states, or user-visible flows.
+
+What to update (as applicable)
+- Mermaid: `docs/uml/sst-uml.md`
+  - Component interaction diagram (UI ↔ client services ↔ API routes ↔ Google)
+  - Sequence(s) touched: Login+Ensure, Add Pin+Photos, Manual Sync, Moved/Renamed/Relink, Floorplan Viewer
+  - Data model snapshot aligned with `lib/db.ts` and `lib/types.ts`
+- PlantUML: `docs/uml/plantuml/*.puml`
+  - `components.puml`, affected `sequences-*.puml`, and `class-model.puml`
+
+Conventions
+- Keep Mermaid syntax simple: avoid angle brackets and parentheses in node labels; prefer plain text.
+- Use simple rectangle nodes; avoid special shapes that break some renderers.
+- Reflect real file names/endpoints where helpful (e.g., `/api/drive/ensure`).
+- Keep Mermaid and PlantUML in sync for the same flows.
+
+Acceptance criteria for docs tasks
+- Diagrams render without errors in VS Code preview or GitHub (Mermaid) and PlantUML extension/CLI.
+- Links from user docs (e.g., `docs/sync.md`) point to the relevant sequence(s) when flows change.
+- PR includes label `uml-update` when diagrams change and reviewer checks rendering locally.
 
 ---
 
@@ -199,7 +231,8 @@ codex generate "Create Dexie v1 with Project, Floorplan, Pin, Photo, Outbox tabl
 **Drive flow (GDrive)**
 
 ```
-codex generate "Drive client: ensure SST root, ensure project folder, upload floorplans, pins JSONs, photos; write project.json last; exponential backoff."
+codex generate "Drive client: ensure SST root, ensure project folder, upload floorplans, pins JSONs, 
+photos; write project.json last; exponential backoff."
 ```
 
 **Docs**
@@ -250,4 +283,4 @@ If an ask includes: *video capture, PDF reports, multi-user collaboration, geo-r
 * **Docs**
 
   * Minimal landing/docs to onboard MVP (as per Next Steps). 
-
+  * Update `docs/uml/` Mermaid and `docs/uml/plantuml/` files when flows/contracts change; preview to ensure no parser errors.

@@ -16,6 +16,7 @@ type EnsureResult = {
   projectFolderId: string
   created: { root?: boolean; project?: boolean }
   movedOrMissing?: boolean
+  anomaly?: 'moved' | 'missing'
 }
 
 async function driveFetch(token: string, url: string, init?: RequestInit) {
@@ -95,12 +96,20 @@ export async function POST(req: Request) {
 
   // If we were given a cached driveFolderId, verify it
   let movedOrMissing = false
+  let anomaly: EnsureResult['anomaly']
   if (body.driveFolderId) {
     const existing = await getFileById(token, body.driveFolderId)
+    const notFound = !existing
+    const trashed = existing?.trashed ?? false
     const badParent = existing ? !((existing.parents || []).includes(root.id)) : false
     const nameMismatch = existing ? existing.name !== projectFolderName : false
-    if (!existing || existing.trashed || badParent || nameMismatch) {
+    if (notFound || trashed) {
       movedOrMissing = true
+      anomaly = 'missing'
+      // fall through to discover by name or create below
+    } else if (badParent || nameMismatch) {
+      movedOrMissing = true
+      anomaly = 'moved'
       // fall through to discover by name or create below
     } else {
       return NextResponse.json({
@@ -108,6 +117,7 @@ export async function POST(req: Request) {
         projectFolderId: existing.id,
         created,
         movedOrMissing: false,
+        anomaly,
       } satisfies EnsureResult)
     }
   }
@@ -124,5 +134,6 @@ export async function POST(req: Request) {
     projectFolderId: projectFolder.id,
     created,
     movedOrMissing,
+    anomaly,
   } satisfies EnsureResult)
 }

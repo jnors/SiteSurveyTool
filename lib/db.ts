@@ -9,6 +9,7 @@ export interface ProjectRow {
   updatedAt: string
   driveFolderId?: string
   syncedAt?: string
+  syncAnomaly?: 'moved' | 'missing' | null
 }
 
 export interface FloorplanRow {
@@ -69,8 +70,23 @@ export class SSTDB extends Dexie {
       photos: '&id, pinId, status',
       outbox: '&id, entityType, entityId, kind',
     })
+
+    this.version(2)
+      .stores({
+        projects: '&id, name, updatedAt, syncedAt',
+        floorplans: '&id, projectId',
+        pins: '&id, floorplanId, updatedAt',
+        photos: '&id, pinId, status',
+        outbox: '&id, entityType, entityId, kind',
+      })
+      .upgrade(async (tx) => {
+        await tx.table('projects').toCollection().modify((project: ProjectRow) => {
+          if (typeof project.syncAnomaly === 'undefined') {
+            project.syncAnomaly = null
+          }
+        })
+      })
   }
 }
 
 export const db = new SSTDB()
-

@@ -1,3 +1,4 @@
+import React from "react"
 import Link from "next/link"
 import type { Project } from "@/lib/types"
 import { Card } from "@/components/ui/card"
@@ -35,6 +36,8 @@ export function ProjectCard({ project, movedOrMissing = false }: ProjectCardProp
   }
 
   const totalPins = project.floorplans.reduce((sum, floorplan) => sum + floorplan.pinCount, 0)
+  const syncAnomalyLabel = project.syncAnomaly === "missing" ? "Re-create" : "Relink"
+  const showAnomalyBadge = movedOrMissing || Boolean(project.syncAnomaly)
 
   return (
     <Link href={`/projects/${project.projectId}`} prefetch>
@@ -50,9 +53,9 @@ export function ProjectCard({ project, movedOrMissing = false }: ProjectCardProp
           </div>
           <div className={`flex items-center gap-2 ${getSyncStatusTextColor(project.status)}`}>
             {getStatusIcon()}
-            {movedOrMissing && (
+            {showAnomalyBadge && (
               <span className="rounded-full border border-yellow-500 bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-500">
-                Relink
+                {syncAnomalyLabel}
               </span>
             )}
           </div>

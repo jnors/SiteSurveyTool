@@ -26,12 +26,14 @@
 3. **Moved Folder → Relink**
    - In Google Drive, move the project folder outside `/My Drive/SST/` or rename it.
    - Trigger `Sync Now`; ensure dialog lists affected project(s).
+   - Return to the Projects list: the yellow “Relink” badge appears and remains after a full app reload.
    - Use `Relink` button: paste the corrected folder URL after moving it back and renaming.
    - Validation must fail for wrong parent/name, succeed once corrected, and badge clears on next sync.
 
 4. **Re-create Folder Flow**
    - Delete the project folder in Drive.
    - Tap `Re-create here`; expect Dexie to clear `driveFileId`s, queue uploads, and newly created folder receives assets.
+   - Reload the Projects list to confirm the yellow “Re-create” badge persists until the recreate finishes and a follow-up sync clears it.
 
 5. **Error Handling & Retry**
    - Simulate network failure mid-sync (toggle offline after ensure succeeds); expect red status and retry prompt.

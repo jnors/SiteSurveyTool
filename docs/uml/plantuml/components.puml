@@ -1,0 +1,86 @@
+@startuml Components
+skinparam backgroundColor #121212
+skinparam defaultTextAlignment left
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #8AB4F8
+skinparam ArrowThickness 1
+skinparam ClassBorderColor #444444
+skinparam ClassBackgroundColor #1E1E1E
+skinparam ClassFontColor #E8EAED
+
+package "UI / React Components" {
+  [App Layout/providers] as AppShell
+  [ProjectsPage]
+  [ProjectDetailPage]
+  [Floorplan Viewer]
+  [PinDetailModal]
+  [PinSidebar]
+  [PinMarker]
+  [SyncBanner]
+  [OfflineBanner]
+  [NavBar]
+  [SignInCard]
+  [ServiceWorkerRegistrar] as SWReg
+}
+
+package "Client Services" {
+  [Dexie / IndexedDB] as Dexie
+  [Outbox Table] as Outbox
+  [NextAuth (client)] as AuthClient
+  [Drive Client (client wrappers)] as ClientDrive
+  [syncProject()] as SyncProcessor
+  [compressImageToJpeg] as PhotoPipeline
+  [Service Worker / Cache] as SW
+}
+
+package "Next.js API Routes" {
+  [/api/drive/ensure] as EnsureAPI
+  [/api/drive/relink] as RelinkAPI
+  [/api/drive/upload/photo] as UploadPhotoAPI
+  [/api/drive/upload/floorplan] as UploadFloorplanAPI
+  [/api/drive/write/project-json] as ProjectJsonAPI
+  [/api/drive/delete/photo] as DeletePhotoAPI
+}
+
+package "External Services" {
+  [Google OAuth]
+  [Google Drive API]
+}
+
+AppShell --> AuthClient
+AuthClient --> "Google OAuth"
+
+ProjectsPage --> Dexie
+ProjectDetailPage --> Dexie
+"Floorplan Viewer" --> Dexie
+PinDetailModal --> Dexie
+PinDetailModal --> PhotoPipeline
+PhotoPipeline --> Dexie
+PinSidebar --> Dexie
+
+SyncBanner --> SyncProcessor
+SyncProcessor --> Outbox
+SyncProcessor --> ClientDrive
+SyncProcessor --> Dexie
+PinDetailModal --> Outbox
+
+ClientDrive --> EnsureAPI
+ClientDrive --> RelinkAPI
+ClientDrive --> UploadPhotoAPI
+ClientDrive --> UploadFloorplanAPI
+ClientDrive --> ProjectJsonAPI
+ClientDrive --> DeletePhotoAPI
+
+EnsureAPI --> "Google Drive API"
+RelinkAPI --> "Google Drive API"
+UploadPhotoAPI --> "Google Drive API"
+UploadFloorplanAPI --> "Google Drive API"
+ProjectJsonAPI --> "Google Drive API"
+DeletePhotoAPI --> "Google Drive API"
+
+SWReg .. SW
+ProjectsPage .. SW
+ProjectDetailPage .. SW
+@enduml
+

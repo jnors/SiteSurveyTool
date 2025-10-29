@@ -1,0 +1,42 @@
+@startuml ManualSync
+skinparam backgroundColor #121212
+skinparam sequenceMessageAlign center
+skinparam sequenceArrowColor #8AB4F8
+skinparam sequenceLifeLineBorderColor #444444
+skinparam sequenceLifeLineBackgroundColor #1E1E1E
+skinparam ParticipantFontColor #E8EAED
+
+actor User as U
+participant SyncBanner as SB
+participant "syncProject()" as Sync
+collections Outbox as OB
+participant "/api/drive/*" as API
+participant "Google Drive API" as GD
+database Dexie as DB
+
+U -> SB: Tap "Sync now"
+SB -> Sync: start
+loop Photos to upload
+  Sync -> DB: Read pending photos
+  Sync -> API: /upload/photo (multipart)
+  API -> GD: files.create or update
+  GD --> API: fileId
+  API --> Sync: ok
+  Sync -> DB: Update Photo{ driveFileId, status=synced }
+  Sync -> OB: Remove outbox entries for photo
+  alt Delete pending
+    Sync -> API: /delete/photo
+    API -> GD: files.delete
+    GD --> API: ok/404
+    API --> Sync: deleted
+    Sync -> OB: Mark delete done
+  end
+end
+Sync -> DB: Gather project data
+Sync -> API: /write/project-json (write last)
+API -> GD: files.create/update project.json
+GD --> API: fileId
+API --> Sync: ok
+Sync -> DB: Update Project.syncedAt
+@enduml
+

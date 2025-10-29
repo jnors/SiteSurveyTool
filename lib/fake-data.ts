@@ -18,6 +18,7 @@ export const fakeProjects: Project[] = [
     lastSynced: '2025-10-20T14:32:00Z',
     status: 'synced',
     activeFloorplanId: 'fp-proj-1',
+    syncAnomaly: null,
     floorplans: [
       {
         floorplanId: 'fp-proj-1',
@@ -79,6 +80,7 @@ export const fakeProjects: Project[] = [
     lastSynced: '2025-10-19T09:15:00Z',
     status: 'pending',
     activeFloorplanId: 'fp-proj-2',
+    syncAnomaly: null,
     floorplans: [
       {
         floorplanId: 'fp-proj-2',
@@ -112,6 +114,7 @@ export const fakeProjects: Project[] = [
     lastSynced: '2025-10-18T16:45:00Z',
     status: 'error',
     activeFloorplanId: 'fp-proj-3',
+    syncAnomaly: null,
     floorplans: [
       {
         floorplanId: 'fp-proj-3',
@@ -145,6 +148,7 @@ export const fakeProjects: Project[] = [
     lastSynced: '2025-10-21T11:20:00Z',
     status: 'syncing',
     activeFloorplanId: 'fp-proj-4',
+    syncAnomaly: null,
     floorplans: [
       {
         floorplanId: 'fp-proj-4',

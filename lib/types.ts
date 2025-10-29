@@ -1,4 +1,5 @@
 export type SyncStatus = "synced" | "pending" | "error" | "syncing"
+export type SyncAnomaly = "moved" | "missing"
 
 export interface PinPhoto {
   photoId: string
@@ -45,4 +46,5 @@ export interface Project {
   activeFloorplanId: string | null
   floorplans: Floorplan[]
   pins: Pin[]
+  syncAnomaly: SyncAnomaly | null
 }

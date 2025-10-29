@@ -109,7 +109,7 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
   - Manual QA reference: [`docs/qa-sync.md`](../docs/qa-sync.md) covers relink, recreate, and retry paths across devices.
 
 ## Story 5 — Persist Sync Anomalies Across Reloads
-- Status: [ ] Pending
+- Status: [x] Completed
 - Tags: state-UX, data-contract
 - Data Contract Touched: Project (add `syncAnomaly?: 'moved' | 'missing' | null`)
 - UX States: normal; “Relink” badge visible until cleared

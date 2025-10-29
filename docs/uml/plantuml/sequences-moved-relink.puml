@@ -1,0 +1,50 @@
+@startuml MovedRelink
+skinparam backgroundColor #121212
+skinparam sequenceMessageAlign center
+skinparam sequenceArrowColor #8AB4F8
+skinparam sequenceLifeLineBorderColor #444444
+skinparam sequenceLifeLineBackgroundColor #1E1E1E
+skinparam ParticipantFontColor #E8EAED
+
+actor User as U
+participant ProjectsPage as Projects
+participant "useProjects()" as Hook
+participant "/api/drive/ensure" as Ensure
+participant "/api/drive/relink" as Relink
+participant "Google Drive API" as GD
+database Dexie as DB
+
+U -> Projects: Tap "Sync now"
+Projects -> Hook: syncAll()
+loop each project
+  Hook -> Ensure: ensureProjectFolder(projectId,name,driveFolderId)
+  Ensure -> GD: verify cached folder (if provided)
+  GD --> Ensure: anomaly moved|missing or ok
+  Ensure --> Hook: {projectFolderId, movedOrMissing, anomaly}
+  alt movedOrMissing
+    Hook -> DB: set Project.syncAnomaly
+    Hook --> Projects: show issues dialog
+  else ok
+    Hook -> DB: update driveFolderId, clear syncAnomaly
+  end
+end
+
+alt Re-create here
+  Projects -> Hook: recreateProjectFolder(projectId)
+  Hook -> Ensure: ensureProjectFolder(projectId,name)
+  Ensure -> GD: create under /My Drive/SST
+  GD --> Ensure: folder id
+  Ensure --> Hook: { projectFolderId }
+  Hook -> DB: update driveFolderId; reset floorplan.driveFileId; reset photos driveFileId+status=pending; enqueue uploads
+else Relink with pasted link/ID
+  Projects -> Hook: relinkProjectFolder(projectId, folderInput)
+  Hook -> Relink: validateProjectFolder(projectId,name,folderInput)
+  Relink -> GD: fetch folder, validate parent/name/ownership
+  GD --> Relink: ok + folderId
+  Relink --> Hook: { folderId }
+  Hook -> Ensure: ensureProjectFolder(projectId,name,folderId)
+  Ensure --> Hook: { movedOrMissing: false }
+  Hook -> DB: update driveFolderId; clear syncAnomaly
+end
+@enduml
+

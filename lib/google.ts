@@ -5,6 +5,7 @@ export type EnsureFoldersResponse = {
   projectFolderId: string
   created?: { root?: boolean; project?: boolean }
   movedOrMissing?: boolean
+  anomaly?: 'moved' | 'missing'
 }
 
 export type ValidateFolderResponse = {

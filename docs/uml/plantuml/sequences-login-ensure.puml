@@ -1,0 +1,29 @@
+@startuml LoginEnsure
+skinparam backgroundColor #121212
+skinparam sequenceMessageAlign center
+skinparam sequenceArrowColor #8AB4F8
+skinparam sequenceLifeLineBorderColor #444444
+skinparam sequenceLifeLineBackgroundColor #1E1E1E
+skinparam ParticipantFontColor #E8EAED
+
+actor User as U
+participant "NextAuth client" as App
+participant "/api/drive/ensure" as API
+participant "Google Drive API" as GD
+database Dexie as DB
+collections "Google OAuth" as GO
+
+U -> App: Open / Sign In
+App -> GO: OAuth (openid email profile + drive)
+GO --> App: Access token (JWT session)
+
+note over App: On sync or first ensure
+App -> API: ensureProjectFolder(projectId,name,driveFolderId?)
+API -> GD: Ensure /My Drive/SST
+GD --> API: Root folder id
+API -> GD: Ensure <ProjectName>__<projectId>
+GD --> API: Project folder id
+API --> App: {rootId, projectFolderId, movedOrMissing?}
+App -> DB: Save/Update driveFolderId
+@enduml
+

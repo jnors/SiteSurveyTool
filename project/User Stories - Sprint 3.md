@@ -138,7 +138,7 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
   - Unit tests toggle the flag to cover demo normalization vs. production failure handling without mutating Drive call order.
 
 ## Story 7 — SW Pre-cache Enhancements (Optional, P2)
-- Status: [ ] Pending
+- Status: [x] Completed
 - Tags: state-UX
 - Data Contract Touched: none
 - Scenarios:
@@ -146,8 +146,10 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
   - Given assets updated, when SW activates, then it cleans old entries and refreshes navigation fallbacks.
 - Acceptance Criteria:
   - Verified offline navigation to a visited project without 504 errors; install-time warm works reliably.
+  - Offline guidance documents explain visiting `/projects` online to warm caches before going offline.
 - Test Notes:
   - SW unit tests for URL extraction and cache writes (mock `fetch`/`caches`).
+  - Added `tests/sw.extractAssetUrls.test.ts`, `tests/sw.cacheRequestWithDeps.test.ts`, and `tests/sw.helpers.test.ts` to cover helper exposure and caching helpers.
 
 ## Story 8 — Unit Tests Coverage (Expanded)
 - Status: [ ] Pending
@@ -167,6 +169,17 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
    - API `POST /api/drive/ensure` idempotency and moved/missing case.
    - Hook `useProjects.syncAll` sets syncing, updates `driveFolderId`, returns summary.
    - UI SyncBanner shows “Syncing”.
+
+### Task Breakdown (Prioritized)
+- [x] **P0** Add a `useProjects.createProject` hook test that seeds Dexie, invokes `createProject`, and verifies the returned ID plus pending status in the project list (`lib/hooks/use-projects.ts:383`).
+- [x] **P0** Create a `useProjects.syncAll` hook test covering the happy path: projects flip to `syncing`, folder IDs update, and the summary aggregates counts (`lib/hooks/use-projects.ts:224`).
+- [x] **P0** Add a `useProjects.syncAll` regression test for moved/missing anomalies to ensure `ensureIssues` and `syncAnomaly` behave as expected (`lib/hooks/use-projects.ts:246`).
+- [x] **P0** Extend `/api/drive/ensure` tests to exercise the idempotent branch that returns immediately when the Drive folder ID is still valid (`app/api/drive/ensure/route.ts:115`).
+- [x] **P1** Write a RTL test for `ProjectCreateDialog` to keep Save disabled until both name and image are provided, and ensure it calls `onSubmit` only when enabled (`components/project-create-dialog.tsx:40`).
+- [x] **P1** Add a RTL test for `SyncBanner` to assert the “Syncing” label and spinner render correctly when status is `syncing` (`components/sync-banner.tsx:72`).
+- [x] **P2** Cover the pending-state visuals in `ProjectCard` by asserting the clock icon and yellow styling render for new offline projects (`components/project-card.tsx:18`).
+- [x] **P2** Expand `PinDetailModal` tests to confirm the photo slot counter and Attach button update after a deletion, maintaining the four-photo cap (`components/pin-detail-modal.tsx:233`).
+- [x] **P2** Add a deletion feedback test in `PinDetailModal` that surfaces the warning copy when Drive removal fails (`components/pin-detail-modal.tsx:148`).
 
 ### Tooling
 - Test runner: Vitest. DOM: React Testing Library. API route handler tests using `next/server` mocks. Dexie: in-memory instance; seed helpers in `lib/seed.ts`.

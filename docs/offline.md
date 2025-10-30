@@ -8,6 +8,7 @@ SST is built to run completely offline in the field. All data lands in Dexie/Ind
 - **Use Offline Now:** From the landing page, choose `Use Offline Now` to skip auth. You can sign in later for sync without losing edits.
 - **Floorplan switching:** Once a project detail page is cached, switching between floorplans and reviewing pins works offline (Sprint 4 enhancement).
 - **Outbox queueing:** Every create/update/delete operation enqueues to `Outbox`. The queue persists and retries automatically once you tap `Sync Now` online.
+- **Warm caches while online:** Open `/projects` when you have connectivity so SST’s Service Worker can pre-cache each listed project and its `/_next/*` assets. After that warmup, you can tap into those project pages offline without 504s or white screens. Projects that haven’t been visited online yet will still require a connection the first time.
 
 ## Queueing and Retries
 

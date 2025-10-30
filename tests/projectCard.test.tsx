@@ -45,4 +45,32 @@ describe('<ProjectCard />', () => {
     render(<ProjectCard project={makeProject()} movedOrMissing />)
     expect(screen.getByText('Relink')).toBeInTheDocument()
   })
+
+  it('renders the pending sync icon and styling for new projects', () => {
+    const now = new Date().toISOString()
+    const { container } = render(
+      <ProjectCard
+        project={makeProject({
+          status: 'pending',
+          lastSynced: now,
+          floorplans: [
+            {
+              floorplanId: 'fp-1',
+              name: 'Main',
+              localUri: 'data:image/jpeg;base64,AAA',
+              width: 100,
+              height: 100,
+              driveFileId: undefined,
+              pinCount: 0,
+            },
+          ],
+        })}
+      />,
+    )
+
+    const pendingCluster = container.querySelector('.text-accent-yellow')
+    expect(pendingCluster).not.toBeNull()
+    expect(pendingCluster?.querySelector('svg')).not.toBeNull()
+    expect(screen.queryByText(/Relink|Re-create/i)).not.toBeInTheDocument()
+  })
 })

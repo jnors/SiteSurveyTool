@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sst-cache-v1';
+const CACHE_NAME = 'sst-cache-v2';
 const OFFLINE_URLS = ['/', '/projects'];
 
 const RSC_ACCEPT_HEADER = 'text/x-component';
@@ -86,12 +86,33 @@ async function cacheRequestWithDeps(cache, request) {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_URLS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(OFFLINE_URLS))
+      .catch(() => undefined)
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map((name) => {
+          if (name === CACHE_NAME) return Promise.resolve(false);
+          return caches.delete(name);
+        })
+      );
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.addAll(OFFLINE_URLS);
+      } catch {
+        // Ignore re-prime failures during activate (likely offline)
+      }
+      await self.clients.claim();
+    })()
+  );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -187,3 +208,12 @@ self.addEventListener('message', (event) => {
     );
   }
 });
+
+if (typeof self !== 'undefined' && self.__SST_SW_TEST__) {
+  Object.assign(self.__SST_SW_TEST__, {
+    cacheRequestWithDeps,
+    extractAssetUrls,
+    matchResponse,
+    storeResponse,
+  });
+}

@@ -89,4 +89,38 @@ describe('POST /api/drive/ensure', () => {
     expect(data.anomaly).toBe('missing')
     expect(data.projectFolderId).toBe('recreated')
   })
+
+  it('returns cached folder details when the Drive folder is still valid', async () => {
+    vi.mocked(requireServerAccessToken).mockResolvedValue('token')
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ files: [{ id: 'root123' }] })) // root lookup
+      .mockResolvedValueOnce(
+        jsonResponse({
+          id: 'proj-existing',
+          name: 'Valid Project__proj-3',
+          parents: ['root123'],
+          trashed: false,
+        }),
+      ) // getFileById matches
+
+    const req = new Request('http://localhost/api/drive/ensure', {
+      method: 'POST',
+      body: JSON.stringify({
+        projectId: 'proj-3',
+        projectName: 'Valid Project',
+        driveFolderId: 'proj-existing',
+      }),
+    })
+
+    const res = (await POST(req)) as NextResponse
+    const data = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(data).toMatchObject({
+      rootId: 'root123',
+      projectFolderId: 'proj-existing',
+      movedOrMissing: false,
+    })
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
 })

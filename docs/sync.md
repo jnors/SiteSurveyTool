@@ -4,12 +4,12 @@ Manual sync keeps SST’s offline-first capture model intact while giving crews 
 
 - **Mode:** Manual only. No background or auto-sync.
 - **Entry points:** Sync banner on Projects + Project Detail screens (`Sync Now` button).
-- **States:** `syncing` (blue), `synced` (green), `pending` (yellow), `error` (red retry), plus Relink/Re-create badges when Drive folders move or go missing (persist across reloads until resolved).
+- **States:** `syncing` (blue with spinner), `synced` (green), `pending` (yellow until the first Drive upload completes), `error` (red retry), plus Relink/Re-create badges when Drive folders move or go missing (persist across reloads until resolved).
 
 ## End-to-End Sequence
 
 1. **Authenticate (optional):** Sign in with Google (`openid email profile https://www.googleapis.com/auth/drive`). Offline users can continue capturing without signing in; sync waits.
-2. **Ensure Drive folders:** `/My Drive/SST/` is created if missing. Project folder must equal `<ProjectName>__<projectId>`. If the cached `driveFolderId` no longer matches, SST surfaces a “Drive folder moved or missing” dialog.
+2. **Ensure Drive folders:** `/My Drive/SST/` is created if missing. Project folder must equal `<ProjectName>__<projectId>`. If the cached `driveFolderId` no longer matches, SST surfaces a “Drive folder moved or missing” dialog. Projects stay yellow (`pending`) until ensure succeeds and uploads complete.
 3. **Resolve folder issues:**
    - **Re-create here:** Builds a fresh project folder under `/My Drive/SST/`, clears stale `driveFileId`s, re-queues uploads. Projects show a yellow “Re-create” badge until this completes successfully.
    - **Relink:** Paste a Drive folder link/ID. SST validates ownership, parent, name, and trash status before updating Dexie. Projects show a yellow “Relink” badge until the folder validates. See [Sync QA](./qa-sync.md) for full relink tests.
@@ -29,7 +29,7 @@ Manual sync keeps SST’s offline-first capture model intact while giving crews 
 
 | Symptom | What it means | Recommended action |
 | --- | --- | --- |
-| `Sync Now` disabled | User is signed out or offline | Sign in, or reconnect before retrying |
+| `Sync Now` disabled | User is signed out or offline | Sign in, or reconnect before retrying. Offline mode shows the reason text (“Offline - sync resumes when reconnected”). |
 | Relink or Re-create badge persists | Drive folder moved/renamed or deleted | Use the surfaced action (`Relink` or `Re-create here`) and ensure folder lives under `/My Drive/SST/` with the exact `<ProjectName>__<projectId>` name |
 | Photos stuck in `pending` | Asset uploads failed | Check connection, ensure folder exists, re-run `Sync Now` |
 | Error toast after ensure | Google returned 4xx/5xx | Review toast message (quota, auth, moved folder). Repeat once resolved |

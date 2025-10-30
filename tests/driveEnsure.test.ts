@@ -7,12 +7,17 @@ vi.mock('@/lib/google-server', () => ({
   requireServerAccessToken: vi.fn(),
 }))
 
-const { requireServerAccessToken } = await import('@/lib/google-server')
+let requireServerAccessToken: any
 
 const mockFetch = vi.fn()
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks()
+
+  // grab the mocked export at runtime (no top-level await)
+  const mod = await import('@/lib/google-server')
+  requireServerAccessToken = mod.requireServerAccessToken
+
   ;(globalThis as any).fetch = mockFetch
 })
 

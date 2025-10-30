@@ -11,7 +11,9 @@ vi.mock('@/lib/google', () => ({
   writeProjectJsonClient: vi.fn(),
 }))
 
-const { uploadPhotoClient, uploadFloorplanClient, writeProjectJsonClient } = await import('@/lib/google')
+let uploadPhotoClient: any
+let uploadFloorplanClient: any
+let writeProjectJsonClient: any
 
 const dataUrl = 'data:image/jpeg;base64,' + Buffer.from('test-image').toString('base64')
 
@@ -19,6 +21,11 @@ beforeEach(async () => {
   await db.delete()
   await db.open()
   vi.resetAllMocks()
+
+  const mod = await import('@/lib/google')
+  uploadPhotoClient = mod.uploadPhotoClient
+  uploadFloorplanClient = mod.uploadFloorplanClient
+  writeProjectJsonClient = mod.writeProjectJsonClient
 })
 
 afterEach(() => {

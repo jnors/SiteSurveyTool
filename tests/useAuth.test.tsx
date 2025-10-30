@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react'
 import React, { type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useAuth } from '@/lib/useAuth'
 
@@ -17,8 +17,18 @@ vi.mock('@/lib/useOnline', () => ({
   useOnline: vi.fn(),
 }))
 
-const { SessionContext, signOut } = await import('next-auth/react')
-const { useOnline } = await import('@/lib/useOnline')
+let SessionContext: typeof import('next-auth/react')['SessionContext']
+let signOut: typeof import('next-auth/react')['signOut']
+let useOnline: typeof import('@/lib/useOnline')['useOnline']
+
+beforeAll(async () => {
+  const nextAuth = await import('next-auth/react')
+  SessionContext = nextAuth.SessionContext
+  signOut = nextAuth.signOut
+
+  const onlineModule = await import('@/lib/useOnline')
+  useOnline = onlineModule.useOnline
+})
 
 const SESSION_KEY = 'sst:last-session'
 

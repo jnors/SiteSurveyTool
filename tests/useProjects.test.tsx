@@ -35,9 +35,9 @@ import type { compressImageToJpeg as CompressImageFn } from '@/lib/utils/image'
 import type { ensureProjectFolderClient as EnsureProjectFn } from '@/lib/google'
 import type { syncProject as SyncProjectFn } from '@/lib/sync'
 
-let compressImageToJpeg: MockedFunction<CompressImageFn>
-let ensureProjectFolderClient: MockedFunction<EnsureProjectFn>
-let syncProject: MockedFunction<SyncProjectFn>
+let compressImageToJpeg: MockedFunction<typeof CompressImageFn>
+let ensureProjectFolderClient: MockedFunction<typeof EnsureProjectFn>
+let syncProject: MockedFunction<typeof SyncProjectFn>
 
 beforeAll(async () => {
   compressImageToJpeg = vi.mocked((await import('@/lib/utils/image')).compressImageToJpeg)

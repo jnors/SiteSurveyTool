@@ -4,7 +4,7 @@ vi.mock('@/lib/utils/image', () => ({
   compressImageToJpeg: vi.fn(),
 }))
 
-const { compressImageToJpeg } = await import('@/lib/utils/image')
+let compressImageToJpeg: any
 
 import { db } from '@/lib/db'
 import { createProjectRecord } from '@/lib/hooks/use-projects'
@@ -15,6 +15,10 @@ describe('createProjectRecord', () => {
     await db.delete()
     await db.open()
     vi.resetAllMocks()
+
+    // grab the mocked export at runtime (no top-level await)
+    const mod = await import('@/lib/utils/image')
+    compressImageToJpeg = mod.compressImageToJpeg
   })
 
   it('maps pins for the selected floorplan and surfaces pin counts', async () => {

@@ -322,13 +322,16 @@ export async function syncProject(
     photosByPin.set(pin.id, photos)
   }
 
+   // Normalize floorplan to `FloorplanRow | null`
+  const floorplanArg = (floorplan && typeof floorplan !== 'string') ? floorplan : null
+
   const payload = buildProjectJsonPayload(
     project,
-    floorplan ?? null,
+    floorplanArg,
     pins,
     photosByPin,
     nowIso,
-    floorplan?.id ?? null,
+    floorplanArg?.id ?? null,
   )
 
   let projectJsonWritten = false

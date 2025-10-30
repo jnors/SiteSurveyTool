@@ -8,7 +8,9 @@ vi.mock('@/lib/google-server', () => ({
   driveFetch: vi.fn(),
 }))
 
-const { requireServerAccessToken, findFolderByName, driveFetch } = await import('@/lib/google-server')
+let requireServerAccessToken: any
+let findFolderByName: any
+let driveFetch: any
 
 function jsonResponse(body: any, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -18,8 +20,13 @@ function jsonResponse(body: any, status = 200) {
 }
 
 describe('POST /api/drive/relink', () => {
-  beforeEach(() => {
+  beforeEach(async() => {
     vi.resetAllMocks()
+
+    const mod = await import('@/lib/google-server')
+    requireServerAccessToken = mod.requireServerAccessToken
+    findFolderByName = mod.findFolderByName
+    driveFetch = mod.driveFetch
   })
 
   it('validates folder and returns folderId when checks pass', async () => {

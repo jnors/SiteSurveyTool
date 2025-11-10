@@ -185,3 +185,23 @@ body {
     opacity: 1;
   }
 }
+
+/* Reveal-up entrance (≤150ms) */
+@keyframes reveal-up {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.reveal-up {
+  animation: reveal-up 130ms ease-out both;
+}
+.reveal-delay-1 { animation-delay: 60ms; }
+.reveal-delay-2 { animation-delay: 120ms; }
+.reveal-delay-3 { animation-delay: 180ms; }
+.reveal-delay-4 { animation-delay: 240ms; }

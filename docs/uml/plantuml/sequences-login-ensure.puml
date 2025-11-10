@@ -19,7 +19,7 @@ GO --> App: Access token (JWT session)
 
 note over App: On sync or first ensure
 App -> API: ensureProjectFolder(projectId,name,driveFolderId?)
-API -> GD: Ensure /My Drive/SST
+API -> GD: Ensure /My Drive/FieldPins
 GD --> API: Root folder id
 API -> GD: Ensure <ProjectName>__<projectId>
 GD --> API: Project folder id

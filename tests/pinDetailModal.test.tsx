@@ -8,7 +8,7 @@ import type { DeletePhotoResult, Pin, PinPhoto } from '@/lib/types'
 
 vi.mock('next/image', () => ({
   __esModule: true,
-  default: ({ alt, fill, ...props }: { alt?: string; fill?: boolean } & React.ImgHTMLAttributes<HTMLImageElement>) => (
+  default: ({ alt, fill: _fill, ...props }: { alt?: string; fill?: boolean } & React.ImgHTMLAttributes<HTMLImageElement>) => (
     <img alt={alt ?? ''} {...props} />
   ),
 }))

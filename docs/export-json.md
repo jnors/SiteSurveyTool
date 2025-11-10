@@ -47,7 +47,7 @@
 ```
 
 ## Sequence (Sprint 2)
-- Ensure `/My Drive/SST/` root folder exists.
+- Ensure `/My Drive/FieldPins/` root folder exists.
 - Ensure project folder named `<ProjectName>__<projectId>` exists.
 - Upload photos first; capture `driveFileId`s.
 - Upload floorplan image (optional), capture `driveFileId`.

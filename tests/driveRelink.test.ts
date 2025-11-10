@@ -55,7 +55,7 @@ describe('POST /api/drive/relink', () => {
     expect(data).toEqual({ folderId: 'folder123' })
   })
 
-  it('rejects folders outside SST root', async () => {
+  it('rejects folders outside FieldPins root', async () => {
     vi.mocked(requireServerAccessToken).mockResolvedValue('token')
     vi.mocked(findFolderByName).mockResolvedValue({ id: 'root123' })
     vi.mocked(driveFetch).mockResolvedValueOnce(

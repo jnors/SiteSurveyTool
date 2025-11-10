@@ -16,7 +16,7 @@ type StoredSession = {
   expiresAt?: string | number | null
 }
 
-const SESSION_STORAGE_KEY = 'sst:last-session'
+const SESSION_STORAGE_KEY = 'FieldPins:last-session'
 
 const FALLBACK_SESSION: SessionContextValue = {
   data: null,

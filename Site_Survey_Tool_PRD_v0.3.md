@@ -1,8 +1,8 @@
-# Site Survey Tool (SST) — Product Requirements Document (PRD) v0.3
+# FieldPins — Product Requirements Document (PRD) v0.3
 
 **Author:** João Silva  
-**Date:** 21 Oct 2025  
-**Version:** 0.3 (Auth & Storage finalised)
+**Date:** 31 Oct 2025  
+**Version:** 0.4 (Naming changed)
 
 ---
 
@@ -19,7 +19,7 @@ Network Engineers and Site Surveyors waste time and lose context because floorpl
 ## 🚀 High Level Approach
 
 A **mobile-first web app (Next.js PWA)** that supports **offline data capture** (floorplan + pins + notes + photos), with **manual sync to Google Drive** for cloud persistence.  
-Authentication and user identity handled via **Google OAuth**.  
+Authentication and user identity handled via **Google OAuth** (initial sign-in required before capture; offline capture available thereafter).  
 No backend database (Supabase dropped for MVP).
 
 ---
@@ -27,8 +27,8 @@ No backend database (Supabase dropped for MVP).
 ## 🎥 Narrative
 
 **Today:** Engineers capture photos on phones, notes in separate apps, and floorplans in PDFs. Reconciliation takes hours.  
-**With SST:** Upload a floorplan, add pins with notes and photos (max 4 photos per pin, 1080p), work offline, then press “Sync” to push structured data to Drive.  
-Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName>/`.
+**With FieldPins:** Sign in with Google, upload a floorplan, add pins with notes and photos (max 4 photos per pin, 1080p), work online or offline, then press “Sync” to push structured data to Drive.  
+Projects are easily accessible in Google Drive under `/My Drive/FieldPins/<ProjectName>/`.
 
 ---
 
@@ -71,7 +71,7 @@ Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName
 | **Storage** | Google Drive (`https://www.googleapis.com/auth/drive`) |
 | **Data** | Structured JSONs per project (`project.json`, `pins/`, `floorplans/`) |
 | **Export** | JSON only |
-| **Offline** | Dexie/IndexedDB local-first |
+| **Offline** | Dexie/IndexedDB local-first (available after initial sign-in) |
 | **Sync** | Manual |
 | **Backend** | None (no Supabase, no server) |
 
@@ -86,7 +86,7 @@ Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName
 3. Pins: add/move/delete with `% coordinates`.  
 4. Pin modal: title, note, up to 4 photos @1080p.  
 5. Offline persistence via Dexie.  
-6. Manual sync to Google Drive (`My Drive/SST/<ProjectName>`).  
+6. Manual sync to Google Drive (`My Drive/FieldPins/<ProjectName>`).  
 7. JSON export (local + Drive `project.json`).  
 8. Google OAuth sign-in and token refresh.
 
@@ -109,19 +109,19 @@ Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName
    - `openid email profile`  
    - `https://www.googleapis.com/auth/drive`  
 3. Store user info locally (id, email).  
-4. Redirect to dashboard.
+4. Redirect to dashboard. Offline capture and `/projects` access are available only after this step completes at least once on the device.
 
 ### 2. Discover Projects
 
-1. Query Drive for folder named “SST.”  
-2. If missing, prompt “Create SST folder.”  
-3. List subfolders (`mimeType=folder`) under SST.  
+1. Query Drive for folder named “FieldPins.”  
+2. If missing, prompt “Create FieldPins folder.”  
+3. List subfolders (`mimeType=folder`) under FieldPins.  
 4. For each, fetch `project.json` → build dashboard list.
 
 ### 3. Create Project
 
 1. User taps “+ New Project.”  
-2. Creates subfolder under `SST/`.  
+2. Creates subfolder under `FieldPins/`.  
 3. Initializes empty `project.json` locally.  
 4. Navigates to floorplan upload screen.
 
@@ -145,7 +145,7 @@ Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName
 1. User taps “Sync now.”  
 2. Check network & token validity.  
 3. Ensure folder structure in Drive:  
-   `/My Drive/SST/<ProjectName>/floorplans/`, `/pins/` etc.  
+   `/My Drive/FieldPins/<ProjectName>/floorplans/`, `/pins/` etc.  
 4. Upload floorplans, then pins JSONs, then photos.  
 5. Write/patch `project.json` (includes Drive fileIds).  
 6. Mark local records as “synced.”
@@ -170,7 +170,7 @@ Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName
 | Local autosave | On every edit or modal close |
 | File format | JSON UTF-8 + JPEG |
 | Offline persistence | Dexie + local URIs |
-| Cloud structure | `My Drive/SST/<Project>/<floorplans|pins>` |
+| Cloud structure | `My Drive/FieldPins/<Project>/<floorplans|pins>` |
 | Auth storage | Local cache (Google ID, email) |
 
 ---
@@ -190,7 +190,7 @@ Projects are easily accessible in Google Drive under `/My Drive/SST/<ProjectName
 |------|---------|-------------|
 | OAuth app verification delay | Medium | Pilot in test mode first |
 | iOS PWA camera quirks | Medium | Add Capacitor wrapper if needed |
-| User moves SST folder | Low | Detect and re-prompt folder ID |
+| User moves FieldPins folder | Low | Detect and re-prompt folder ID |
 | Network interruptions | High | Retry queue with exponential backoff |
 | Drive quota | Low | User-managed; warn if upload fails |
 
@@ -260,15 +260,15 @@ https://www.googleapis.com/auth/drive
 
 **Drive queries**
 ```sql
-# Find SST folder
-name = 'SST' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false
+# Find FieldPins folder
+name = 'FieldPins' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false
 
 # List projects
-'${sstFolderId}' in parents and mimeType='application/vnd.google-apps.folder'
+'${fieldpinsFolderId}' in parents and mimeType='application/vnd.google-apps.folder'
 ```
 
 **Upload sequence**
-1. Ensure SST root folder.  
+1. Ensure FieldPins root folder.  
 2. Ensure project folder.  
 3. Upload floorplans.  
 4. Upload pins and photos.  

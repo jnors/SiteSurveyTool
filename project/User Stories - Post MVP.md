@@ -12,7 +12,7 @@ Scope: Collect stories that require features beyond MVP constraints or are inten
 - Scenarios (Given/When/Then):
   - Given a user, when I open Settings from the NavBar/menu, then I see sections: Account (Google profile + Sign out), Storage & Sync, Privacy & Docs, Advanced.
   - Given “Advanced,” when I choose “Delete Local Data,” then a confirmation explains local-only deletion and upon confirm Dexie is wiped and the app reloads to a clean state (protects shared devices).
-  - Given Storage & Sync, I can view Drive root disclosure (`/My Drive/SST/`) and access “Re-create project folder” links (routes to existing flows where applicable).
+  - Given Storage & Sync, I can view Drive root disclosure (`/My Drive/FieldPins/`) and access “Re-create project folder” links (routes to existing flows where applicable).
 - Acceptance Criteria:
   - Settings accessible from all primary screens.
   - “Delete Local Data” wipes Dexie and app caches we own (if applicable) with a single confirm; does not touch Google Drive.

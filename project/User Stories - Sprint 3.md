@@ -97,12 +97,12 @@ Note: Offline floorplan switching is deferred. See Sprint 4, Story 2 for the ded
 - Data Contract Touched: Project.driveFolderId (re-validated/replaced)
 - UX States: syncing/success/fail; relink prompt
 - Scenarios:
-  - Given a project with a cached `driveFolderId`, when ensure detects the folder is moved/renamed/trashed or not under `/My Drive/SST/`, then the UI offers “Re-create here” and “Relink existing”.
-  - Given “Relink existing,” when the user pastes a Drive folder URL/ID (or uses a picker, P2), then the client validates ownership, parent = `SST` root, and name = `<ProjectName>__<projectId>`; upon success, `Project.driveFolderId` is updated and ensure passes on next sync.
+  - Given a project with a cached `driveFolderId`, when ensure detects the folder is moved/renamed/trashed or not under `/My Drive/FieldPins/`, then the UI offers “Re-create here” and “Relink existing”.
+  - Given “Relink existing,” when the user pastes a Drive folder URL/ID (or uses a picker, P2), then the client validates ownership, parent = `FieldPins` root, and name = `<ProjectName>__<projectId>`; upon success, `Project.driveFolderId` is updated and ensure passes on next sync.
   - Given invalid folder, when validated, then the UI shows actionable errors and does not persist.
 - Acceptance Criteria:
   - Dialog shows both actions when `movedOrMissing = true`.
-  - Validation covers: exists, not trashed, parent is `SST` root, exact name match.
+  - Validation covers: exists, not trashed, parent is `FieldPins` root, exact name match.
   - On success, relink persists to Dexie and badge clears on next ensure.
 - Test Notes:
   - Mock ensure API returning `movedOrMissing: true` then simulate relink path; verify Dexie update and subsequent ensure call passes.

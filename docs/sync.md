@@ -1,6 +1,6 @@
 # Manual Sync
 
-Manual sync keeps SST’s offline-first capture model intact while giving crews a clear, predictable path to push data into their Google Drive when connectivity returns.
+Manual sync keeps FieldPins’s offline-first capture model intact while giving crews a clear, predictable path to push data into their Google Drive when connectivity returns.
 
 - **Mode:** Manual only. No background or auto-sync.
 - **Entry points:** Sync banner on Projects + Project Detail screens (`Sync Now` button).
@@ -8,12 +8,12 @@ Manual sync keeps SST’s offline-first capture model intact while giving crews 
 
 ## End-to-End Sequence
 
-1. **Authenticate (optional):** Sign in with Google (`openid email profile https://www.googleapis.com/auth/drive`). Offline users can continue capturing without signing in; sync waits.
-2. **Ensure Drive folders:** `/My Drive/SST/` is created if missing. Project folder must equal `<ProjectName>__<projectId>`. If the cached `driveFolderId` no longer matches, SST surfaces a “Drive folder moved or missing” dialog. Projects stay yellow (`pending`) until ensure succeeds and uploads complete.
+1. **Authenticate (required before capture):** Sign in with Google (`openid email profile https://www.googleapis.com/auth/drive`). Initial sign-in requires connectivity. After sign-in, you can capture online or offline.
+2. **Ensure Drive folders:** `/My Drive/FieldPins/` is created if missing. Project folder must equal `<ProjectName>__<projectId>`. If the cached `driveFolderId` no longer matches, FieldPins surfaces a “Drive folder moved or missing” dialog. Projects stay yellow (`pending`) until ensure succeeds and uploads complete.
 3. **Resolve folder issues:**
-   - **Re-create here:** Builds a fresh project folder under `/My Drive/SST/`, clears stale `driveFileId`s, re-queues uploads. Projects show a yellow “Re-create” badge until this completes successfully.
-   - **Relink:** Paste a Drive folder link/ID. SST validates ownership, parent, name, and trash status before updating Dexie. Projects show a yellow “Relink” badge until the folder validates. See [Sync QA](./qa-sync.md) for full relink tests.
-4. **Upload pipeline:** With a valid `driveFolderId`, SST processes the Outbox:
+   - **Re-create here:** Builds a fresh project folder under `/My Drive/FieldPins/`, clears stale `driveFileId`s, re-queues uploads. Projects show a yellow “Re-create” badge until this completes successfully.
+   - **Relink:** Paste a Drive folder link/ID. FieldPins validates ownership, parent, name, and trash status before updating Dexie. Projects show a yellow “Relink” badge until the folder validates. See [Sync QA](./qa-sync.md) for full relink tests.
+4. **Upload pipeline:** With a valid `driveFolderId`, FieldPins processes the Outbox:
    - Photos (<=4 per pin, 1080p JPEG) upload first.
    - Floorplan images follow (only if they lack `driveFileId`).
    - Pins/metadata enqueue updates; `project.json` writes last once all assets succeed.
@@ -21,7 +21,7 @@ Manual sync keeps SST’s offline-first capture model intact while giving crews 
 
 ## Offline Behaviour
 
-- Capture continues with no network calls. Outbox rows persist until a manual sync succeeds.
+- After an initial sign-in, capture continues with no network calls. Outbox rows persist until a manual sync succeeds.
 - If a project detail route was never cached, offline navigation is blocked with “Loads when online” messaging.
 - When offline, URL updates for floorplan selection use `history.replaceState` to avoid reloads and queue transitions still log locally.
 
@@ -30,7 +30,7 @@ Manual sync keeps SST’s offline-first capture model intact while giving crews 
 | Symptom | What it means | Recommended action |
 | --- | --- | --- |
 | `Sync Now` disabled | User is signed out or offline | Sign in, or reconnect before retrying. Offline mode shows the reason text (“Offline - sync resumes when reconnected”). |
-| Relink or Re-create badge persists | Drive folder moved/renamed or deleted | Use the surfaced action (`Relink` or `Re-create here`) and ensure folder lives under `/My Drive/SST/` with the exact `<ProjectName>__<projectId>` name |
+| Relink or Re-create badge persists | Drive folder moved/renamed or deleted | Use the surfaced action (`Relink` or `Re-create here`) and ensure folder lives under `/My Drive/FieldPins/` with the exact `<ProjectName>__<projectId>` name |
 | Photos stuck in `pending` | Asset uploads failed | Check connection, ensure folder exists, re-run `Sync Now` |
 | Error toast after ensure | Google returned 4xx/5xx | Review toast message (quota, auth, moved folder). Repeat once resolved |
 | Outbox empty but status pending | Awaiting Drive ensure | Tap `Sync Now` again once the ensure issue is fixed |

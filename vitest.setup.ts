@@ -8,4 +8,4 @@ if (!('self' in globalScope) || typeof globalScope.self !== 'object') {
 }
 
 const selfScope = globalScope.self as Record<string, unknown>
-selfScope.__SST_SW_TEST__ = {}
+selfScope.__FieldPins_SW_TEST__ = {}

@@ -15,13 +15,10 @@ interface SyncBannerProps {
 
 export function SyncBanner({ status, onSync, actionDisabled, disabledReason }: SyncBannerProps) {
   const [prevStatus, setPrevStatus] = useState<SyncStatus>(status)
-  const [isTransitioning, setIsTransitioning] = useState(false)
 
   useEffect(() => {
     if (prevStatus !== status) {
-      setIsTransitioning(true)
       const timer = setTimeout(() => {
-        setIsTransitioning(false)
         setPrevStatus(status)
       }, 150)
       return () => clearTimeout(timer)

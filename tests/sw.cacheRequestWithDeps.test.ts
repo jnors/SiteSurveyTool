@@ -6,15 +6,15 @@ const OriginalRequest = globalThis.Request
 describe('service worker cacheRequestWithDeps', () => {
   beforeEach(() => {
     vi.resetModules()
-    selfScope.__SST_SW_TEST__ = {}
+    selfScope.__FieldPins_SW_TEST__ = {}
     selfScope.addEventListener = selfScope.addEventListener || vi.fn()
     selfScope.location = {
-      origin: 'https://sst.test',
-      href: 'https://sst.test/',
+      origin: 'https://FieldPins.test',
+      href: 'https://FieldPins.test/',
     }
     const RequestShim = function (input: RequestInfo | URL, init?: RequestInit) {
       if (typeof input === 'string' && input.startsWith('/')) {
-        return new OriginalRequest(`https://sst.test${input}`, init)
+        return new OriginalRequest(`https://FieldPins.test${input}`, init)
       }
       return new OriginalRequest(input, init)
     }
@@ -63,8 +63,8 @@ describe('service worker cacheRequestWithDeps', () => {
 
     await import('../public/sw.js')
 
-    const { cacheRequestWithDeps } = selfScope.__SST_SW_TEST__
-    const requestUrl = 'https://sst.test/projects/abc'
+    const { cacheRequestWithDeps } = selfScope.__FieldPins_SW_TEST__
+    const requestUrl = 'https://FieldPins.test/projects/abc'
     const request = new Request(requestUrl, { credentials: 'include' })
     await cacheRequestWithDeps(cache, request)
 
@@ -77,9 +77,9 @@ describe('service worker cacheRequestWithDeps', () => {
     const storedKeys = put.mock.calls.map(([arg]) => (arg instanceof Request ? arg.url : arg))
     expect(storedKeys).toEqual(
       expect.arrayContaining([
-        'https://sst.test/projects/abc',
+        'https://FieldPins.test/projects/abc',
         '/projects/abc',
-        'https://sst.test/_next/static/chunk.js',
+        'https://FieldPins.test/_next/static/chunk.js',
         '/_next/static/chunk.js',
       ])
     )

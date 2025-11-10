@@ -1,7 +1,7 @@
 # README.md — Local Development Setup
 
 ## Overview
-This document guides developers to set up and run the Site Survey Tool (SST) locally using VS Code and Codex CLI.
+This document guides developers to set up and run the Site Survey Tool (FieldPins) locally using VS Code and Codex CLI.
 
 Note on Sprint 1: Manual sync is local-only (no Google OAuth/Drive yet). OAuth + Drive integration lands in Sprint 2. Offline capture and local queueing are fully functional.
 
@@ -29,7 +29,7 @@ Note on Sprint 1: Manual sync is local-only (no Google OAuth/Drive yet). OAuth +
    GOOGLE_OAUTH_CLIENT_SECRET=
    GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
 GOOGLE_DRIVE_SCOPE="openid email profile https://www.googleapis.com/auth/drive"
-NEXT_PUBLIC_APP_NAME="SST"
+NEXT_PUBLIC_APP_NAME="FieldPins"
 NEXT_PUBLIC_MAX_PHOTOS_PER_PIN=4
 NEXT_PUBLIC_MAX_PHOTO_RES=1080
 # Optional: enable demo-only sync normalization (flags unsynced photos as synced for presentations)
@@ -76,4 +76,4 @@ NEXT_PUBLIC_MAX_PHOTO_RES=1080
 ## Testing Targets
 - Offline capture → queued uploads → manual sync → success/fail handling (see `docs/offline.md` and `docs/sync.md`)
 - Max 4 photos per pin (1080p cap)
-- Correct folder creation under My Drive/SST/ (Sprint 2)
+- Correct folder creation under My Drive/FieldPins/ (Sprint 2)

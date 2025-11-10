@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { driveFetch, findFolderByName, requireServerAccessToken } from '@/lib/google-server'
 
-const ROOT_NAME = 'SST'
+const ROOT_NAME = 'FieldPins'
 const ROOT_PARENT_ID = 'root'
 
 type RelinkBody = {
@@ -99,10 +99,10 @@ export async function POST(req: Request) {
     root = await findFolderByName(token, ROOT_NAME, ROOT_PARENT_ID)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown Drive error.'
-    return errorResponse('INVALID_REQUEST', `Could not verify SST root folder. ${message}`)
+    return errorResponse('INVALID_REQUEST', `Could not verify FieldPins root folder. ${message}`)
   }
   if (!root?.id) {
-    return errorResponse('ROOT_NOT_FOUND', 'SST root folder not found. Re-create it before relinking.')
+    return errorResponse('ROOT_NOT_FOUND', 'FieldPins root folder not found. Re-create it before relinking.')
   }
 
   let res: Response
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
 
   const parents = folder.parents || []
   if (!parents.includes(root.id)) {
-    return errorResponse('WRONG_PARENT', 'Move the folder under /My Drive/SST/ before relinking.')
+    return errorResponse('WRONG_PARENT', 'Move the folder under /My Drive/FieldPins/ before relinking.')
   }
 
   const expectedName = `${body.projectName}__${body.projectId}`

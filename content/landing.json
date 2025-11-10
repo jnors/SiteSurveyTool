@@ -1,0 +1,110 @@
+{
+  "hero": {
+    "eyebrow": "Offline-first site surveys",
+    "headline": "Offline site surveys. On your terms.",
+    "subheadline": "Sign in once. Capture floorplans, pins, notes, and photos offline. Sync manually to your Google Drive.",
+    "primaryCta": {
+      "label": "Sign in with Google",
+      "href": "/signin",
+      "onClickEventName": "cta_click_hero_primary"
+    },
+    "secondaryCta": {
+      "label": "Learn how offline works",
+      "href": "#offline",
+      "onClickEventName": "cta_click_hero_secondary"
+    },
+    "media": {
+      "type": "image",
+      "src": "/images/screenshots/Projects_home.png",
+      "alt": "FieldPin UI screenshot"
+    }
+  },
+  "problemValue": {
+    "before": [
+      "Lose context when offline; notes split across apps",
+      "Paper plans get messy and misplaced",
+      "Photos scatter across devices and chats"
+    ],
+    "after": [
+      "Capture pins, notes, photos online or offline",
+      "One-tap manual sync to your Google Drive",
+      "Export JSON; keep data portable"
+    ]
+  },
+  "pillars": {
+    "items": [
+      { "id": "offline", "title": "Offline capture", "summary": "Keep working without signal after your first sign‑in." },
+      { "id": "manual-sync", "title": "Manual sync", "summary": "You choose when to upload and retry—no background sync." },
+      { "id": "drive-ownership", "title": "Your Drive", "summary": "Exports live under /My Drive/FieldPins/ — you keep ownership." }
+    ]
+  },
+  "driveProof": {
+    "folderPathExample": "/My Drive/\n└── FieldPins/\n    └── Building A__p_12345/\n        ├── floorplans/\n        ├── pins/\n        ├── photos/\n        └── project.json",
+    "bullets": [
+      "Folders are named <ProjectName>__<projectId>",
+      "Photos and assets upload under your account",
+      "project.json is written last for consistency"
+    ],
+    "jsonSample": "{\n  \"project\": { \"id\": \"p_12345\", \"name\": \"Building A\" },\n  \"floorplans\": [ { \"id\": \"f_1\", \"name\": \"Level 1\", \"width\": 2048, \"height\": 1536 } ],\n  \"pins\": [ { \"id\": \"n_1\", \"floorplanId\": \"f_1\", \"title\": \"Room 102\", \"note\": \"Replace panel\", \"xPct\": 0.42, \"yPct\": 0.31 } ],\n  \"photos\": [ { \"id\": \"ph_1\", \"pinId\": \"n_1\", \"width\": 1080, \"height\": 810, \"sizeBytes\": 143211 } ]\n}",
+    "learnMoreHref": "#offline"
+  },
+  "specs": {
+    "items": [
+      { "id": "photos", "title": "Photo pipeline", "benefit": "4 photos per pin, resized to 1080p JPEG" },
+      { "id": "pins", "title": "Precision pins", "benefit": "Percent-based coordinates render consistently" },
+      { "id": "ui", "title": "Field-ready UI", "benefit": "Dark-mode mobile design with 44px tap targets" },
+      { "id": "autosave", "title": "Autosave", "benefit": "Edits save on change and on close" },
+      { "id": "conflict", "title": "Last-write-wins", "benefit": "Simple, clear conflict handling for MVP" },
+      { "id": "export", "title": "Portable export", "benefit": "JSON plus assets in your Drive" }
+    ]
+  },
+  "howItWorks": {
+    "title": "How it works",
+    "steps": [
+      "Sign in with Google and create a project",
+      "Drop pins and attach notes/photos — online or offline",
+      "Tap Sync to upload to your Google Drive",
+      "Share JSON exports and photos straight from Drive"
+    ]
+  },
+  "screens": {
+    "title": "Product preview",
+    "items": [
+      { "src": "/images/screenshots/Project detail.png", "alt": "Project detail", "caption": "Pin and photo detail" }
+    ]
+  },
+  "security": {
+    "title": "Security & privacy",
+    "intro": "FieldPin keeps survey data in your control. Offline edits stay on-device until you sync.",
+    "items": [
+      { "title": "Scopes you approve", "description": "We request only openid, email, profile, and Drive for uploads." },
+      { "title": "Device-first storage", "description": "Dexie/IndexedDB stores projects locally until you trigger sync." },
+      { "title": "Drive ownership", "description": "Exports write to /My Drive/FieldPins/<ProjectName>__<projectId>/ with project.json last." },
+      { "title": "Manual control", "description": "No background sync. You decide when to upload, retry, or relink." }
+    ]
+  },
+  "faq": {
+    "title": "Frequently asked",
+    "items": [
+      { "q": "Do I need a new account?", "a": "Sign in with Google is required. We request basic profile and Drive to create an /FieldPins/ folder in your My Drive for sync." },
+      { "q": "Can I start offline before sign-in?", "a": "No. First sign-in requires connectivity. After you sign in once, you can capture online or offline." },
+      { "q": "Where is my data stored?", "a": "On-device while offline (IndexedDB). Sync uploads to /My Drive/FieldPins/<ProjectName>__<projectId>/." },
+      { "q": "Is there auto-sync?", "a": "No. Sync is manual in MVP so crews stay in control in the field." },
+      { "q": "How many photos per pin?", "a": "Up to four photos per pin, resized client-side to max 1080p JPEG (~0.75 quality)." },
+      { "q": "What formats are exported?", "a": "A JSON file (project.json) plus floorplan and photo assets in your Drive folders." }
+    ]
+  },
+  "finalCta": {
+    "headline": "Ready to capture your next survey?",
+    "subheadline": "Sign in once, then capture online or offline and sync on your terms.",
+    "primaryCta": {
+      "label": "Sign in with Google",
+      "onClickEventName": "cta_click_final_primary"
+    },
+    "secondaryCta": {
+      "label": "Learn how offline works",
+      "href": "#offline",
+      "onClickEventName": "cta_click_final_secondary"
+    }
+  }
+}

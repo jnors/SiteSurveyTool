@@ -243,7 +243,7 @@ export default function ProjectsPage() {
                 </li>
               ))}
             </ul>
-            <p className="text-foreground-muted">You can re-create the folder under /My Drive/SST/ now or do it later.</p>
+            <p className="text-foreground-muted">You can re-create the folder under /My Drive/FieldPins/ now or do it later.</p>
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -289,7 +289,7 @@ export default function ProjectsPage() {
             {relinkTarget && (
               <p className="text-foreground-muted">
                 Paste the Drive folder link or ID for <span className="text-foreground">{relinkTarget.projectName}</span>.
-                The folder must live under <code className="rounded bg-muted px-1 py-0.5">/My Drive/SST/</code> and match&nbsp;
+                The folder must live under <code className="rounded bg-muted px-1 py-0.5">/My Drive/FieldPins/</code> and match&nbsp;
                 <code className="rounded bg-muted px-1 py-0.5">
                   {`${relinkTarget.projectName}__${relinkTarget.projectId}`}
                 </code>

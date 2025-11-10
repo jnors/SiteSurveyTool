@@ -1,24 +1,24 @@
-# Multiple Users in SST — MVP-Compliant Approaches
+# Multiple Users in FieldPins — MVP-Compliant Approaches
 
-This doc clarifies what “multiple users” means for SST today, the gap you’re noticing, and practical options to address it without violating MVP constraints (no backend DB, manual sync, Google Drive as the source of truth).
+This doc clarifies what “multiple users” means for FieldPins today, the gap you’re noticing, and practical options to address it without violating MVP constraints (no backend DB, manual sync, Google Drive as the source of truth).
 
 ## Scope Clarification
 
-- Supported now: Multiple independent users, each signing in with their own Google account. The app writes only to that user’s My Drive under `/My Drive/SST/<ProjectName>__<projectId>`.
+- Supported now: Multiple independent users, each signing in with their own Google account. The app writes only to that user’s My Drive under `/My Drive/FieldPins/<ProjectName>__<projectId>`.
 - Not in MVP: Real-time or shared editing (“collaboration”) on the same project across users. That is out-of-scope; label requests as `scope-creep` for a PO CUT decision.
 
 ## Current Behavior (as implemented)
 
 - Auth: NextAuth Google OAuth with Drive scope. Writes to the signed-in user’s Drive.
   - Code: `app/api/auth/[...nextauth]/route.ts`, `lib/auth.ts` (Google provider setup)
-- Local-first data: IndexedDB via Dexie named `sst_db`.
-  - Code: `lib/db.ts` (constructor uses `super('sst_db')`)
+- Local-first data: IndexedDB via Dexie named `FieldPins_db`.
+  - Code: `lib/db.ts` (constructor uses `super('FieldPins_db')`)
 - Sync: Manual, last-write-wins, Drive folder ensure + uploads + write `project.json` last.
   - Code: `lib/google.ts`, `lib/sync.ts`, `lib/hooks/use-projects.ts`
 
 ### The Gap You Noticed
 
-On a shared device, if User A signs in, creates offline data, signs out, and User B signs in using the same browser profile, all local data persists in the same Dexie DB (`sst_db`). This can cause cross-account bleed of local drafts. Cloud sync still goes to the currently signed-in user’s Drive, but local separation is not enforced.
+On a shared device, if User A signs in, creates offline data, signs out, and User B signs in using the same browser profile, all local data persists in the same Dexie DB (`FieldPins_db`). This can cause cross-account bleed of local drafts. Cloud sync still goes to the currently signed-in user’s Drive, but local separation is not enforced.
 
 ## Options to Handle “Multiple Users” Safely (No Collaboration)
 
@@ -37,7 +37,7 @@ Implementation notes:
    - Add before calling `signOut(...)`:
      - `await db.delete()` (and close DB instances, if needed)
      - Clear any SW caches you own (optional, if you cache user data)
-     - Existing code already clears the cached session key `sst:last-session`
+     - Existing code already clears the cached session key `FieldPins:last-session`
 
 2) QA acceptance
    - Given User A creates offline pins/photos, when A signs out, then local data is removed and not visible to User B after B signs in.
@@ -45,7 +45,7 @@ Implementation notes:
 
 ### Option A — User‑Scoped Dexie DB (more robust)
 
-- What: Use a unique DB name per Google account (stable `sub`), e.g. `sst_db_<sub>`. Instantiate after sign-in and switch on account changes.
+- What: Use a unique DB name per Google account (stable `sub`), e.g. `FieldPins_db_<sub>`. Instantiate after sign-in and switch on account changes.
 - Pros: Preserves each user’s offline drafts across sessions on shared devices; prevents cross-user bleed.
 - Cons: Requires a small refactor to avoid a global DB singleton; add an identity to the session.
 
@@ -60,7 +60,7 @@ Implementation steps:
    - Refactor `lib/db.ts` from a process‑wide singleton to a user‑scoped instance.
    - Example approach:
      - Export a small factory `createDB(name: string)` that constructs `new Dexie(name)` and sets up tables.
-     - Hold a current `db` reference in a module or provider, initialized after sign-in with `name = "sst_db_" + session.userId`.
+     - Hold a current `db` reference in a module or provider, initialized after sign-in with `name = "FieldPins_db_" + session.userId`.
      - On account switch or sign out, close/delete the old DB and re‑initialize (or null it when unauthenticated).
 
 3) Wire up after sign-in
@@ -89,7 +89,7 @@ Implementation steps:
 
 - Two Google accounts on one device/browser:
   - Create offline data as A → sign out → sign in as B → verify separation based on chosen option.
-  - Ensure sync writes to the correct Drive path for each account (`/My Drive/SST/<ProjectName>__<projectId>`).
+  - Ensure sync writes to the correct Drive path for each account (`/My Drive/FieldPins/<ProjectName>__<projectId>`).
 - Offline-first:
   - Capture pins/photos while offline pre-sign-in → sign in as a user → confirm uploads target that user’s Drive only.
 - Regressions:

@@ -1,14 +1,14 @@
 - # Onboarding
 
-SST is a mobile-first PWA that lets crews capture floorplans, pins, notes, and photos offline, then push everything to Google Drive on demand. Use this guide to get from the new landing page to your first successful sync.
+FieldPins is a mobile-first PWA that lets crews capture floorplans, pins, notes, and photos offline (after sign-in), then push everything to Google Drive on demand. Use this guide to get from the new landing page to your first successful sync.
 
-## Landing: Start Online or Offline
+## Landing: Sign in, then capture online or offline
 
-![Mobile landing mock with Continue with Google and Use Offline Now actions](../public/docs/landing-mobile.svg)
+![Mobile landing mock with Continue with Google and Learn how offline works](../public/docs/landing-mobile.svg)
 
-- Primary CTA: `Continue with Google` handles OAuth (`openid email profile https://www.googleapis.com/auth/drive`) and queues a Drive sync.
-- Secondary link: `Use Offline Now` jumps straight to `Projects` with no authentication. You can capture everything offline, then return later to sync.
-- Offline banner: when the device is offline, the Google CTA is disabled with a tooltip explaining why and `Use Offline Now` remains active.
+- Primary CTA: `Continue with Google` handles OAuth (`openid email profile https://www.googleapis.com/auth/drive`). Sign-in is required before capture.
+- Secondary link: `Learn how offline works` opens a short guide to offline behaviour.
+- Offline banner: when the device is offline, the Google CTA is disabled with a tooltip explaining sign-in requires connectivity. Docs remain available offline.
 
 > Tip: Install the PWA to your home screen (Android Chrome or iOS Safari) for a full-screen field experience.
 
@@ -21,9 +21,10 @@ SST is a mobile-first PWA that lets crews capture floorplans, pins, notes, and p
 ## First Run & Projects
 
 1. Open `https://your-host/` (local development: `http://localhost:3000`).
-2. Hit `Use Offline Now` if you’re in the field without connectivity; otherwise continue with Google.
-3. The `Projects` grid reads from Dexie. On first launch, demo data seeds automatically.
-4. Tap a project card to view floorplans, pins, and sync status.
+2. Tap `Continue with Google` to sign in. Initial sign-in requires connectivity.
+3. Once signed in, `/projects` becomes available and capture works online or offline.
+4. The `Projects` grid reads from Dexie. On first launch, demo data seeds automatically.
+5. Tap a project card to view floorplans, pins, and sync status.
 
 ## Capture Workflow (≤5s Goal)
 
@@ -55,4 +56,4 @@ SST is a mobile-first PWA that lets crews capture floorplans, pins, notes, and p
 ## Next Steps
 
 - Read the [Offline guide](./offline.md) for full offline capture tips.
-- Review [Privacy](./privacy.md) to understand exactly what SST reads/writes in your Drive.
+- Review [Privacy](./privacy.md) to understand exactly what FieldPins reads/writes in your Drive.

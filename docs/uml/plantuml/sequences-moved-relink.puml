@@ -32,7 +32,7 @@ end
 alt Re-create here
   Projects -> Hook: recreateProjectFolder(projectId)
   Hook -> Ensure: ensureProjectFolder(projectId,name)
-  Ensure -> GD: create under /My Drive/SST
+  Ensure -> GD: create under /My Drive/FieldPins
   GD --> Ensure: folder id
   Ensure --> Hook: { projectFolderId }
   Hook -> DB: update driveFolderId; reset floorplan.driveFileId; reset photos driveFileId+status=pending; enqueue uploads

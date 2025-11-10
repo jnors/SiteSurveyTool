@@ -1,9 +1,9 @@
-# AGENTS.md — Site Survey Tool (SST)
+# AGENTS.md — FieldPins
 
 ## 0) Context & Non-Negotiables
 
-* **Product**: Mobile-first web app (Next.js PWA) to capture floorplans, pins, notes, photos, work offline, then **manual sync to Google Drive**. No backend DB for MVP (Supabase dropped). 
-* **Auth/Storage**: **Google OAuth** (`openid email profile`) + **Drive scope** for user’s *My Drive/SST/* structure. Export = **JSON only**. Photos: **≤4 per pin, 1080p JPEG**. Offline store: **Dexie/IndexedDB**. Sync = **manual**. 
+* **Product**: Mobile-first web app (Next.js PWA) to capture floorplans, pins, notes, photos, work offline (after initial sign-in), then **manual sync to Google Drive**. No backend DB for MVP (Supabase dropped). 
+* **Auth/Storage**: **Google OAuth** (`openid email profile`) + **Drive scope** for user’s *My Drive/FieldPins/* structure. Export = **JSON only**. Photos: **≤4 per pin, 1080p JPEG**. Offline store: **Dexie/IndexedDB**. Sync = **manual**. Offline capture is available only after an initial sign-in while online. 
 * **Visual identity**: Dark-mode first (Inter font, #121212 bg, #8AB4F8 primary, stateful green=Synced, yellow=Pending, red=Failed), 8-pt grid, subtle glow/pulse feedback. 
 
 > Agents must **not** propose scope that violates the above and must align deliverables to the PRD data model & flows. 
@@ -29,7 +29,7 @@
 
 ### Drive Integration Engineer (GDrive)
 
-* **Purpose**: OAuth + Drive client; SST root detection/creation; upload sequencing; project.json patching.
+* **Purpose**: OAuth + Drive client; FieldPins root detection/creation; upload sequencing; project.json patching.
 * **Inputs**: Scopes, query samples, upload sequence. 
 * **Outputs**: Idempotent sync; exponential backoff; helpful error surfacing (quota, moved folder, offline).
 * **Guardrails**: Respect folder naming `<ProjectName>__<projectId>`; write `project.json` last. 
@@ -76,7 +76,7 @@ GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
 GOOGLE_DRIVE_SCOPE="openid email profile https://www.googleapis.com/auth/drive"
 
 # App
-NEXT_PUBLIC_APP_NAME="SST"
+NEXT_PUBLIC_APP_NAME="FieldPins"
 NEXT_PUBLIC_MAX_PHOTOS_PER_PIN=4
 NEXT_PUBLIC_MAX_PHOTO_RES=1080
 
@@ -138,7 +138,7 @@ When to update
 - On completion of any User Story that alters data contracts, API routes, Drive flows (ensure/relink/upload/write/delete), sync states, or user-visible flows.
 
 What to update (as applicable)
-- Mermaid: `docs/uml/sst-uml.md`
+- Mermaid: `docs/uml/FieldPins-uml.md`
   - Component interaction diagram (UI ↔ client services ↔ API routes ↔ Google)
   - Sequence(s) touched: Login+Ensure, Add Pin+Photos, Manual Sync, Moved/Renamed/Relink, Floorplan Viewer
   - Data model snapshot aligned with `lib/db.ts` and `lib/types.ts`
@@ -208,7 +208,7 @@ QA must include scenarios for:
 
 ## 8) Security, Privacy, Compliance
 
-* Only request scopes listed; store tokens locally (least persistence); show what is uploaded and where (`/My Drive/SST/<Project>`). 
+* Only request scopes listed; store tokens locally (least persistence); show what is uploaded and where (`/My Drive/FieldPins/<Project>`). 
 * No server-side PII; all user-owned Drive.
 * Respect offline context; avoid blocking UI for network calls.
 
@@ -231,7 +231,7 @@ codex generate "Create Dexie v1 with Project, Floorplan, Pin, Photo, Outbox tabl
 **Drive flow (GDrive)**
 
 ```
-codex generate "Drive client: ensure SST root, ensure project folder, upload floorplans, pins JSONs, 
+codex generate "Drive client: ensure FieldPins root, ensure project folder, upload floorplans, pins JSONs, 
 photos; write project.json last; exponential backoff."
 ```
 

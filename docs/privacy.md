@@ -1,6 +1,6 @@
 # Privacy & Data
 
-SST keeps survey data either on the device or in your own Google Drive—there is no shared backend database.
+FieldPins keeps survey data either on the device or in your own Google Drive—there is no shared backend database.
 
 ## Local-First Storage
 
@@ -11,15 +11,15 @@ SST keeps survey data either on the device or in your own Google Drive—there i
 ## Google Drive Access
 
 - OAuth scopes: `openid email profile https://www.googleapis.com/auth/drive`.
-- SST creates `/My Drive/SST/<ProjectName>__<projectId>` for each project. That path is displayed before uploads start.
-- Drive ensure/relink/recreate happens client-side with your token; no SST server persists Drive IDs.
+- FieldPins creates `/My Drive/FieldPins/<ProjectName>__<projectId>` for each project. That path is displayed before uploads start.
+- Drive ensure/relink/recreate happens client-side with your token; no FieldPins server persists Drive IDs.
 - `project.json` writes last to guarantee floorplans, pins, and photos are uploaded first.
 
 ## Session Handling
 
 - NextAuth (JWT strategy) stores access tokens in encrypted cookies; refresh tokens remain client-side.
-- Signing out clears tokens immediately. Remaining offline keeps all edits local until you initiate sync.
-- If authentication fails, the app simply defers sync—captures remain available offline.
+- Signing out clears tokens immediately. Remaining offline keeps all edits local until you initiate sync, provided you have signed in previously on the device.
+- If authentication fails, the app defers sync. Captures remain available offline only if you completed an initial sign-in while online; otherwise, capturing requires sign-in.
 
 ## No Server-Side PII
 

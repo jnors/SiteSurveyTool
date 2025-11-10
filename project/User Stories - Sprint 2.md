@@ -13,7 +13,7 @@ Scope: Add Google OAuth + Drive integration for manual sync. Keep manual sync en
   - Given sign-out, when confirmed, then tokens are cleared and Drive actions are disabled.
 - Acceptance Criteria:
   - OAuth flow works in PWA context; tokens available to Drive client; minimal persistence.
-  - Clear path disclosure: shows `/My Drive/SST/…` target.
+  - Clear path disclosure: shows `/My Drive/FieldPins/…` target.
   - Offline/unauthenticated states communicated without blocking the UI.
 - Test Notes:
   - Token expiry/refresh via NextAuth JWT refresh path (test forced expiry).
@@ -31,7 +31,7 @@ Implementation Notes (Delivered):
 - Data Contract Touched: Drive folder IDs cached per `Project.driveFolderId`
 - UX States: syncing/success/fail
 - Scenarios (Given/When/Then):
-  - Given "Sync now", when root `/My Drive/SST/` is missing, then create it (idempotent).
+  - Given "Sync now", when root `/My Drive/FieldPins/` is missing, then create it (idempotent).
   - Given a project `<ProjectName>__<projectId>`, when syncing, then ensure the project folder exists (idempotent).
   - Given a moved/renamed folder, when detected, then prompt to re-link or re-create.
 - Acceptance Criteria:
@@ -42,7 +42,7 @@ Implementation Notes (Delivered):
   - Simulate moved/renamed folders; multiple syncs; permissions errors.
 
 Implementation Notes (Delivered):
-- API `POST /api/drive/ensure` creates/locates `SST` root and `<ProjectName>__<projectId>` idempotently; validates cached `driveFolderId` and flags moved/renamed/trashed or wrong parent.
+- API `POST /api/drive/ensure` creates/locates `FieldPins` root and `<ProjectName>__<projectId>` idempotently; validates cached `driveFolderId` and flags moved/renamed/trashed or wrong parent.
 - `useProjects.syncAll()` sets all projects to `syncing`, calls ensure per project, updates Dexie `Project.driveFolderId`, and returns an issues summary.
 - UI shows a toast summary and a dialog listing impacted projects with a "Re‑create here" action; ProjectCards render a yellow "Relink" chip until resolved.
 

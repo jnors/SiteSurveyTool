@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sst-cache-v2';
+const CACHE_NAME = 'FieldPins-cache-v2';
 const OFFLINE_URLS = ['/', '/projects'];
 
 const RSC_ACCEPT_HEADER = 'text/x-component';
@@ -209,8 +209,8 @@ self.addEventListener('message', (event) => {
   }
 });
 
-if (typeof self !== 'undefined' && self.__SST_SW_TEST__) {
-  Object.assign(self.__SST_SW_TEST__, {
+if (typeof self !== 'undefined' && self.__FieldPins_SW_TEST__) {
+  Object.assign(self.__FieldPins_SW_TEST__, {
     cacheRequestWithDeps,
     extractAssetUrls,
     matchResponse,

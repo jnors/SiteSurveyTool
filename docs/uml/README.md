@@ -1,6 +1,6 @@
-SST UML Overview
+FieldPins UML Overview
 
-This folder contains Mermaid-based UML diagrams modeling interactions between the UI, React components, local services, and external APIs (Google OAuth and Drive) for the Site Survey Tool (SST) MVP.
+This folder contains Mermaid-based UML diagrams modeling interactions between the UI, React components, local services, and external APIs (Google OAuth and Drive) for the Site Survey Tool (FieldPins) MVP.
 
 Scope and constraints reflected here:
 - Next.js PWA, offline-first with Dexie/IndexedDB; manual sync only
@@ -9,7 +9,7 @@ Scope and constraints reflected here:
 - Drive sync writes `project.json` last; exponential backoff on failures
 
 Files:
-- `docs/uml/sst-uml.md` – Component interactions and key sequence diagrams (Mermaid)
+- `docs/uml/FieldPins-uml.md` – Component interactions and key sequence diagrams (Mermaid)
 - PlantUML diagrams:
   - `docs/uml/plantuml/components.puml`
   - `docs/uml/plantuml/sequences-login-ensure.puml`

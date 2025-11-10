@@ -24,7 +24,7 @@ export function NavBar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href="/projects" className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground">
-            <span className="font-bold text-sm">SST</span>
+            <span className="font-bold text-sm">FieldPins</span>
           </div>
           <span className="font-semibold text-lg text-foreground">Site Survey Tool</span>
         </Link>

@@ -54,7 +54,7 @@ export interface OutboxRow {
   lastTriedAt?: string
 }
 
-export class SSTDB extends Dexie {
+export class FieldPinsDB extends Dexie {
   projects!: Table<ProjectRow, string>
   floorplans!: Table<FloorplanRow, string>
   pins!: Table<PinRow, string>
@@ -62,7 +62,7 @@ export class SSTDB extends Dexie {
   outbox!: Table<OutboxRow, string>
 
   constructor() {
-    super('sst_db')
+    super('FieldPins_db')
     this.version(1).stores({
       projects: '&id, name, updatedAt, syncedAt',
       floorplans: '&id, projectId',
@@ -89,4 +89,4 @@ export class SSTDB extends Dexie {
   }
 }
 
-export const db = new SSTDB()
+export const db = new FieldPinsDB()

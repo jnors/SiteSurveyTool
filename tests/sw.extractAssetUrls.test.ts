@@ -5,7 +5,7 @@ const selfScope = globalThis.self as Record<string, any>
 describe('service worker extractAssetUrls', () => {
   beforeEach(async () => {
     vi.resetModules()
-    selfScope.__SST_SW_TEST__ = {}
+    selfScope.__FieldPins_SW_TEST__ = {}
     selfScope.addEventListener = selfScope.addEventListener || vi.fn()
     await import('../public/sw.js')
   })
@@ -21,7 +21,7 @@ describe('service worker extractAssetUrls', () => {
         <body></body>
       </html>
     `
-    const assets = selfScope.__SST_SW_TEST__.extractAssetUrls(html)
+    const assets = selfScope.__FieldPins_SW_TEST__.extractAssetUrls(html)
     expect(assets).toContain('/_next/static/chunk.js')
     expect(assets).toContain('/_next/static/chunk.css')
     expect(assets).toContain('/inline.js')
@@ -39,7 +39,7 @@ describe('service worker extractAssetUrls', () => {
         <body></body>
       </html>
     `
-    const assets = selfScope.__SST_SW_TEST__.extractAssetUrls(html)
+    const assets = selfScope.__FieldPins_SW_TEST__.extractAssetUrls(html)
     expect(assets).not.toContain('https://cdn.example.com/app.js')
     expect(assets).not.toContain('data:text/css;base64,AAAA')
     expect(assets).toContain('/_next/static/app.js?v=123')

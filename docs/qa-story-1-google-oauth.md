@@ -7,7 +7,7 @@
 
 ## Test Scenarios
 1. **Initial Sign-in (redirect flow)**
-   - Launch `/projects` unauthenticated; verify Sign In card copy + `/My Drive/SST/` disclosure.
+   - Launch `/projects` unauthenticated; verify Sign In card copy + `/My Drive/FieldPins/` disclosure.
    - Tap `Sign in with Google`; ensure consent shows requested scopes exactly and callback returns to `/projects`.
    - Confirm Projects view remains loaded after redirect.
 

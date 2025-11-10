@@ -7,7 +7,7 @@
 
 ## Prerequisites
 - Seed projects or create a fresh one with ≥1 floorplan, pins, and photos (≤4 per pin, 1080p JPEG limit).
-- Google test account with Drive access; SST `/My Drive/SST/` root may already exist.
+- Google test account with Drive access; FieldPins `/My Drive/FieldPins/` root may already exist.
 - Ability to toggle network offline (DevTools, OS airplane mode).
 - Demo toggle awareness: leave `NEXT_PUBLIC_DEMO_SYNC` **unset** during QA so sync errors surface normally. Enable (`NEXT_PUBLIC_DEMO_SYNC=1`) only for field demos where pending/error photos should appear green after a manual sync.
 
@@ -25,7 +25,7 @@
    - Reconnect and sync; confirm queued items upload and status returns to `synced`.
 
 3. **Moved Folder → Relink**
-   - In Google Drive, move the project folder outside `/My Drive/SST/` or rename it.
+   - In Google Drive, move the project folder outside `/My Drive/FieldPins/` or rename it.
    - Trigger `Sync Now`; ensure dialog lists affected project(s).
    - Return to the Projects list: the yellow “Relink” badge appears and remains after a full app reload.
    - Use `Relink` button: paste the corrected folder URL after moving it back and renaming.
@@ -47,7 +47,7 @@
 ## Regression Smoke
 - Pin + photo capture remains ≤5 seconds end-to-end.
 - Photo delete still removes Dexie row and queues delete.
-- Landing page CTA states (`Continue with Google`, `Use Offline Now`) behave correctly after sync attempts.
+- Landing page CTA states (`Continue with Google`, `Learn how offline works`) behave correctly after sync attempts.
 - Docs (`onboarding`, `offline`, `privacy`, `sync`) link paths remain valid after updates.
 
 ## Logging

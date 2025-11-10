@@ -30,7 +30,7 @@ beforeAll(async () => {
   useOnline = onlineModule.useOnline
 })
 
-const SESSION_KEY = 'sst:last-session'
+const SESSION_KEY = 'FieldPins:last-session'
 
 function withSessionProvider(value: Parameters<typeof SessionContext.Provider>[0]['value']) {
   return function Wrapper({ children }: { children: ReactNode }) {

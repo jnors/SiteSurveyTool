@@ -4,22 +4,23 @@ Scope: Add a mobile-first Landing page that highlights offline-first usage befor
 
 ---
 
-## Story 1 — Landing Page (Offline-First, Google CTA)
+## Story 1 — Landing Page (Sign-in Required, Offline After Login)
 - Status: [ ] Pending
 - Tags: state-UX
 - Data Contract Touched: none
 - UX States: online/unauthenticated, offline/unauthenticated, authenticated
 - Scenarios (Given/When/Then):
-  - Given unauthenticated and online, when I visit `/`, then I see a hero, brief value props, and a primary CTA “Continue with Google,” plus a secondary “Use Offline Now” link that routes to `/projects` without auth.
-  - Given unauthenticated and offline, when I visit `/`, then I see an offline banner; the Google CTA is disabled with an explanatory tooltip; “Use Offline Now” remains enabled.
+  - Given unauthenticated and online, when I visit `/`, then I see a hero, brief value props, and a primary CTA “Continue with Google,” plus a secondary “Learn how offline works” link to docs/section (no access to `/projects`).
+  - Given unauthenticated and offline, when I visit `/`, then I see an offline banner; the Google CTA is disabled with an explanatory tooltip stating sign‑in is required and must be done online; the docs link remains available.
   - Given authenticated, when I visit `/`, then I’m redirected to `/projects` automatically.
 - Acceptance Criteria:
-  - Landing reuses `SignInCard` for Google CTA and scope disclosure; adds “Use Offline Now” and highlights offline capture/sync-later benefits.
-  - Clear copy: “No account to create — continue with Google. Offline works without sign-in; sync later to your Drive.”
+  - Landing reuses `SignInCard` for Google CTA and scope disclosure; removes unauthenticated access to `/projects`; highlights capture works online or offline after sign‑in and manual Drive sync.
+  - Clear copy: “Sign in with Google to use FieldPins. After sign‑in, capture works online or offline. Sync later to your Drive.”
   - Motion ≤150ms, dark-mode tokens, 8-pt grid, Inter font.
   - Page shell and brand assets are cached by the SW for quick repeat loads.
+  - `/projects` is gated behind auth; unauthenticated navigation attempts redirect to `/` with sign‑in prompt.
 - Test Notes:
-  - iOS Safari PWA and Android Chrome: verify offline-unauth flow, CTA disabled state, and navigation to `/projects` works offline.
+  - iOS Safari PWA and Android Chrome: verify offline-unauth flow, CTA disabled state with tooltip, and that `/projects` is not accessible without sign‑in.
   - Lighthouse PWA: page cached; no blocking network calls in offline state.
 
 ## Story 2 — Offline Floorplan Switching (Client-Only)
@@ -54,8 +55,8 @@ Scope: Add a mobile-first Landing page that highlights offline-first usage befor
 - Scenarios:
   - Given Landing, when users look for clarity, then docs provide concise guidance for: Offline-first, First Sync, and Privacy.
 - Acceptance Criteria:
-  - Update `/docs/onboarding.md` with landing screenshots and “Use Offline Now.”
-  - Update `/docs/offline.md` to emphasize full offline capture without sign-in; sync later with Google.
+  - Update `/docs/onboarding.md` with landing screenshot and “Learn how offline works” secondary link.
+  - Update `/docs/offline.md` to emphasize offline capture after sign-in; sync later with Google.
   - Update `/docs/privacy.md` to restate Drive-only storage and requested scopes.
   - Remove any Billing/Stripe references from docs for MVP.
 - Test Notes:
@@ -66,11 +67,11 @@ Scope: Add a mobile-first Landing page that highlights offline-first usage befor
 ## Notes on Constraints & Phasing (Aligns with AGENTS.md)
 - Auth/Storage: Google OAuth (openid email profile) + Drive scope; Manual sync; No backend DB.
 - Visual identity: Dark-mode first, Inter, tokens in styleguide; motion ≤150ms; state colors.
-- Offline-first: Fully available without sign-in. Landing must showcase this.
+- Offline capture: Available after initial sign-in. Landing must set this expectation.
 
 ## Risks & Mitigations
 - Users expect “sign up” with email/password → clear copy: Google-only, no extra account to create.
-- Confusion about offline availability → “Use Offline Now” prominent on landing; disable Google CTA while offline with a clear reason.
+- Confusion about offline availability → copy clarifies sign-in is required; Google CTA disabled while offline with clear reason; docs link remains available.
 
 ## QA Matrix
 - Landing: online/unauth → Google CTA works; offline/unauth → CTA disabled, Offline banner shown; authenticated → redirect to `/projects`.

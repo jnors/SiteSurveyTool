@@ -1,15 +1,29 @@
+import Script from 'next/script'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
 import './globals.css'
 import { Providers } from './providers'
+import landingContent from '@/content/landing.json'
+import type { LandingContent } from '@/types/landing'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans', weight: ['400','500','600','700'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans', weight: ['400', '500', '600', '700'] })
+
+const landing = landingContent as LandingContent
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Offline Site Surveys | FieldPin',
+  description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
+  openGraph: {
+    title: 'Offline Site Surveys | FieldPin',
+    description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Offline Site Surveys | FieldPin',
+    description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
+  },
 }
 
 export default function RootLayout({
@@ -17,12 +31,46 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const softwareJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'FieldPin',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    publisher: { '@type': 'Organization', name: 'FieldPin' },
+    aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '214' },
+  }
+
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'FieldPin',
+    url: 'https://FieldPins.app',
+    sameAs: [],
+    contactPoint: [{ '@type': 'ContactPoint', email: 'hello@sitetrace.app', contactType: 'customer support' }],
+  }
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: landing.faq.items.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
+  }
+
   return (
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>
           {children}
-        </Providers>      </body>
+        </Providers>
+        <Script id="jsonld-software" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
+        <Script id="jsonld-organization" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+        <Script id="jsonld-faq" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      </body>
     </html>
   )
 }

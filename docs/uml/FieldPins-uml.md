@@ -4,7 +4,7 @@ This document captures how the FieldPins Next.js PWA interacts across the UI, Re
 
 Component Interaction Diagram
 
-```mermaid
+\`\`\`mermaid
 flowchart LR
   %% UI / React components (actual components in repo)
   subgraph UI[UI / React Components]
@@ -91,11 +91,11 @@ flowchart LR
   SW --- ProjectDetailPage
   ProjectsPage --> OfflineBanner
   ProjectDetailPage --> OfflineBanner
-```
+\`\`\`
 
 Data Model Snapshot (for reference)
 
-```mermaid
+\`\`\`mermaid
 classDiagram
   class Project {
     id: string
@@ -148,11 +148,11 @@ classDiagram
   Project "1" --> "*" Floorplan
   Floorplan "1" --> "*" Pin
   Pin "1" --> "*" Photo
-```
+\`\`\`
 
 Sequence — Login + Drive Root Setup
 
-```mermaid
+\`\`\`mermaid
 sequenceDiagram
   autonumber
   participant U as User
@@ -174,11 +174,11 @@ sequenceDiagram
   GD-->>API: Project folder ID
   API-->>App: { rootId, projectFolderId, movedOrMissing? }
   App->>DB: Save/Update driveFolderId
-```
+\`\`\`
 
 Sequence — Add Pin + Photos (Offline First)
 
-```mermaid
+\`\`\`mermaid
 sequenceDiagram
   autonumber
   participant U as User
@@ -196,11 +196,11 @@ sequenceDiagram
   PP->>DB: Add Photo{ localUri, dims, sizeBytes, status=pending }
   Modal->>DB: Add Pin{...}
   Modal->>OB: enqueue upload_photo per photo
-```
+\`\`\`
 
 Sequence — Manual Sync (Outbox Processing)
 
-```mermaid
+\`\`\`mermaid
 sequenceDiagram
   autonumber
   participant U as User
@@ -240,11 +240,11 @@ sequenceDiagram
   GD-->>API: fileId
   API-->>Sync: ok
   Sync->>DB: Update Project.syncedAt
-```
+\`\`\`
 
 Sequence — Moved/Renamed Drive Folder (Detect, Re-create, Relink)
 
-```mermaid
+\`\`\`mermaid
 sequenceDiagram
   autonumber
   participant U as User
@@ -287,11 +287,11 @@ sequenceDiagram
     Ensure-->>Hook: { movedOrMissing: false }
     Hook->>DB: update driveFolderId, clear syncAnomaly
   end
-```
+\`\`\`
 
 Sequence — Floorplan Viewer (Load & Render)
 
-```mermaid
+\`\`\`mermaid
 sequenceDiagram
   autonumber
   participant U as User
@@ -305,7 +305,7 @@ sequenceDiagram
   FV->>DB: Read Floorplan + Pins (+ Photos.localUri)
   SW-->>PD: Cached shell/assets/images (if available)
   FV-->>U: Render image and pins (xPct,yPct)
-```
+\`\`\`
 
 Notes and Assumptions
 - No backend database; all data is client-side with Dexie/IndexedDB.

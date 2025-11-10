@@ -4,7 +4,7 @@
 - This document describes the structure that will be written to Drive under the project folder, with `project.json` written last.
 
 ## Structure
-```
+\`\`\`
 {
   "project": {
     "id": "<projectId>",
@@ -44,7 +44,7 @@
     }
   ]
 }
-```
+\`\`\`
 
 ## Sequence (Sprint 2)
 - Ensure `/My Drive/FieldPins/` root folder exists.
@@ -56,4 +56,3 @@
 ## Notes
 - Photos are capped at 4 per pin and stored at 1080p JPEG for reliability.
 - Last-write-wins: Later edits overwrite prior JSON and metadata.
-

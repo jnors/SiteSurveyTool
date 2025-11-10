@@ -158,7 +158,7 @@ A: A JSON file (`project.json`) that describes your project, floorplans, pins, a
 
 ## Content Seed (for future `content/landing.json`)
 
-```json
+\`\`\`json
 {
   "hero": {
     "eyebrow": "Offline‑first site surveys",
@@ -181,7 +181,7 @@ A: A JSON file (`project.json`) that describes your project, floorplans, pins, a
     { "q": "Where is my data stored?", "a": "In your Google Drive under /My Drive/FieldPins/<Project>." }
   ]
 }
-```
+\`\`\`
 
 ## Analytics Events (to wire later)
 - cta_click: { location: hero|final, variant: primary|secondary, label: continue_with_google|learn_offline }

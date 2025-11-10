@@ -11,4 +11,3 @@
 ## Tips
 - Take multiple close-up photos for detail rather than relying on one ultra-high-res shot.
 - If a photo appears rotated, retake within the PWA; FieldPins applies orientation during processing.
-

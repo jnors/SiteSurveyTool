@@ -26,4 +26,3 @@ GD --> API: Project folder id
 API --> App: {rootId, projectFolderId, movedOrMissing?}
 App -> DB: Save/Update driveFolderId
 @enduml
-

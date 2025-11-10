@@ -1,10 +1,8 @@
-import type { NextAuthOptions } from 'next-auth'
-import type { JWT } from 'next-auth/jwt'
-import GoogleProvider from 'next-auth/providers/google'
+import type { NextAuthOptions } from "next-auth"
+import type { JWT } from "next-auth/jwt"
+import { GoogleProvider } from "next-auth/providers/google"
 
-const GOOGLE_SCOPE =
-  process.env.GOOGLE_DRIVE_SCOPE ??
-  'openid email profile https://www.googleapis.com/auth/drive'
+const GOOGLE_SCOPE = process.env.GOOGLE_DRIVE_SCOPE ?? "openid email profile https://www.googleapis.com/auth/drive"
 
 const TOKEN_EXPIRY_BUFFER = 60_000
 
@@ -16,22 +14,22 @@ function getEnv(name: string) {
   return value
 }
 
-const googleClientId = getEnv('GOOGLE_OAUTH_CLIENT_ID')
-const googleClientSecret = getEnv('GOOGLE_OAUTH_CLIENT_SECRET')
+const googleClientId = getEnv("GOOGLE_OAUTH_CLIENT_ID")
+const googleClientSecret = getEnv("GOOGLE_OAUTH_CLIENT_SECRET")
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   if (!token.refreshToken) {
-    return { ...token, error: 'MissingRefreshToken' }
+    return { ...token, error: "MissingRefreshToken" }
   }
 
   try {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         client_id: googleClientId,
         client_secret: googleClientSecret,
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
         refresh_token: token.refreshToken as string,
       }),
     })
@@ -39,7 +37,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
     const refreshedTokens = await response.json()
 
     if (!response.ok) {
-      return { ...token, error: 'RefreshAccessTokenError' }
+      return { ...token, error: "RefreshAccessTokenError" }
     }
 
     return {
@@ -50,8 +48,8 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       error: undefined,
     }
   } catch (error) {
-    console.error('Error refreshing access token', error)
-    return { ...token, error: 'RefreshAccessTokenError' }
+    console.error("Error refreshing access token", error)
+    return { ...token, error: "RefreshAccessTokenError" }
   }
 }
 
@@ -62,15 +60,15 @@ export const authOptions: NextAuthOptions = {
       clientSecret: googleClientSecret,
       authorization: {
         params: {
-          prompt: 'consent',
-          access_type: 'offline',
+          prompt: "consent",
+          access_type: "offline",
           scope: GOOGLE_SCOPE,
         },
       },
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   callbacks: {
     async jwt({ token, account }) {

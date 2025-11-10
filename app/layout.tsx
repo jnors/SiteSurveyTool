@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     title: 'Offline Site Surveys | FieldPin',
     description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
   },
+    generator: 'v0.app'
 }
 
 export default function RootLayout({

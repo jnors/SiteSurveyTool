@@ -47,4 +47,3 @@ else Relink with pasted link/ID
   Hook -> DB: update driveFolderId; clear syncAnomaly
 end
 @enduml
-

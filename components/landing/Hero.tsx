@@ -1,12 +1,11 @@
-'use client'
+"use client"
 
-import Image from 'next/image'
-import Link from 'next/link'
+import Image from "next/image"
+import Link from "next/link"
 
-import { Button } from '@/components/ui/button'
-import { track } from '@/lib/analytics'
-import { cn } from '@/lib/utils'
-import type { HeroProps } from '@/types/landing'
+import { Button } from "@/components/ui/button"
+import { track } from "@/lib/analytics"
+import type { HeroProps } from "@/types/landing"
 
 type HeroSectionProps = {
   data: HeroProps
@@ -17,8 +16,8 @@ export function Hero({ data }: HeroSectionProps) {
     if (data.primaryCta.onClickEventName) {
       track({
         event: data.primaryCta.onClickEventName,
-        location: 'hero',
-        variant: 'primary',
+        location: "hero",
+        variant: "primary",
         label: data.primaryCta.label,
       })
     }
@@ -28,62 +27,80 @@ export function Hero({ data }: HeroSectionProps) {
     if (data.secondaryCta?.onClickEventName) {
       track({
         event: data.secondaryCta.onClickEventName,
-        location: 'hero',
-        variant: 'secondary',
+        location: "hero",
+        variant: "secondary",
         label: data.secondaryCta.label,
       })
     }
   }
 
   return (
-    <section className="relative overflow-hidden px-6 pb-20 pt-20 sm:px-8">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[380px] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(138,180,248,0.20)_0%,rgba(18,18,18,0)_70%)]" />
-      <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr),minmax(0,420px)] lg:items-center">
-        <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
-          {data.eyebrow ? (
-            <span className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-              {data.eyebrow}
-            </span>
-          ) : null}
-          <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-[3.25rem] sm:leading-[1.1]">
-            {data.headline}
-          </h1>
-          <p className="max-w-2xl text-base leading-relaxed text-foreground-muted">
-            {data.subheadline}
-          </p>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-            <Button asChild size="lg" className="min-w-[200px] bg-primary text-primary-foreground hover:bg-primary/80" onClick={handlePrimaryCta}>
-              <Link href="#cta">{data.primaryCta.label}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="lg" className="text-primary hover:text-primary/80" onClick={handleSecondaryCta}>
-              <Link href={data.secondaryCta?.href ?? '#offline'}>{data.secondaryCta?.label ?? 'Learn how offline works'}</Link>
-            </Button>
+    <section className="relative overflow-hidden px-6 py-24 sm:px-8 md:py-32">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[500px]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(138,180,248,0.25),rgba(52,168,83,0.08),rgba(18,18,18,0))]" />
+      </div>
+
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="grid gap-16 lg:grid-cols-2 lg:items-center lg:gap-20">
+          {/* Left: Content */}
+          <div className="flex flex-col gap-8 text-center lg:text-left">
+            {data.eyebrow ? (
+              <div className="inline-flex items-center justify-center gap-2 lg:justify-start">
+                <div className="h-1 w-1 rounded-full bg-primary" />
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{data.eyebrow}</span>
+              </div>
+            ) : null}
+
+            <h1 className="text-balance text-5xl font-bold leading-[1.1] text-foreground sm:text-6xl lg:text-[4rem]">
+              {data.headline}
+            </h1>
+
+            <p className="text-balance text-lg leading-relaxed text-foreground-muted sm:text-xl">{data.subheadline}</p>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
+                onClick={handlePrimaryCta}
+              >
+                <Link href="#cta">{data.primaryCta.label}</Link>
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                size="lg"
+                className="h-12 border border-border/50 px-8 text-base font-semibold text-foreground transition hover:border-primary/50 hover:bg-primary/5"
+                onClick={handleSecondaryCta}
+              >
+                <Link href={data.secondaryCta?.href ?? "#offline"}>{data.secondaryCta?.label ?? "Learn more"}</Link>
+              </Button>
+            </div>
+
+            <p className="text-xs text-foreground-subtle">
+              No auto-sync • Manual control • Your data stays on your Drive
+            </p>
           </div>
-          <p className="text-xs text-foreground-subtle">No auto-sync. Manual uploads to your Drive only.</p>
-          {data.trustBadges && data.trustBadges.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-4 pt-4 text-xs uppercase tracking-[0.2em] text-foreground-subtle">
-              {data.trustBadges.map((badge) => (
-                <span key={badge.src}>{badge.alt}</span>
-              ))}
+
+          {/* Right: Media */}
+          {data.media?.type === "image" ? (
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-primary/10 via-success/5 to-transparent blur-2xl" />
+              <div className="relative overflow-hidden rounded-[28px] border border-primary/20 bg-background/40 p-2 shadow-2xl backdrop-blur-sm">
+                <Image
+                  src={data.media.src || "/placeholder.svg"}
+                  alt={data.media.alt ?? "FieldPins mobile interface"}
+                  width={data.media.width ?? 640}
+                  height={data.media.height ?? 860}
+                  className="h-auto w-full rounded-[24px] object-cover"
+                  priority
+                  sizes="(min-width: 1024px) 500px, 100vw"
+                />
+              </div>
             </div>
           ) : null}
         </div>
-        {data.media?.type === 'image' ? (
-          <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-[28px] border border-primary/15 bg-background/60 p-4 shadow-[0_0_40px_rgba(138,180,248,0.08)]">
-            <div className="pointer-events-none absolute -inset-10 -z-10 opacity-70 [filter:blur(28px)] bg-[radial-gradient(45%_45%_at_50%_0%,rgba(138,180,248,0.28)_0%,rgba(18,18,18,0)_70%)]" />
-            <Image
-              src={data.media.src}
-              alt={data.media.alt ?? 'FieldPins mobile interface'}
-              width={data.media.width ?? 640}
-              height={data.media.height ?? 860}
-              className={cn('h-auto w-full rounded-[20px] border border-border/20 object-cover')}
-              priority
-              sizes="(min-width: 1024px) 380px, 100vw"
-            />
-          </div>
-        ) : null}
       </div>
-      <div className="pointer-events-none absolute inset-0 -z-10" />
     </section>
   )
 }

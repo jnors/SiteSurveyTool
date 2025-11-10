@@ -23,4 +23,3 @@ Modal -> DB: Save Pin{...}
 Modal -> OB: enqueue upload_photo per photo
 note over Modal,DB: Autosave on close; last-write-wins
 @enduml
-

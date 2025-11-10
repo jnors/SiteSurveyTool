@@ -100,4 +100,3 @@ Implementation steps:
 - PO → FE: Implement Option B or Option A (tag `state-UX` if adding sign-out confirmations; tag `data-contract` only if you touch export schema — not needed here).
 - QA: Validate shared-device and offline cases above.
 - Any collaboration ask: label `scope-creep` and route to PO for CUT.
-

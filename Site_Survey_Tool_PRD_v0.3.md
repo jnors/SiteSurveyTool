@@ -212,16 +212,16 @@ Projects are easily accessible in Google Drive under `/My Drive/FieldPins/<Proje
 
 ## 📦 Data Model (local Dexie)
 
-```
+\`\`\`
 Project { id, name, createdAt, updatedAt, driveFolderId?, syncedAt? }
 Floorplan { id, projectId, name, type, width, height, localUri, driveFileId? }
 Pin { id, floorplanId, title, note, xPct, yPct, updatedAt }
 Photo { id, pinId, localUri, width, height, sizeBytes, driveFileId?, status }
 Outbox { id, kind, entityType, entityId, payload, retries, lastTriedAt }
-```
+\`\`\`
 
 ### Export Schema (`project.json`)
-```
+\`\`\`
 {
   "schemaVersion": "1.0",
   "appVersion": "MVP",
@@ -241,17 +241,17 @@ Outbox { id, kind, entityType, entityId, payload, retries, lastTriedAt }
     }
   ]
 }
-```
+\`\`\`
 
 ---
 
 ## 🔐 Google Integration Details
 
 **Scopes**
-```
+\`\`\`
 openid email profile
 https://www.googleapis.com/auth/drive
-```
+\`\`\`
 
 **Auth flow**
 - Sign in with Google → get access token.  
@@ -259,13 +259,13 @@ https://www.googleapis.com/auth/drive
 - User info retrieved via `userinfo` endpoint for display.
 
 **Drive queries**
-```sql
+\`\`\`sql
 # Find FieldPins folder
 name = 'FieldPins' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false
 
 # List projects
 '${fieldpinsFolderId}' in parents and mimeType='application/vnd.google-apps.folder'
-```
+\`\`\`
 
 **Upload sequence**
 1. Ensure FieldPins root folder.  

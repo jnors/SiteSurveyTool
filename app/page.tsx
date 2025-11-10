@@ -1,22 +1,22 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
+import Link from "next/link"
+import Image from "next/image"
+import { redirect } from "next/navigation"
+import { getServerSession } from "next-auth/next"
 
-import { OfflineBanner } from '@/components/offline-banner'
-import { FinalCta } from '@/components/landing/FinalCta'
-import { Faq } from '@/components/landing/Faq'
-import { Hero } from '@/components/landing/Hero'
-import { HowItWorks } from '@/components/landing/HowItWorks'
-import { Security } from '@/components/landing/Security'
-import { Pillars } from '@/components/landing/Pillars'
-import { DriveProof } from '@/components/landing/DriveProof'
-import { SpecsGrid } from '@/components/landing/SpecsGrid'
-import { Screens } from '@/components/landing/Screens'
-import { Button } from '@/components/ui/button'
-import { authOptions } from '@/lib/auth'
-import type { LandingContent } from '@/types/landing'
-import landingContent from '@/content/landing.json'
+import { OfflineBanner } from "@/components/offline-banner"
+import { FinalCta } from "@/components/landing/FinalCta"
+import { Faq } from "@/components/landing/Faq"
+import { Hero } from "@/components/landing/Hero"
+import { HowItWorks } from "@/components/landing/HowItWorks"
+import { Security } from "@/components/landing/Security"
+import { Pillars } from "@/components/landing/Pillars"
+import { DriveProof } from "@/components/landing/DriveProof"
+import { SpecsGrid } from "@/components/landing/SpecsGrid"
+import { Screens } from "@/components/landing/Screens"
+import { Button } from "@/components/ui/button"
+import { authOptions } from "@/lib/auth"
+import type { LandingContent } from "@/types/landing"
+import landingContent from "@/content/landing.json"
 
 const content = landingContent as LandingContent
 
@@ -24,7 +24,7 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions)
 
   if (session) {
-    redirect('/projects')
+    redirect("/projects")
   }
 
   return (
@@ -47,7 +47,12 @@ export default async function HomePage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="ghost" className="hidden md:inline-flex text-primary hover:text-primary/80">
+            <Button
+              asChild
+              size="sm"
+              variant="ghost"
+              className="hidden md:inline-flex text-primary hover:text-primary/80"
+            >
               <Link href="#offline">Learn offline</Link>
             </Button>
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/80">

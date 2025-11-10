@@ -13,18 +13,18 @@ Note on Sprint 1: Manual sync is local-only (no Google OAuth/Drive yet). OAuth +
 
 ## Setup Steps
 1. **Clone the repo**  
-   ```bash
+   \`\`\`bash
    git clone <repo-url>
    cd site-survey-tool
-   ```
+   \`\`\`
 
 2. **Install dependencies**  
-   ```bash
+   \`\`\`bash
    pnpm install
-   ```
+   \`\`\`
 
 3. **Create `.env.local`**
-   ```bash
+   \`\`\`bash
    GOOGLE_OAUTH_CLIENT_ID=
    GOOGLE_OAUTH_CLIENT_SECRET=
    GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
@@ -37,12 +37,12 @@ NEXT_PUBLIC_MAX_PHOTO_RES=1080
 # Theme keys not currently read by the app; styling uses tokens in app/globals.css
 # NEXT_PUBLIC_THEME_BG=#121212
 # NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
-```
+\`\`\`
 
 4. **Run the development server**
-   ```bash
+   \`\`\`bash
    pnpm dev
-   ```
+   \`\`\`
 
 5. **Access locally**  
    Visit [http://localhost:3000](http://localhost:3000)
@@ -60,11 +60,11 @@ NEXT_PUBLIC_MAX_PHOTO_RES=1080
 - Ensure Codex CLI is installed globally (`pipx install codex-cli` or similar).
 - Agents and routing rules are defined in `AGENTS.md`.
 - Example commands:
-  ```bash
+  \`\`\`bash
   codex plan "Implement PinModal with 4-photo limit (1080p)"
   codex generate "Drive client upload sequence"
   codex write "docs/sync.md: Manual sync flow"
-  ```
+  \`\`\`
 
 ## Recommended VS Code Extensions
 - ESLint

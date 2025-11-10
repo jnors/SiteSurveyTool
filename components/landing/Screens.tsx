@@ -39,4 +39,3 @@ export function Screens({ data }: ScreensSectionProps) {
     </section>
   )
 }
-

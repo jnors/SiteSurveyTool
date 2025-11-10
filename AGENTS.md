@@ -68,7 +68,7 @@
 
 **ENV (example)**
 
-```
+\`\`\`
 # Google
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
@@ -83,7 +83,7 @@ NEXT_PUBLIC_MAX_PHOTO_RES=1080
 # Branding
 NEXT_PUBLIC_THEME_BG=#121212
 NEXT_PUBLIC_THEME_PRIMARY=#8AB4F8
-```
+\`\`\`
 
 ---
 
@@ -162,13 +162,13 @@ Acceptance criteria for docs tasks
 
 **Dexie Tables**
 
-```
+\`\`\`
 Project { id, name, createdAt, updatedAt, driveFolderId?, syncedAt? }
 Floorplan { id, projectId, name, type, width, height, localUri, driveFileId? }
 Pin { id, floorplanId, title, note, xPct, yPct, updatedAt }
 Photo { id, pinId, localUri, width, height, sizeBytes, driveFileId?, status }
 Outbox { id, kind, entityType, entityId, payload, retries, lastTriedAt }
-```
+\`\`\`
 
 Export JSON (project.json) structure & sequence: see PRD (write last). 
 
@@ -218,28 +218,28 @@ QA must include scenarios for:
 
 **Kick a story (FE)**
 
-```
+\`\`\`
 codex plan "Implement PinModal with 4-photo limit (1080p), autosave on close, state badges (pending/synced/failed)."
-```
+\`\`\`
 
 **Generate Dexie schema (FE)**
 
-```
+\`\`\`
 codex generate "Create Dexie v1 with Project, Floorplan, Pin, Photo, Outbox tables (fields per PRD)."
-```
+\`\`\`
 
 **Drive flow (GDrive)**
 
-```
+\`\`\`
 codex generate "Drive client: ensure FieldPins root, ensure project folder, upload floorplans, pins JSONs, 
 photos; write project.json last; exponential backoff."
-```
+\`\`\`
 
 **Docs**
 
-```
+\`\`\`
 codex write "docs/sync.md: Manual Sync flow with screenshots and troubleshooting."
-```
+\`\`\`
 
 ---
 

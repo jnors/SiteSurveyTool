@@ -76,7 +76,7 @@
 
 Create the following types in `types/landing.ts` and import them in components.
 
-```ts
+\`\`\`ts
 // Buttons
 export type CtaVariant = "primary" | "secondary" | "ghost";
 export interface CtaButtonProps {
@@ -150,7 +150,7 @@ export interface RoiCalculatorProps {
 // FAQ
 export interface FaqItem { q: string; a: string; }
 export interface FaqProps { items: FaqItem[]; }
-```
+\`\`\`
 
 ---
 
@@ -232,7 +232,7 @@ export interface FaqProps { items: FaqItem[]; }
 
 **JSON‑LD templates (add in `app/layout.tsx` or per page):**
 
-```json
+\`\`\`json
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -243,9 +243,9 @@ export interface FaqProps { items: FaqItem[]; }
   "publisher": { "@type": "Organization", "name": "Company Name" },
   "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "214" }
 }
-```
+\`\`\`
 
-```json
+\`\`\`json
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -253,13 +253,13 @@ export interface FaqProps { items: FaqItem[]; }
     {"@type":"Question","name":"Do I need a credit card?","acceptedAnswer":{"@type":"Answer","text":"No. The 14-day trial requires no card."}}
   ]
 }
-```
+\`\`\`
 
 ---
 
 ## 8) ROI calculator logic (`lib/roi.ts`)
 
-```ts
+\`\`\`ts
 export type RoiInput = {
   teamSize: number;
   avgHourlyCost: number;
@@ -272,7 +272,7 @@ export function calcRoi(input: RoiInput) {
   const annualSavingsEUR = weeklyHoursSaved * input.teamSize * input.avgHourlyCost * 48; // 48 working weeks
   return { weeklySavingsHours: Math.round(weeklyHoursSaved), annualSavingsEUR: Math.round(annualSavingsEUR) };
 }
-```
+\`\`\`
 
 ---
 
@@ -280,7 +280,7 @@ export function calcRoi(input: RoiInput) {
 
 - Add a simple data‑layer emitter and call it from CTA clicks, ROI events, video plays, pricing toggles.
 
-```ts
+\`\`\`ts
 type AnalyticsPayload = Record<string, unknown> & { event: string };
 
 export function track(payload: AnalyticsPayload) {
@@ -288,15 +288,15 @@ export function track(payload: AnalyticsPayload) {
   (window as any).dataLayer = (window as any).dataLayer || [];
   (window as any).dataLayer.push(payload);
 }
-```
+\`\`\`
 
 **Event examples:**
 
-```js
+\`\`\`js
 track({ event: "cta_click", location: "hero", variant: "primary", label: "start_free_trial" });
 track({ event: "roi_calculated", teamSize: 12, reductionPct: 40 });
 track({ event: "pricing_toggle", yearly: true });
-```
+\`\`\`
 
 **Experiment flags:** expose `process.env.NEXT_PUBLIC_EXP_HERO_VARIANT` and branch in `Hero`.
 
@@ -314,7 +314,7 @@ track({ event: "pricing_toggle", yearly: true });
 
 ## 11) Content seed (`content/landing.json`)
 
-```json
+\`\`\`json
 {
   "hero": {
     "headline": "Ship features 3× faster",
@@ -336,7 +336,7 @@ track({ event: "pricing_toggle", yearly: true });
     { "q": "Can I cancel anytime?", "a": "Yes. Cancel from your account with no fees." }
   ]
 }
-```
+\`\`\`
 
 ---
 

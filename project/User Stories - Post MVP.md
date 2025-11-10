@@ -42,4 +42,3 @@ Scope: Collect stories that require features beyond MVP constraints or are inten
 - PO → UX/FE: Settings (state-UX)
 - PO → CUT (scope-creep): Any Billing/Stripe work beyond a simple external link
 - Tags: `state-UX`, `scope-creep`
-

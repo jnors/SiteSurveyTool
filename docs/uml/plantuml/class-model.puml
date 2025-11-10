@@ -61,4 +61,3 @@ Project "1" --* "*" Floorplan
 Floorplan "1" --* "*" Pin
 Pin "1" --* "*" Photo
 @enduml
-

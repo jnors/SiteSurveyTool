@@ -36,4 +36,3 @@ export function DriveProof({ data }: DriveProofSectionProps) {
     </section>
   )
 }
-

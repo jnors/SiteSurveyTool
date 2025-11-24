@@ -4,13 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { db, type FloorplanRow, type ProjectRow } from '@/lib/db'
-import { deletePhotoClient, ensureProjectFolderClient, validateProjectFolderClient } from '@/lib/google'
+import { deletePhotoClient, ensureProjectFolderClient, validateProjectFolderClient, deleteProjectClient } from '@/lib/google'
 import { enqueue, enqueuePhotoDriveDelete, enqueuePhotoUpload, removePhotoOutboxEntries } from '@/lib/outbox'
 import { seedIfEmpty } from '@/lib/seed'
 import { syncProject, type ProjectSyncSummary } from '@/lib/sync'
 import type { DeletePhotoResult, Project, Pin } from '@/lib/types'
 import { mapToUIProject } from '@/lib/mappers'
 import { compressImageToJpeg } from '@/lib/utils/image'
+import { ProjectSchema, FloorplanSchema, PhotoSchema } from '@/core'
+import { MAX_PHOTO_RES, MAX_PHOTOS_PER_PIN } from '@/lib/constants'
 
 export type CreateProjectParams = {
   name: string
@@ -34,6 +36,12 @@ export function useFloorplans(projectId: string): UseFloorplansResult {
 
   const load = useCallback(async () => {
     const rows = await db.floorplans.where('projectId').equals(projectId).toArray()
+    // Validate read rows at the boundary (non-throwing)
+    rows.forEach((r) => {
+      try {
+        FloorplanSchema.parse(r)
+      } catch { }
+    })
     const ordered = rows.sort((a, b) => a.id.localeCompare(b.id))
     setFloorplans(ordered)
     setIsLoading(false)
@@ -41,11 +49,11 @@ export function useFloorplans(projectId: string): UseFloorplansResult {
 
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      await seedIfEmpty()
-      if (!mounted) return
-      await load()
-    })()
+      ; (async () => {
+        await seedIfEmpty()
+        if (!mounted) return
+        await load()
+      })()
     return () => {
       mounted = false
     }
@@ -57,14 +65,14 @@ export function useFloorplans(projectId: string): UseFloorplansResult {
       if (!projectRow) {
         throw new Error('Project not found')
       }
-      const compressed = await compressImageToJpeg(file, 1080, 0.75)
+      const compressed = await compressImageToJpeg(file, MAX_PHOTO_RES, 0.75)
       const floorplanId = generateId('floorplan')
       const fallbackName = `${projectRow.name} Floorplan ${floorplans.length + 1}`
       const name = file.name?.trim() || fallbackName
       const nowIso = new Date().toISOString()
 
       await db.transaction('rw', db.floorplans, db.projects, async () => {
-        await db.floorplans.add({
+        const floorplanDto = FloorplanSchema.parse({
           id: floorplanId,
           projectId,
           name,
@@ -73,6 +81,7 @@ export function useFloorplans(projectId: string): UseFloorplansResult {
           height: compressed.height,
           localUri: compressed.dataUrl,
         })
+        await db.floorplans.add(floorplanDto)
         await db.projects.update(projectId, { updatedAt: nowIso })
       })
 
@@ -156,20 +165,20 @@ export async function createProjectRecord({ name, file }: CreateProjectParams): 
   if (!trimmedName) {
     throw new Error('Project name is required')
   }
-  const compressed = await compressImageToJpeg(file, 1080, 0.75)
+  const compressed = await compressImageToJpeg(file, MAX_PHOTO_RES, 0.75)
   const nowIso = new Date().toISOString()
   const projectId = generateId('project')
   const floorplanId = generateId('floorplan')
 
   await db.transaction('rw', db.projects, db.floorplans, async () => {
-    await db.projects.add({
+    const projectDto = ProjectSchema.parse({
       id: projectId,
       name: trimmedName,
       createdAt: nowIso,
       updatedAt: nowIso,
       syncAnomaly: null,
     })
-    await db.floorplans.add({
+    const floorplanDto = FloorplanSchema.parse({
       id: floorplanId,
       projectId,
       name: file.name || `${trimmedName} Floorplan`,
@@ -178,6 +187,8 @@ export async function createProjectRecord({ name, file }: CreateProjectParams): 
       height: compressed.height,
       localUri: compressed.dataUrl,
     })
+    await db.projects.add(projectDto)
+    await db.floorplans.add(floorplanDto)
   })
 
   return { projectId }
@@ -195,7 +206,15 @@ async function mapProjectsToUI(): Promise<Project[]> {
   const rows = await db.projects.toArray()
   const ui: Project[] = []
   for (const project of rows) {
+    try {
+      ProjectSchema.parse(project)
+    } catch { }
     const floorplans = await db.floorplans.where('projectId').equals(project.id).toArray()
+    floorplans.forEach((fp) => {
+      try {
+        FloorplanSchema.parse(fp)
+      } catch { }
+    })
     if (!floorplans.length) continue
     const ordered = floorplans.sort((a, b) => a.id.localeCompare(b.id))
     ui.push(await mapToUIProject(project, ordered))
@@ -210,12 +229,12 @@ export function useProjects() {
 
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      await seedIfEmpty()
-      if (!mounted) return
-      setProjects(await mapProjectsToUI())
-      setIsLoading(false)
-    })()
+      ; (async () => {
+        await seedIfEmpty()
+        if (!mounted) return
+        setProjects(await mapProjectsToUI())
+        setIsLoading(false)
+      })()
     return () => {
       mounted = false
     }
@@ -386,7 +405,56 @@ export function useProjects() {
     return projectId
   }
 
-  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, relinkProjectFolder, createProject }
+  const deleteProject = async (projectId: string): Promise<void> => {
+    const projectRow = await db.projects.get(projectId)
+    if (!projectRow) return
+
+    // 1. Delete from Drive (if online)
+    if (projectRow.driveFolderId && typeof navigator !== 'undefined' && navigator.onLine) {
+      try {
+        await deleteProjectClient({ driveFolderId: projectRow.driveFolderId })
+      } catch (error) {
+        console.warn('[deleteProject] drive delete failed', error)
+        // Continue with local delete even if Drive fails
+      }
+    }
+
+    // 2. Cascade delete local data
+    await db.transaction('rw', [db.projects, db.floorplans, db.pins, db.photos, db.outbox], async () => {
+      // Find all related IDs
+      const floorplans = await db.floorplans.where('projectId').equals(projectId).toArray()
+      const floorplanIds = floorplans.map((fp) => fp.id)
+      const pins = await db.pins.where('floorplanId').anyOf(floorplanIds).toArray()
+      const pinIds = pins.map((p) => p.id)
+      const photos = await db.photos.where('pinId').anyOf(pinIds).toArray()
+      const photoIds = photos.map((p) => p.id)
+
+      // Delete Photos
+      await db.photos.bulkDelete(photoIds)
+
+      // Delete Pins
+      await db.pins.bulkDelete(pinIds)
+
+      // Delete Floorplans
+      await db.floorplans.bulkDelete(floorplanIds)
+
+      // Delete Project
+      await db.projects.delete(projectId)
+
+      // Clean up outbox
+      // Note: We might want to keep delete ops if we want to sync deletes later, 
+      // but for now we just clear related outbox items to stop syncing.
+      const outboxIds = await db.outbox
+        .where('entityId')
+        .anyOf([...photoIds, ...pinIds, projectId])
+        .primaryKeys()
+      await db.outbox.bulkDelete(outboxIds)
+    })
+
+    setProjects(await mapProjectsToUI())
+  }
+
+  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, relinkProjectFolder, createProject, deleteProject }
 }
 
 export function useProject(projectId: string, preferredFloorplanId: string | null) {
@@ -426,7 +494,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
       if (!projectRow) {
         throw new Error('Project not found')
       }
-      const compressed = await compressImageToJpeg(file, 1080, 0.75)
+      const compressed = await compressImageToJpeg(file, MAX_PHOTO_RES, 0.75)
       const floorplanId = generateId('floorplan')
       const fallbackName = `${projectRow.name} Floorplan ${(project?.floorplans.length ?? 0) + 1}`
       const name = file.name?.trim() || fallbackName
@@ -475,13 +543,13 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
   const addPhotos = useCallback(
     async (pinId: string, files: File[]) => {
       const existingCount = await db.photos.where('pinId').equals(pinId).count()
-      const remaining = Math.max(0, 4 - existingCount)
+      const remaining = Math.max(0, MAX_PHOTOS_PER_PIN - existingCount)
       const selected = Array.from(files).slice(0, remaining)
       for (const file of selected) {
         try {
-          const compressed = await compressImageToJpeg(file, 1080, 0.75)
+          const compressed = await compressImageToJpeg(file, MAX_PHOTO_RES, 0.75)
           const photoId = `${pinId}-ph-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-          await db.photos.add({
+          const photoDto = PhotoSchema.parse({
             id: photoId,
             pinId,
             localUri: compressed.dataUrl,
@@ -490,6 +558,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
             sizeBytes: compressed.sizeBytes,
             status: 'pending',
           })
+          await db.photos.add(photoDto)
           await enqueuePhotoUpload(photoId)
         } catch (error) {
           console.warn('[photos] compression failed', error)

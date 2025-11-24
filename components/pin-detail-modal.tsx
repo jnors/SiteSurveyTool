@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { DeletePhotoResult, Pin, PinPhoto } from "@/lib/types"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { getSyncStatusTextColor } from "@/lib/utils/sync-status"
-import { AlertCircle, CheckCircle2, Clock, Loader2, Trash2 } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Loader2, Trash2 } from "lucide-react"
+import { BadgeStatus } from "@/ui/ds/BadgeStatus"
 import Image from "next/image"
 
 interface PinDetailModalProps {
@@ -18,6 +19,8 @@ interface PinDetailModalProps {
   onSaveNewPin?: (pin: Pin) => void
   onAddPhotos?: (pinId: string, files: File[]) => Promise<void> | void
   onDeletePhoto?: (photoId: string) => Promise<DeletePhotoResult | void> | DeletePhotoResult | void
+  uploadDisabled?: boolean
+  uploadDisabledReason?: string
 }
 
 export function PinDetailModal({
@@ -28,6 +31,8 @@ export function PinDetailModal({
   onSaveNewPin,
   onAddPhotos,
   onDeletePhoto,
+  uploadDisabled = false,
+  uploadDisabledReason,
 }: PinDetailModalProps) {
   const [title, setTitle] = useState("")
   const [note, setNote] = useState("")
@@ -39,6 +44,7 @@ export function PinDetailModal({
   const [photoToDelete, setPhotoToDelete] = useState<PinPhoto | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteNotice, setDeleteNotice] = useState<{ text: string; tone: "warning" | "error" } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (pin) {
@@ -63,19 +69,6 @@ export function PinDetailModal({
   }, [pin?.pinId])
 
   if (!pin) return null
-
-  const getStatusIcon = () => {
-    switch (pin.syncStatus) {
-      case "synced":
-        return <CheckCircle2 className="h-4 w-4" />
-      case "pending":
-        return <Clock className="h-4 w-4" />
-      case "error":
-        return <AlertCircle className="h-4 w-4" />
-      case "syncing":
-        return <Loader2 className="h-4 w-4 animate-spin" />
-    }
-  }
 
   const getStatusText = () => {
     switch (pin.syncStatus) {
@@ -123,7 +116,7 @@ export function PinDetailModal({
   }
 
   const handleAddPhotos = async (files: FileList | null) => {
-    if (!files || !onAddPhotos || !pin || isNewPin) return
+    if (!files || !onAddPhotos || !pin || isNewPin || uploadDisabled) return
     setIsUploading(true)
     try {
       await onAddPhotos(pin.pinId, Array.from(files))
@@ -131,6 +124,13 @@ export function PinDetailModal({
       setIsUploading(false)
     }
   }
+
+  const photosActionDisabled = uploadDisabled || isNewPin
+  const photosDisabledReason = photosActionDisabled
+    ? isNewPin
+      ? "Save pin before attaching photos"
+      : uploadDisabledReason ?? "Offline - reconnect to attach photos"
+    : undefined
 
   const handleConfirmDeletePhoto = async () => {
     if (!photoToDelete || !onDeletePhoto) {
@@ -164,7 +164,7 @@ export function PinDetailModal({
         }
       }
       setDeleteNotice(notice)
-    } catch (error: any) {
+    } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Drive deletion failed"
       setDeleteNotice({
         text: `Drive deletion request failed: ${message}`,
@@ -194,12 +194,10 @@ export function PinDetailModal({
 
         <div className="space-y-6">
           {/* Sync Status Badge */}
-          <div
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${getSyncStatusTextColor(pin.syncStatus)}`}
-          >
-            {getStatusIcon()}
-            <span className="font-medium">{getStatusText()}</span>
-          </div>
+          <BadgeStatus
+            status={pin.syncStatus === "syncing" ? "syncing" : pin.syncStatus}
+            label={getStatusText() ?? undefined}
+          />
 
           {deleteNotice && (
             <div
@@ -273,6 +271,15 @@ export function PinDetailModal({
                         </button>
                       )}
                     </>
+                  ) : photosActionDisabled ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex h-full cursor-not-allowed items-center justify-center text-foreground-muted text-sm opacity-60">
+                          Add photo
+                        </span>
+                      </TooltipTrigger>
+                      {photosDisabledReason ? <TooltipContent>{photosDisabledReason}</TooltipContent> : null}
+                    </Tooltip>
                   ) : (
                     <label
                       htmlFor={fileInputId}
@@ -294,15 +301,27 @@ export function PinDetailModal({
                   capture="environment"
                   className="hidden"
                   onChange={(e) => handleAddPhotos(e.target.files)}
+                  ref={fileInputRef}
+                  disabled={uploadDisabled}
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById(fileInputId)?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
-                  className="border-border text-foreground hover:bg-background-elevated"
-                  disabled={isUploading}
-                >
-                  {isUploading ? "Processing..." : "Attach Photos"}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (photosActionDisabled) return
+                          fileInputRef.current?.click()
+                        }}
+                        className="border-border text-foreground hover:bg-background-elevated"
+                        disabled={isUploading || photosActionDisabled}
+                      >
+                        {isUploading ? "Processing..." : "Attach Photos"}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {photosDisabledReason ? <TooltipContent>{photosDisabledReason}</TooltipContent> : null}
+                </Tooltip>
                 <span className="text-foreground-muted text-xs">Max 4 photos, resized to 1080p JPEG</span>
               </div>
             )}
@@ -409,3 +428,5 @@ export function PinDetailModal({
     </Dialog>
   )
 }
+
+

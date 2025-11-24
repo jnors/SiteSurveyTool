@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
-import { requireServerAccessToken } from '@/lib/google-server'
+import { requireServerAccessToken } from '@/sync/drive'
+import { DRIVE_ROOT_NAME } from '@/core'
 
 const DRIVE_BASE = 'https://www.googleapis.com/drive/v3'
 
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
   const created: EnsureResult['created'] = {}
 
   // 1) Ensure root FieldPins under My Drive
-  const ROOT_NAME = 'FieldPins'
+  const ROOT_NAME = DRIVE_ROOT_NAME
   const ROOT_PARENT = 'root'
   let root = await findFolderByName(token, ROOT_NAME, ROOT_PARENT)
   if (!root) {
@@ -136,3 +137,4 @@ export async function POST(req: Request) {
     anomaly,
   } satisfies EnsureResult)
 }
+

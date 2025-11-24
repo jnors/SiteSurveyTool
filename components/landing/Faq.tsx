@@ -20,7 +20,7 @@ export function Faq({ data }: FaqSectionProps) {
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-16 text-center">
           <h2 className="text-balance text-3xl font-bold text-foreground sm:text-4xl">{data.title}</h2>
-          <p className="mt-4 text-lg text-foreground-muted">Everything you need to know about FieldPin</p>
+          <p className="mt-4 text-lg text-foreground-muted">Everything you need to know about FieldPins</p>
         </div>
 
         <div className="space-y-4">

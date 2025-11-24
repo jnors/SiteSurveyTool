@@ -1,0 +1,33 @@
+export { OfflineBanner, SyncBar } from '@/ui/blocks'
+// Re-export UI components and hooks to keep app/* importing from /ui only
+export { AuthGate } from '@/components/auth-gate'
+export { NavBar } from '@/components/nav-bar'
+export { ProjectCreateDialog } from '@/components/project-create-dialog'
+export { ProjectCard } from '@/components/project-card'
+export { ToastNotification } from '@/components/toast-notification'
+export { ServiceWorkerRegistrar } from '@/components/sw-registrar'
+// UI primitives
+export { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+export { Input } from '@/components/ui/input'
+export { Button } from '@/ui/ds/Button'
+export { BadgeStatus } from '@/ui/ds/BadgeStatus'
+export { Card } from '@/ui/ds/Card'
+export { Surface } from '@/ui/ds/Surface'
+export { IconButton } from '@/ui/ds/IconButton'
+export { Toast } from '@/ui/ds/Toast'
+// Landing components
+export { FinalCta } from '@/components/landing/FinalCta'
+export { Faq } from '@/components/landing/Faq'
+export { Hero } from '@/components/landing/Hero'
+export { HowItWorks } from '@/components/landing/HowItWorks'
+export { Security } from '@/components/landing/Security'
+export { Pillars } from '@/components/landing/Pillars'
+export { DriveProof } from '@/components/landing/DriveProof'
+export { SpecsGrid } from '@/components/landing/SpecsGrid'
+export { Screens } from '@/components/landing/Screens'
+// Hooks (UI)
+export { useAuth } from '@/lib/useAuth'
+export { useOnline } from '@/lib/useOnline'
+export { useProjects } from '@/lib/hooks/use-projects'
+// Icons
+export * from './icons'

@@ -10,14 +10,11 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { AddFloorplanButton } from "@/components/add-floorplan-button"
 import { AddPinButton } from "@/components/add-pin-button"
-import { AuthGate } from "@/components/auth-gate"
-import { NavBar } from "@/components/nav-bar"
-import { OfflineBanner } from "@/components/offline-banner"
+import { AuthGate, NavBar, OfflineBanner, SyncBar } from "@/ui"
 import { FloorplanSwitcher } from "@/components/floorplan-switcher"
 import { PinDetailModal } from "@/components/pin-detail-modal"
 import { PinMarker } from "@/components/pin-marker"
 import { PinSidebar } from "@/components/pin-sidebar"
-import { SyncBanner } from "@/components/sync-banner"
 import { ToastNotification } from "@/components/toast-notification"
 import { Button } from "@/components/ui/button"
 import { useActiveFloorplan, useProject } from "@/lib/hooks/use-projects"
@@ -123,6 +120,21 @@ export default function ProjectDetailPage() {
     })
   }, [project])
 
+  const queueStats = useMemo(() => {
+    if (!project) return { pending: 0, errors: 0 }
+    let pending = 0
+    let errors = 0
+    if (project.status === "pending" || project.status === "syncing") pending += 1
+    if (project.status === "error") errors += 1
+    for (const pin of project.pins) {
+      if (pin.syncStatus === "pending" || pin.syncStatus === "syncing") pending += 1
+      if (pin.syncStatus === "error") errors += 1
+      pending += pin.photos.filter((photo) => photo.status === "pending" || photo.status === "syncing").length
+      errors += pin.photos.filter((photo) => photo.status === "error").length
+    }
+    return { pending, errors }
+  }, [project])
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -143,7 +155,7 @@ export default function ProjectDetailPage() {
       </div>
     )
   }
-
+  const projectLastSyncedIso = project.lastSynced
   const hasSyncError = project.status === "error"
   const syncBlocked = hasSyncError && isOnline
   const missingFloorplan = !activeFloorplan
@@ -159,18 +171,22 @@ export default function ProjectDetailPage() {
     : !isOnline
       ? "Offline - sync resumes when you reconnect"
       : undefined
-  const actionDisabled = Boolean(syncDisabledReason)
+
+  const isPro = auth.subscriptionStatus === 'active'
 
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
       <OfflineBanner />
       <AuthGate status={auth.status} isAuthenticated={auth.isAuthenticated}>
-        <SyncBanner
+        <SyncBar
           status={project.status}
-          onSync={syncAll}
-          actionDisabled={actionDisabled}
+          pendingCount={queueStats.pending}
+          errorCount={queueStats.errors}
+          lastSyncedIso={projectLastSyncedIso ?? undefined}
+          onSync={async () => { await syncAll() }}
           disabledReason={syncDisabledReason}
+          isSyncing={project.status === "syncing"}
         />
 
         <main className="mx-auto max-w-7xl px-6 py-6">
@@ -193,7 +209,17 @@ export default function ProjectDetailPage() {
                   onSelect={setActiveFloorplanId}
                   disabled={isLoading}
                 />
-                <AddFloorplanButton onAdd={handleAddFloorplan} />
+                <AddFloorplanButton
+                  onAdd={handleAddFloorplan}
+                  disabled={!isOnline || (!isPro && (project?.floorplans.length ?? 0) >= 1)}
+                  disabledReason={
+                    !isOnline
+                      ? "Offline - reconnect to add floorplans"
+                      : !isPro && (project?.floorplans.length ?? 0) >= 1
+                        ? "Free plan limited to 1 floorplan. Upgrade to add more."
+                        : undefined
+                  }
+                />
               </div>
               <div className="overflow-hidden rounded-lg border border-border bg-background-card">
                 {isAddingPin && (
@@ -279,6 +305,8 @@ export default function ProjectDetailPage() {
             await addPhotos(pinId, files)
           }}
           onDeletePhoto={deletePhoto}
+          uploadDisabled={!isOnline}
+          uploadDisabledReason="Offline - reconnect to attach photos"
         />
       </AuthGate>
     </div>

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card'
 import { useAuth } from '@/lib/useAuth'
 import { useOnline } from '@/lib/useOnline'
+import { useHasMounted } from '@/lib/useHasMounted'
 import { cn } from '@/lib/utils'
 
 type SignInCardProps = {
@@ -31,8 +32,10 @@ export function SignInCard({
   const descriptionId = useId()
   const { status, signIn } = useAuth('/projects')
   const isOnline = useOnline()
+  const hasMounted = useHasMounted()
+  const effectiveOnline = hasMounted ? isOnline : true
   const isLoading = status === 'loading'
-  const isDisabled = isLoading || !isOnline
+  const isDisabled = isLoading || !effectiveOnline
 
   const handleSignIn = () => {
     if (isDisabled) return
@@ -40,7 +43,7 @@ export function SignInCard({
     void signIn()
   }
 
-  const tooltip = !isOnline ? offlineTooltip : undefined
+  const tooltip = !effectiveOnline ? offlineTooltip : undefined
 
   return (
     <Card className={cn('w-full max-w-md border-primary/30 bg-background-elevated/80 backdrop-blur', className)}>
@@ -71,17 +74,17 @@ export function SignInCard({
         </p>
         <div className="space-y-2">
           <Button
-            aria-describedby={!isOnline ? descriptionId : undefined}
+            aria-describedby={!effectiveOnline && hasMounted ? descriptionId : undefined}
             className="mt-4 w-full gap-2 bg-primary hover:bg-primary/80"
             size="lg"
             onClick={handleSignIn}
             disabled={isDisabled}
-            title={tooltip}
+            title={hasMounted ? tooltip : undefined}
           >
             <LogIn className="h-4 w-4" />
             {ctaLabel}
           </Button>
-          {!isOnline && (
+          {hasMounted && !effectiveOnline && (
             <p id={descriptionId} className="text-xs text-[var(--color-accent-yellow)]">
               {offlineTooltip}
             </p>

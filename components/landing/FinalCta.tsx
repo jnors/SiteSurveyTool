@@ -15,7 +15,7 @@ type FinalCtaSectionProps = {
 export function FinalCta({ data }: FinalCtaSectionProps) {
   const { status, signIn } = useAuth('/projects')
   const isOnline = useOnline()
-  const isDisabled = status === 'loading' || !isOnline
+  const isDisabled = !isOnline
 
   const handlePrimaryClick = () => {
     if (isDisabled) return
@@ -42,16 +42,46 @@ export function FinalCta({ data }: FinalCtaSectionProps) {
   }
 
   return (
-    <section id="cta" className="border-t border-border/40 bg-[rgba(138,180,248,0.08)] px-6 py-16 sm:px-8">
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-6 text-center">
-        <h2 className="text-3xl font-semibold text-foreground">{data.headline}</h2>
+    <section id="cta" className="relative overflow-hidden border-t border-border/40 px-6 py-24 sm:px-8">
+      {/* Dramatic layered background */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-card to-background" />
+
+        {/* Geometric grid */}
+        <div className="absolute inset-0 bg-pattern-grid opacity-20" />
+
+        {/* Amber glow top-right */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 80% 20%, oklch(0.72 0.15 65 / 0.15), transparent 50%)'
+          }}
+        />
+
+        {/* Cyan glow bottom-left */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 20% 80%, oklch(0.72 0.14 195 / 0.12), transparent 50%)'
+          }}
+        />
+      </div>
+
+      <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center gap-8 text-center">
+        <h2 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          {data.headline}
+        </h2>
         {data.subheadline ? (
-          <p className="max-w-2xl text-base text-foreground-muted">{data.subheadline}</p>
+          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            {data.subheadline}
+          </p>
         ) : null}
+
         <div className="flex flex-col items-center gap-4 sm:flex-row">
           <Button
             size="lg"
-            className="min-w-[200px] bg-primary text-primary-foreground hover:bg-primary/80"
+            className="glow-amber min-w-[200px] border-2 border-primary/20 bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-all hover:border-primary/40 hover:bg-primary/90"
             onClick={handlePrimaryClick}
             disabled={isDisabled}
             title={!isOnline ? 'Sign-in requires connectivity. Reconnect to continue.' : undefined}
@@ -63,18 +93,25 @@ export function FinalCta({ data }: FinalCtaSectionProps) {
               asChild
               variant="ghost"
               size="lg"
-              className="text-primary hover:text-primary/80"
+              className="glow-cyan border-2 border-secondary/30 bg-secondary/10 px-8 text-base font-semibold text-foreground transition-all hover:border-secondary/50 hover:bg-secondary/20"
               onClick={handleSecondaryClick}
             >
-              <Link href={data.secondaryCta.href ?? '#offline'}>{data.secondaryCta.label}</Link>
+              <Link href={data.secondaryCta.href ?? '#offline'}>
+                {data.secondaryCta.label}
+              </Link>
             </Button>
           ) : null}
         </div>
+
         {!isOnline ? (
-          <p className="text-xs text-[var(--color-accent-yellow)]">Reconnect to sign in and unlock offline capture.</p>
+          <p className="text-sm font-medium text-primary">
+            Reconnect to sign in and unlock offline capture.
+          </p>
         ) : null}
-        <p className="text-xs text-foreground-subtle">
-          Manual sync only. FieldPin writes to folders you own under <span className="font-medium text-primary">/My Drive/FieldPins/</span>.
+
+        <p className="text-xs text-muted-foreground">
+          Manual sync only. FieldPins writes to folders you own under{' '}
+          <span className="font-mono font-medium text-primary">/My Drive/FieldPins/</span>.
         </p>
       </div>
     </section>

@@ -12,19 +12,19 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans', weight: ['400
 const landing = landingContent as LandingContent
 
 export const metadata: Metadata = {
-  title: 'Offline Site Surveys | FieldPin',
+  title: 'Offline Site Surveys | FieldPins',
   description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
   openGraph: {
-    title: 'Offline Site Surveys | FieldPin',
+    title: 'Offline Site Surveys | FieldPins',
     description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Offline Site Surveys | FieldPin',
+    title: 'Offline Site Surveys | FieldPins',
     description: 'Capture floorplans, pins, notes, and photos offline after sign-in. Manual sync keeps everything under your Google Drive.',
   },
-    generator: 'v0.app'
+  generator: 'v0.app'
 }
 
 export default function RootLayout({
@@ -35,18 +35,18 @@ export default function RootLayout({
   const softwareJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'FieldPin',
+    name: 'FieldPins',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
-    publisher: { '@type': 'Organization', name: 'FieldPin' },
+    publisher: { '@type': 'Organization', name: 'FieldPins' },
     aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '214' },
   }
 
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'FieldPin',
+    name: 'FieldPins',
     url: 'https://FieldPins.app',
     sameAs: [],
     contactPoint: [{ '@type': 'ContactPoint', email: 'hello@sitetrace.app', contactType: 'customer support' }],

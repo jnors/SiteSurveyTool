@@ -1,14 +1,27 @@
 import { db, type FloorplanRow, type PhotoRow, type PinRow, type ProjectRow } from './db'
-import { fakeProjects } from './fake-data'
+import { fakeProjects, sampleProject } from './fake-data'
 
 // Seed the Dexie DB from fake data if empty
+type SeedMode = 'none' | 'sample' | 'full'
+
+function getSeedMode(): SeedMode {
+  const raw = (process.env.NEXT_PUBLIC_SEED_MODE || '').toLowerCase().trim()
+  if (raw === 'sample') return 'sample'
+  if (raw === 'full') return 'full'
+  return 'none'
+}
+
 export async function seedIfEmpty() {
   const count = await db.projects.count()
   if (count > 0) return
 
+  const mode = getSeedMode()
+  if (mode === 'none') return
+
+  const source = mode === 'sample' ? [sampleProject] : fakeProjects
   const nowIso = new Date().toISOString()
 
-  for (const p of fakeProjects) {
+  for (const p of source) {
     const project: ProjectRow = {
       id: p.projectId,
       name: p.name,

@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CheckCircle2, X } from "lucide-react"
+
+import { Toast } from "@/ui/ds/Toast"
 
 interface ToastNotificationProps {
   message: string
@@ -28,23 +29,18 @@ export function ToastNotification({ message, show, onClose, duration = 3000 }: T
 
   return (
     <div
-      className={`
-        fixed top-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg border border-green-600/50 bg-background-card px-4 py-3 shadow-xl transition-all duration-150
-        ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"}
-      `}
+      className={`fixed top-20 left-1/2 z-50 flex -translate-x-1/2 transition-all duration-150 ${
+        isVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
+      }`}
     >
-      <CheckCircle2 className="h-5 w-5 text-green-600" />
-      <p className="text-foreground text-sm">{message}</p>
-      <button
-        onClick={() => {
+      <Toast
+        tone="success"
+        description={message}
+        onClose={() => {
           setIsVisible(false)
           setTimeout(onClose, 150)
         }}
-        className="text-foreground-muted transition-colors hover:text-foreground"
-        aria-label="Close notification"
-      >
-        <X className="h-4 w-4" />
-      </button>
+      />
     </div>
   )
 }

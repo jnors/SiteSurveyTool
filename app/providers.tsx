@@ -1,14 +1,14 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { SessionProvider } from 'next-auth/react'
-import { ServiceWorkerRegistrar } from '@/components/sw-registrar'
+import SupabaseProvider from '@/components/supabase-provider'
+import { ServiceWorkerRegistrar } from '@/ui'
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <SessionProvider refetchOnWindowFocus={false} refetchWhenOffline={false}>
+    <SupabaseProvider>
       {children}
       <ServiceWorkerRegistrar />
-    </SessionProvider>
+    </SupabaseProvider>
   )
 }

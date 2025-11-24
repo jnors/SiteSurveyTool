@@ -1,6 +1,4 @@
-import { getServerSession } from "next-auth/next"
-
-import { authOptions } from "@/lib/auth"
+import { createClient } from "@/lib/supabase/server"
 
 const DRIVE_BASE = "https://www.googleapis.com/drive/v3"
 const DRIVE_UPLOAD_BASE = "https://www.googleapis.com/upload/drive/v3"
@@ -12,15 +10,17 @@ export type GoogleAuthTokens = {
 }
 
 export async function getServerAuthTokens(): Promise<GoogleAuthTokens | null> {
-  const session = await getServerSession(authOptions)
-  if (!session?.accessToken) {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session?.provider_token) {
     return null
   }
 
   return {
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    expiresAt: session.expiresAt,
+    accessToken: session.provider_token,
+    refreshToken: session.provider_refresh_token ?? undefined,
+    expiresAt: session.expires_at,
   }
 }
 
@@ -31,6 +31,14 @@ export async function requireServerAccessToken(): Promise<string> {
   }
 
   return tokens.accessToken
+}
+
+export async function getDriveClient() {
+  const accessToken = await requireServerAccessToken()
+  const { google } = await import('googleapis')
+  const auth = new google.auth.OAuth2()
+  auth.setCredentials({ access_token: accessToken })
+  return google.drive({ version: 'v3', auth })
 }
 
 type DriveFetchInit = RequestInit & { query?: Record<string, string> }
@@ -118,7 +126,7 @@ function buildMultipartBody(metadata: Record<string, any>, data: Buffer, mimeTyp
   const boundary = `BOUNDARY_${Date.now().toString(36)}`
   const preamble = Buffer.from(
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
-      `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`,
+    `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`,
     "utf-8",
   )
   const closing = Buffer.from(`\r\n--${boundary}--`, "utf-8")

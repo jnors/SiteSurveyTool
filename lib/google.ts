@@ -46,7 +46,7 @@ export async function validateProjectFolderClient(params: {
     const message = typeof data?.error === 'string' ? data.error : 'Unable to validate Drive folder.'
     const error = new Error(message)
     if (data?.code) {
-      ;(error as any).code = data.code
+      ; (error as any).code = data.code
     }
     throw error
   }
@@ -123,6 +123,19 @@ export async function deletePhotoClient(params: { driveFileId: string }): Promis
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`deletePhoto failed: ${res.status} ${text}`)
+  }
+  return (await res.json()) as { deleted: boolean }
+}
+
+export async function deleteProjectClient(params: { driveFolderId: string }): Promise<{ deleted: boolean }> {
+  const res = await fetch('/api/drive/delete/project', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`deleteProject failed: ${res.status} ${text}`)
   }
   return (await res.json()) as { deleted: boolean }
 }

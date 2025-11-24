@@ -4,7 +4,7 @@ import {
   findFileInFolder,
   requireServerAccessToken,
   uploadFileMultipart,
-} from '@/lib/google-server'
+} from '@/sync/drive'
 
 type WriteProjectJsonBody = {
   projectFolderId: string
@@ -47,3 +47,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+

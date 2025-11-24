@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { deleteDriveFile, requireServerAccessToken } from '@/lib/google-server'
+import { deleteDriveFile, requireServerAccessToken } from '@/sync/drive'
 
 type DeletePhotoBody = {
   driveFileId: string
@@ -34,3 +34,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+

@@ -177,3 +177,35 @@ export const fakeProjects: Project[] = [
     ],
   },
 ]
+
+
+export const sampleProject: Project = {
+  projectId: 'sample-project',
+  name: 'Sample Project',
+  lastSynced: '2025-01-01T00:00:00Z',
+  status: 'pending',
+  activeFloorplanId: 'fp-sample-1',
+  syncAnomaly: null,
+  floorplans: [
+    {
+      floorplanId: 'fp-sample-1',
+      name: 'Ground Floor',
+      localUri: '/architectural-floorplan-blueprint.jpg',
+      width: 0,
+      height: 0,
+      pinCount: 1,
+    },
+  ],
+  pins: [
+    {
+      pinId: 'pin-sample-1',
+      xPct: 50,
+      yPct: 50,
+      title: 'Example Pin',
+      note: 'Add notes and up to 4 photos.',
+      photos: [seedPhoto('pin-sample-1', 1, '/placeholder.svg?height=400&width=400', 'pending')],
+      syncStatus: 'pending',
+    },
+  ],
+}
+

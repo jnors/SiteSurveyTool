@@ -7,7 +7,7 @@ import {
   parseDataUrl,
   requireServerAccessToken,
   uploadFileMultipart,
-} from '@/lib/google-server'
+} from '@/sync/drive'
 
 type UploadFloorplanBody = {
   projectFolderId: string
@@ -56,3 +56,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+

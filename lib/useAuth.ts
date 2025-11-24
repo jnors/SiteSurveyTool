@@ -39,6 +39,17 @@ export function useAuth(callbackUrl: string = '/') {
       console.log('✅ [useAuth] supabase.auth.signOut() completed')
     } catch (error) {
       console.error('❌ [useAuth] Error signing out:', error)
+      // Force clear local storage if signOut fails/times out
+      console.log('🧹 [useAuth] Force clearing local storage tokens...')
+      const keyToRemove = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('sb-') && key?.endsWith('-auth-token')) {
+          keyToRemove.push(key)
+        }
+      }
+      keyToRemove.forEach(k => localStorage.removeItem(k))
+      console.log('✅ [useAuth] Local storage cleared')
     } finally {
       console.log('🔄 [useAuth] Redirecting to:', callbackUrl ?? '/')
       window.location.href = callbackUrl ?? '/'

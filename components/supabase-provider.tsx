@@ -41,30 +41,18 @@ export default function SupabaseProvider({
 
     useEffect(() => {
         // Fetch initial session and subscription status on mount
+        // Manual getSession removed to avoid race condition with onAuthStateChange
+        // which fires INITIAL_SESSION automatically.
+        /*
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session)
-            setUser(session?.user ?? null)
-
-            if (session?.user) {
-                supabase
-                    .from('profiles')
-                    .select('subscription_status')
-                    .eq('id', session.user.id)
-                    .single()
-                    .then(({ data, error }) => {
-                        if (error) {
-                            console.error('❌ [SupabaseProvider] Error fetching initial subscription status:', error)
-                        } else {
-                            console.log('🔍 [SupabaseProvider] Initial subscription status:', data?.subscription_status)
-                        }
-                        setSubscriptionStatus(data?.subscription_status ?? null)
-                    })
-            }
+            // ...
         })
+        */
 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('🔔 [SupabaseProvider] Auth event:', event)
             if (session?.access_token !== session?.access_token) {
                 router.refresh()
             }

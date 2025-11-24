@@ -51,8 +51,12 @@ export default function SupabaseProvider({
                     .select('subscription_status')
                     .eq('id', session.user.id)
                     .single()
-                    .then(({ data }) => {
-                        console.log('🔍 [SupabaseProvider] Initial subscription status:', data?.subscription_status)
+                    .then(({ data, error }) => {
+                        if (error) {
+                            console.error('❌ [SupabaseProvider] Error fetching initial subscription status:', error)
+                        } else {
+                            console.log('🔍 [SupabaseProvider] Initial subscription status:', data?.subscription_status)
+                        }
                         setSubscriptionStatus(data?.subscription_status ?? null)
                     })
             }
@@ -68,12 +72,17 @@ export default function SupabaseProvider({
             setUser(session?.user ?? null)
 
             if (session?.user) {
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from('profiles')
                     .select('subscription_status')
                     .eq('id', session.user.id)
                     .single()
-                console.log('🔍 [SupabaseProvider] Loaded subscription status:', data?.subscription_status)
+
+                if (error) {
+                    console.error('❌ [SupabaseProvider] Error loading subscription status:', error)
+                } else {
+                    console.log('🔍 [SupabaseProvider] Loaded subscription status:', data?.subscription_status)
+                }
                 setSubscriptionStatus(data?.subscription_status ?? null)
             } else {
                 setSubscriptionStatus(null)

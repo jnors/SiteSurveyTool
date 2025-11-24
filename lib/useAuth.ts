@@ -28,11 +28,19 @@ export function useAuth(callbackUrl: string = '/') {
   )
 
   const handleSignOut = useCallback(async (callbackUrl?: string) => {
+    console.log('🔄 [useAuth] handleSignOut called')
     try {
-      await supabase.auth.signOut()
+      console.log('🔄 [useAuth] Calling supabase.auth.signOut()...')
+      // Race between signOut and 2s timeout to prevent hanging
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Sign out timed out')), 2000))
+      ])
+      console.log('✅ [useAuth] supabase.auth.signOut() completed')
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('❌ [useAuth] Error signing out:', error)
     } finally {
+      console.log('🔄 [useAuth] Redirecting to:', callbackUrl ?? '/')
       window.location.href = callbackUrl ?? '/'
     }
   }, [supabase])

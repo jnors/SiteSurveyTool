@@ -23,7 +23,7 @@ export function NavBar() {
   const isPro = subscriptionStatus === 'active'
 
   return (
-    <nav className="border-b border-border bg-background-elevated">
+    <nav className="sticky top-0 z-40 border-b border-border bg-background-elevated">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href="/projects" className="flex items-center gap-3 transition-opacity hover:opacity-80">
           <Image src="/images/favicon.svg" alt="FieldPins logo" width={36} height={36} className="h-9 w-9" />
@@ -52,8 +52,13 @@ export function NavBar() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-foreground-muted hover:text-foreground"
-                onClick={handleSignOut}
+                className="cursor-pointer gap-2 text-foreground-muted hover:text-foreground"
+                style={{ pointerEvents: 'auto' }}
+                onClick={(e) => {
+                  console.log('Sign out clicked')
+                  e.preventDefault()
+                  handleSignOut()
+                }}
               >
                 <LogOut className="h-4 w-4" />
                 Sign out

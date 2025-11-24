@@ -71,7 +71,7 @@ export function PricingModal() {
                     {/* Price Display */}
                     <div className="text-center">
                         <div className="text-4xl font-bold">
-                            {isYearly ? '$100' : '$10'}
+                            {isYearly ? '€100' : '€10'}
                             <span className="text-lg text-muted-foreground font-normal">/{isYearly ? 'yr' : 'mo'}</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-2">Cancel anytime.</p>

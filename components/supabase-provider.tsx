@@ -40,6 +40,24 @@ export default function SupabaseProvider({
     }
 
     useEffect(() => {
+        // Fetch initial session and subscription status on mount
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session)
+            setUser(session?.user ?? null)
+
+            if (session?.user) {
+                supabase
+                    .from('profiles')
+                    .select('subscription_status')
+                    .eq('id', session.user.id)
+                    .single()
+                    .then(({ data }) => {
+                        console.log('🔍 [SupabaseProvider] Initial subscription status:', data?.subscription_status)
+                        setSubscriptionStatus(data?.subscription_status ?? null)
+                    })
+            }
+        })
+
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {

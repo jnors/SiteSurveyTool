@@ -51,6 +51,7 @@ export default function ProjectDetailPage() {
   const [showPinToast, setShowPinToast] = useState(false)
   const [showFloorplanToast, setShowFloorplanToast] = useState(false)
   const [syncProgress, setSyncProgress] = useState<string | undefined>(undefined)
+  const [isSyncing, setIsSyncing] = useState(false)
   const floorplanRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -181,17 +182,22 @@ export default function ProjectDetailPage() {
       <OfflineBanner />
       <AuthGate status={auth.status} isAuthenticated={auth.isAuthenticated}>
         <SyncBar
-          status={project.status}
+          status={isSyncing ? 'syncing' : project.status}
           pendingCount={queueStats.pending}
           errorCount={queueStats.errors}
           lastSyncedIso={projectLastSyncedIso ?? undefined}
           onSync={async () => {
+            setIsSyncing(true)
             setSyncProgress('Starting sync...')
-            await syncAll((message) => setSyncProgress(message))
-            setSyncProgress(undefined)
+            try {
+              await syncAll((message) => setSyncProgress(message))
+            } finally {
+              setSyncProgress(undefined)
+              setIsSyncing(false)
+            }
           }}
           disabledReason={syncDisabledReason}
-          isSyncing={project.status === "syncing"}
+          isSyncing={isSyncing}
           syncProgress={syncProgress}
         />
 

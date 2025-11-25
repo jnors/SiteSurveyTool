@@ -68,5 +68,6 @@ export function useAuth(callbackUrl: string = '/') {
     signIn: handleSignIn,
     signOut: handleSignOut,
     subscriptionStatus: subscriptionStatus,
+    refreshSubscriptionStatus: useSupabase().refreshSubscriptionStatus,
   }
 }

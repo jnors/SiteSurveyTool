@@ -28,42 +28,43 @@ export default function SupabaseProvider({
 
     const refreshSubscriptionStatus = async () => {
         console.log('🔄 [SupabaseProvider] refreshSubscriptionStatus called')
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        // Use getSession instead of getUser to avoid network hangs
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-        if (userError) {
-            console.error('❌ [SupabaseProvider] Error getting user:', userError)
+        if (sessionError) {
+            console.error('❌ [SupabaseProvider] Error getting session:', sessionError)
             return
         }
 
-        if (user) {
-            console.log('👤 [SupabaseProvider] User found:', user.id)
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('subscription_status')
-                .eq('id', user.id)
-                .single()
+        if (session?.user) {
+            console.log('👤 [SupabaseProvider] User found:', session.user.id)
 
-            if (error) {
-                console.error('❌ [SupabaseProvider] Error fetching subscription status:', error)
-            } else {
-                console.log('🔍 [SupabaseProvider] Refreshed subscription status:', data?.subscription_status)
+            try {
+                // Race condition to prevent hang
+                const { data, error } = await Promise.race([
+                    supabase
+                        .from('profiles')
+                        .select('subscription_status')
+                        .eq('id', session.user.id)
+                        .single(),
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 5000))
+                ])
+
+                if (error) {
+                    console.error('❌ [SupabaseProvider] Error fetching subscription status:', error)
+                } else {
+                    console.log('🔍 [SupabaseProvider] Refreshed subscription status:', data?.subscription_status)
+                }
+                setSubscriptionStatus(data?.subscription_status ?? null)
+            } catch (err) {
+                console.error('❌ [SupabaseProvider] Profile fetch timed out or failed:', err)
             }
-            setSubscriptionStatus(data?.subscription_status ?? null)
         } else {
-            console.warn('⚠️ [SupabaseProvider] No user found in getUser()')
+            console.warn('⚠️ [SupabaseProvider] No user found in getSession()')
         }
     }
 
     useEffect(() => {
-        // Fetch initial session and subscription status on mount
-        // Manual getSession removed to avoid race condition with onAuthStateChange
-        // which fires INITIAL_SESSION automatically.
-        /*
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            // ...
-        })
-        */
-
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -75,18 +76,26 @@ export default function SupabaseProvider({
             setUser(session?.user ?? null)
 
             if (session?.user) {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('subscription_status')
-                    .eq('id', session.user.id)
-                    .single()
+                try {
+                    const { data, error } = await Promise.race([
+                        supabase
+                            .from('profiles')
+                            .select('subscription_status')
+                            .eq('id', session.user.id)
+                            .single(),
+                        new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 5000))
+                    ])
 
-                if (error) {
-                    console.error('❌ [SupabaseProvider] Error loading subscription status:', error)
-                } else {
-                    console.log('🔍 [SupabaseProvider] Loaded subscription status:', data?.subscription_status)
+                    if (error) {
+                        console.error('❌ [SupabaseProvider] Error loading subscription status:', error)
+                    } else {
+                        console.log('🔍 [SupabaseProvider] Loaded subscription status:', data?.subscription_status)
+                    }
+                    setSubscriptionStatus(data?.subscription_status ?? null)
+                } catch (err) {
+                    console.error('❌ [SupabaseProvider] Profile fetch timed out:', err)
+                    setSubscriptionStatus(null)
                 }
-                setSubscriptionStatus(data?.subscription_status ?? null)
             } else {
                 setSubscriptionStatus(null)
             }

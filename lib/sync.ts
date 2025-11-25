@@ -309,25 +309,25 @@ export async function syncProject(
   }
 
   let floorplanUploaded = false
-  if (activeFloorplan) {
+  for (const floorplan of allFloorplans) {
     try {
-      if (!activeFloorplan.driveFileId || activeFloorplan.localUri.startsWith('data:')) {
-        options.onProgress?.('Syncing floorplan...')
-        const dataUrl = await ensureDataUrl(activeFloorplan.localUri)
-        console.log('[sync] uploading floorplan', projectId, activeFloorplan.id)
+      if (!floorplan.driveFileId || floorplan.localUri.startsWith('data:')) {
+        options.onProgress?.(`Syncing floorplan ${floorplan.name}...`)
+        const dataUrl = await ensureDataUrl(floorplan.localUri)
+        console.log('[sync] uploading floorplan', projectId, floorplan.id)
         const res = await withBackoff(() =>
           uploadFloorplanClient({
             projectFolderId,
-            floorplanId: activeFloorplan.id,
-            name: activeFloorplan.name,
+            floorplanId: floorplan.id,
+            name: floorplan.name,
             dataUrl,
           }),
         )
         floorplanUploaded = true
-        await db.floorplans.update(activeFloorplan.id, { driveFileId: res.driveFileId })
+        await db.floorplans.update(floorplan.id, { driveFileId: res.driveFileId })
       }
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : 'Floorplan upload failed'
+      const message = error instanceof Error ? error.message : `Floorplan ${floorplan.name} upload failed`
       errors.push(message)
     }
   }

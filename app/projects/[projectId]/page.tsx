@@ -50,6 +50,7 @@ export default function ProjectDetailPage() {
   const [newPinPosition, setNewPinPosition] = useState<{ xPct: number; yPct: number } | null>(null)
   const [showPinToast, setShowPinToast] = useState(false)
   const [showFloorplanToast, setShowFloorplanToast] = useState(false)
+  const [syncProgress, setSyncProgress] = useState<string | undefined>(undefined)
   const floorplanRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -184,9 +185,14 @@ export default function ProjectDetailPage() {
           pendingCount={queueStats.pending}
           errorCount={queueStats.errors}
           lastSyncedIso={projectLastSyncedIso ?? undefined}
-          onSync={async () => { await syncAll() }}
+          onSync={async () => {
+            setSyncProgress('Starting sync...')
+            await syncAll((message) => setSyncProgress(message))
+            setSyncProgress(undefined)
+          }}
           disabledReason={syncDisabledReason}
           isSyncing={project.status === "syncing"}
+          syncProgress={syncProgress}
         />
 
         <main className="mx-auto max-w-7xl px-6 py-6">

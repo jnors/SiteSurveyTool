@@ -582,9 +582,10 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     [projectId, load],
   )
 
-  const syncAll = useCallback(async (): Promise<ProjectSyncSummary | null> => {
+  const syncAll = useCallback(async (onProgress?: (message: string) => void): Promise<ProjectSyncSummary | null> => {
     const projectRow = await db.projects.get(projectId)
     if (!projectRow) return null
+    onProgress?.('Ensuring Drive folder...')
     const ensureRes = await ensureProjectFolderClient({
       projectId,
       projectName: projectRow.name,
@@ -596,6 +597,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     }
     const summary = await syncProject(projectId, folderId, {
       floorplanId: project?.activeFloorplanId ?? undefined,
+      onProgress,
     })
     await load()
     return summary

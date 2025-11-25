@@ -16,6 +16,7 @@ type SyncBarProps = {
   onSync?: () => void | Promise<void>
   disabledReason?: string
   isSyncing?: boolean
+  syncProgress?: string
   onViewIssues?: () => void
 }
 
@@ -27,10 +28,15 @@ export function SyncBar({
   onSync,
   disabledReason,
   isSyncing,
+  syncProgress,
   onViewIssues,
 }: SyncBarProps) {
   const hasMounted = useHasMounted()
   const queueText = useMemo(() => {
+    // Show progress message during sync
+    if (syncProgress) {
+      return syncProgress
+    }
     const parts: string[] = []
     if (pendingCount > 0) {
       parts.push(`${pendingCount} pending`)
@@ -42,7 +48,7 @@ export function SyncBar({
       return 'All items synced'
     }
     return `Queue: ${parts.join(' | ')}`
-  }, [pendingCount, errorCount])
+  }, [pendingCount, errorCount, syncProgress])
 
   const formattedLastSynced = hasMounted && lastSyncedIso ? new Date(lastSyncedIso).toLocaleString() : null
 
@@ -69,7 +75,7 @@ export function SyncBar({
               size="sm"
               className="gap-2"
               onClick={onSync}
-              disabled={Boolean(disabledReason)}
+              disabled={Boolean(disabledReason) || isSyncing}
               title={disabledReason}
             >
               {isSyncing ? (

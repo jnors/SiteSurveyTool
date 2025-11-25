@@ -103,14 +103,14 @@ function buildProjectJsonPayload(
     },
     floorplan: floorplan
       ? {
-          id: floorplan.id,
-          projectId: floorplan.projectId,
-          name: floorplan.name,
-          type: floorplan.type,
-          width: floorplan.width,
-          height: floorplan.height,
-          driveFileId: floorplan.driveFileId,
-        }
+        id: floorplan.id,
+        projectId: floorplan.projectId,
+        name: floorplan.name,
+        type: floorplan.type,
+        width: floorplan.width,
+        height: floorplan.height,
+        driveFileId: floorplan.driveFileId,
+      }
       : null,
     pins: pins.map((pin) => ({
       id: pin.id,
@@ -173,7 +173,7 @@ async function normalizeDemoPhotoStatuses(params: {
 export async function syncProject(
   projectId: string,
   projectFolderId: string,
-  options: { floorplanId?: string } = {},
+  options: { floorplanId?: string; onProgress?: (message: string) => void } = {},
 ): Promise<ProjectSyncSummary> {
   const project = (await db.projects.get(projectId)) as ProjectRow | undefined
   if (!project) {
@@ -223,6 +223,10 @@ export async function syncProject(
   const errors: string[] = []
   const nowIso = new Date().toISOString()
 
+  // Delete photos from Drive
+  if (deleteOutboxRows.length > 0) {
+    options.onProgress?.(`Deleting ${deleteOutboxRows.length} photo${deleteOutboxRows.length === 1 ? '' : 's'}...`)
+  }
   for (const row of deleteOutboxRows) {
     const driveFileId = row.payload?.driveFileId as string | undefined
     if (!driveFileId) {
@@ -242,10 +246,14 @@ export async function syncProject(
     }
   }
 
+  // Upload photos
+  let photoIndex = 0
   for (const photoId of photoTargets) {
+    photoIndex++
     const photo = photoMap.get(photoId)
     if (!photo) continue
 
+    options.onProgress?.(`Syncing photo ${photoIndex} of ${photoTargets.size}...`)
     await db.photos.update(photo.id, { status: 'syncing' })
     photo.status = 'syncing'
     try {
@@ -288,6 +296,7 @@ export async function syncProject(
   if (floorplan) {
     try {
       if (!floorplan.driveFileId || floorplan.localUri.startsWith('data:')) {
+        options.onProgress?.('Syncing floorplan...')
         const dataUrl = await ensureDataUrl(floorplan.localUri)
         console.log('[sync] uploading floorplan', projectId, floorplan.id)
         const res = await withBackoff(() =>
@@ -322,7 +331,7 @@ export async function syncProject(
     photosByPin.set(pin.id, photos)
   }
 
-   // Normalize floorplan to `FloorplanRow | null`
+  // Normalize floorplan to `FloorplanRow | null`
   const floorplanArg = (floorplan && typeof floorplan !== 'string') ? floorplan : null
 
   const payload = buildProjectJsonPayload(
@@ -336,6 +345,7 @@ export async function syncProject(
 
   let projectJsonWritten = false
   try {
+    options.onProgress?.('Writing project manifest...')
     await withBackoff(() => {
       console.log('[sync] writing project.json', projectId)
       return writeProjectJsonClient({ projectFolderId, payload })

@@ -352,6 +352,15 @@ export async function syncProject(
     })
     projectJsonWritten = true
     await db.projects.update(projectId, { syncedAt: nowIso })
+
+    // Clear pin outbox entries since they're now synced via project.json
+    const pinIds = pins.map((p) => p.id)
+    await db.outbox
+      .where('entityType')
+      .equals('pin')
+      .and((row) => pinIds.includes(row.entityId))
+      .delete()
+    console.log('[sync] cleared pin outbox entries', projectId, pinIds.length)
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'project.json write failed'
     errors.push(message)

@@ -11,9 +11,21 @@ import { db } from '@/lib/db'
 // Compute a pin sync status from its photos
 async function computePinStatus(pinId: string): Promise<SyncStatus> {
   const photos = await db.photos.where('pinId').equals(pinId).toArray()
+
+  // Check photos first
   if (photos.some((p) => p.status === 'error')) return 'error'
   if (photos.some((p) => p.status === 'syncing')) return 'syncing'
   if (photos.some((p) => p.status === 'pending')) return 'pending'
+
+  // Check if pin itself needs syncing (has outbox entries)
+  const outboxEntries = await db.outbox
+    .where('entityType')
+    .equals('pin')
+    .and((row) => row.entityId === pinId)
+    .toArray()
+
+  if (outboxEntries.length > 0) return 'pending'
+
   return 'synced'
 }
 

@@ -87,7 +87,8 @@ function getPhotoUploadTargets(photos: Map<string, PhotoRow>, outboxPhotoIds: st
 
 function buildProjectJsonPayload(
   project: ProjectRow,
-  floorplan: FloorplanRow | null,
+  activeFloorplan: FloorplanRow | null,
+  allFloorplans: FloorplanRow[],
   pins: PinRow[],
   photosByPin: Map<string, PhotoRow[]>,
   syncedAt: string,
@@ -101,17 +102,26 @@ function buildProjectJsonPayload(
       driveFolderId: project.driveFolderId,
       activeFloorplanId,
     },
-    floorplan: floorplan
+    floorplan: activeFloorplan
       ? {
-        id: floorplan.id,
-        projectId: floorplan.projectId,
-        name: floorplan.name,
-        type: floorplan.type,
-        width: floorplan.width,
-        height: floorplan.height,
-        driveFileId: floorplan.driveFileId,
+        id: activeFloorplan.id,
+        projectId: activeFloorplan.projectId,
+        name: activeFloorplan.name,
+        type: activeFloorplan.type,
+        width: activeFloorplan.width,
+        height: activeFloorplan.height,
+        driveFileId: activeFloorplan.driveFileId,
       }
       : null,
+    floorplans: allFloorplans.map((fp) => ({
+      id: fp.id,
+      projectId: fp.projectId,
+      name: fp.name,
+      type: fp.type,
+      width: fp.width,
+      height: fp.height,
+      driveFileId: fp.driveFileId,
+    })),
     pins: pins.map((pin) => ({
       id: pin.id,
       floorplanId: pin.floorplanId,
@@ -183,15 +193,21 @@ export async function syncProject(
     throw new Error('Missing Drive project folder id')
   }
 
-  const floorplans = await db.floorplans.where('projectId').equals(projectId).toArray()
-  const floorplan =
-    (options.floorplanId && floorplans.find((fp) => fp.id === options.floorplanId)) ?? floorplans[0]
-  const pins = floorplan ? await db.pins.where('floorplanId').equals(floorplan.id).toArray() : []
+  const allFloorplans = await db.floorplans.where('projectId').equals(projectId).toArray()
+  const activeFloorplan =
+    (options.floorplanId && allFloorplans.find((fp) => fp.id === options.floorplanId)) ?? allFloorplans[0]
+
+  // Collect ALL pins from ALL floorplans
+  const allPins: PinRow[] = []
+  for (const floorplan of allFloorplans) {
+    const floorplanPins = await db.pins.where('floorplanId').equals(floorplan.id).toArray()
+    allPins.push(...floorplanPins)
+  }
 
   const photoMap = new Map<string, PhotoRow>()
   const photosByPin = new Map<string, PhotoRow[]>()
 
-  for (const pin of pins) {
+  for (const pin of allPins) {
     const photos = await db.photos.where('pinId').equals(pin.id).toArray()
     photosByPin.set(pin.id, photos)
     for (const photo of photos) {
@@ -293,22 +309,22 @@ export async function syncProject(
   }
 
   let floorplanUploaded = false
-  if (floorplan) {
+  if (activeFloorplan) {
     try {
-      if (!floorplan.driveFileId || floorplan.localUri.startsWith('data:')) {
+      if (!activeFloorplan.driveFileId || activeFloorplan.localUri.startsWith('data:')) {
         options.onProgress?.('Syncing floorplan...')
-        const dataUrl = await ensureDataUrl(floorplan.localUri)
-        console.log('[sync] uploading floorplan', projectId, floorplan.id)
+        const dataUrl = await ensureDataUrl(activeFloorplan.localUri)
+        console.log('[sync] uploading floorplan', projectId, activeFloorplan.id)
         const res = await withBackoff(() =>
           uploadFloorplanClient({
             projectFolderId,
-            floorplanId: floorplan.id,
-            name: floorplan.name,
+            floorplanId: activeFloorplan.id,
+            name: activeFloorplan.name,
             dataUrl,
           }),
         )
         floorplanUploaded = true
-        await db.floorplans.update(floorplan.id, { driveFileId: res.driveFileId })
+        await db.floorplans.update(activeFloorplan.id, { driveFileId: res.driveFileId })
       }
     } catch (error: any) {
       const message = error instanceof Error ? error.message : 'Floorplan upload failed'
@@ -326,18 +342,19 @@ export async function syncProject(
   }
 
   // Refresh photos map after potential updates
-  for (const pin of pins) {
+  for (const pin of allPins) {
     const photos = await db.photos.where('pinId').equals(pin.id).toArray()
     photosByPin.set(pin.id, photos)
   }
 
-  // Normalize floorplan to `FloorplanRow | null`
-  const floorplanArg = (floorplan && typeof floorplan !== 'string') ? floorplan : null
+  // Normalize activeFloorplan to `FloorplanRow | null`
+  const floorplanArg = (activeFloorplan && typeof activeFloorplan !== 'string') ? activeFloorplan : null
 
   const payload = buildProjectJsonPayload(
     project,
     floorplanArg,
-    pins,
+    allFloorplans,
+    allPins,
     photosByPin,
     nowIso,
     floorplanArg?.id ?? null,
@@ -354,7 +371,7 @@ export async function syncProject(
     await db.projects.update(projectId, { syncedAt: nowIso })
 
     // Clear pin outbox entries since they're now synced via project.json
-    const pinIds = pins.map((p) => p.id)
+    const pinIds = allPins.map((p) => p.id)
     await db.outbox
       .where('entityType')
       .equals('pin')

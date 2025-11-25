@@ -7,7 +7,7 @@ type BadgeState = Extract<SyncStatus, 'pending' | 'syncing' | 'error' | 'synced'
 
 const STATUS_MAP: Record<BadgeState, { label: string; className: string; dotClass: string; Icon?: React.ComponentType<{ className?: string }> }> = {
   pending: {
-    label: 'Pending sync',
+    label: 'Sync Needed',
     className: 'border-warning/40 bg-warning/10 text-warning',
     dotClass: 'bg-warning',
     Icon: Clock,

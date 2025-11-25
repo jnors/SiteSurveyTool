@@ -170,7 +170,6 @@ export default function ProjectsPage() {
   }
 
   const isPro = auth.subscriptionStatus === 'active'
-  console.log('🔍 [ProjectsPage] subscriptionStatus:', auth.subscriptionStatus, 'isPro:', isPro)
   const projectLimitReached = !isPro && projects.length >= 1
 
   const createDisabledReason = !isOnline

@@ -5,23 +5,31 @@
 
 :root {
   /* STYLEGUIDE Dark-Mode Tokens - Deep Slate & Electric Blue */
-  --background: #020617; /* Slate 950 */
-  --foreground: #f8fafc; /* Slate 50 */
-  --card: #0f172a; /* Slate 900 */
+  --background: #020617;
+  /* Slate 950 */
+  --foreground: #f8fafc;
+  /* Slate 50 */
+  --card: #0f172a;
+  /* Slate 900 */
   --card-foreground: #f8fafc;
   --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --primary: #3b82f6; /* Blue 500 */
+  --primary: #3b82f6;
+  /* Blue 500 */
   --primary-foreground: #ffffff;
-  --secondary: #1e293b; /* Slate 800 */
+  --secondary: #1e293b;
+  /* Slate 800 */
   --secondary-foreground: #f8fafc;
   --muted: #1e293b;
-  --muted-foreground: #94a3b8; /* Slate 400 */
+  --muted-foreground: #94a3b8;
+  /* Slate 400 */
   --accent: #1e293b;
   --accent-foreground: #f8fafc;
-  --destructive: #ef4444; /* Red 500 */
+  --destructive: #ef4444;
+  /* Red 500 */
   --destructive-foreground: #ffffff;
-  --border: #1e293b; /* Slate 800 */
+  --border: #1e293b;
+  /* Slate 800 */
   --input: #1e293b;
   --ring: #3b82f6;
   --radius: 0.625rem;
@@ -80,6 +88,11 @@
   --color-border: #262626;
   --color-border-hover: #333333;
 
+  /* Semantic colors */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+
   /* Accent colors for sync status */
   --color-accent-green: #34A853;
   --color-accent-green-muted: #2d8e46;
@@ -134,6 +147,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -153,23 +167,28 @@ body {
 
 /* Adding custom keyframe animations for sync status transitions */
 @keyframes subtle-pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.85;
   }
 }
 
 @keyframes shake {
+
   0%,
   100% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-4px);
   }
+
   75% {
     transform: translateX(4px);
   }
@@ -180,6 +199,7 @@ body {
     transform: translateY(-100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -192,6 +212,7 @@ body {
     transform: translateY(8px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -201,7 +222,19 @@ body {
 .reveal-up {
   animation: reveal-up 130ms ease-out both;
 }
-.reveal-delay-1 { animation-delay: 60ms; }
-.reveal-delay-2 { animation-delay: 120ms; }
-.reveal-delay-3 { animation-delay: 180ms; }
-.reveal-delay-4 { animation-delay: 240ms; }
+
+.reveal-delay-1 {
+  animation-delay: 60ms;
+}
+
+.reveal-delay-2 {
+  animation-delay: 120ms;
+}
+
+.reveal-delay-3 {
+  animation-delay: 180ms;
+}
+
+.reveal-delay-4 {
+  animation-delay: 240ms;
+}

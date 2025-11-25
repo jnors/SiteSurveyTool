@@ -80,7 +80,6 @@ export default function SupabaseProvider({
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('🔔 [SupabaseProvider] Auth event:', event)
             if (session?.access_token !== session?.access_token) {
                 router.refresh()
             }
@@ -101,7 +100,6 @@ export default function SupabaseProvider({
                     if (error) {
                         console.error('❌ [SupabaseProvider] Error loading subscription status:', error)
                     } else {
-                        console.log('🔍 [SupabaseProvider] Loaded subscription status:', data?.subscription_status)
                         // Cache status for faster load on next refresh
                         if (data?.subscription_status) {
                             localStorage.setItem('subscription_status', data.subscription_status)

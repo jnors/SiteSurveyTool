@@ -125,8 +125,6 @@ export function useActiveFloorplan(floorplans: FloorplanLike[]): UseActiveFloorp
       const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false
       if (typeof window !== 'undefined' && isOffline) {
         window.history.replaceState(window.history.state, '', url)
-        // Trigger a popstate event so Next.js router notices the URL change
-        window.dispatchEvent(new PopStateEvent('popstate'))
       } else {
         router.replace(url, { scroll: false })
       }
@@ -153,8 +151,22 @@ export function useActiveFloorplan(floorplans: FloorplanLike[]): UseActiveFloorp
     (floorplanId: string) => {
       const exists = floorplans.some((fp) => fp.id === floorplanId)
       if (!exists) return
+
+      // Always update local state immediately
       setActiveFloorplanId(floorplanId)
-      ensureQueryParam(floorplanId)
+
+      // Try to update URL, but don't rely on it working offline
+      const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false
+      if (!isOffline) {
+        // Online: use normal router navigation
+        ensureQueryParam(floorplanId)
+      } else {
+        // Offline: just update URL in address bar, state is already set
+        const params = new URLSearchParams(window.location.search)
+        params.set('fp', floorplanId)
+        const url = `${window.location.pathname}?${params.toString()}`
+        window.history.replaceState(window.history.state, '', url)
+      }
     },
     [floorplans, ensureQueryParam],
   )

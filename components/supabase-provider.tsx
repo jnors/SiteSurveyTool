@@ -54,6 +54,12 @@ export default function SupabaseProvider({
                     console.error('❌ [SupabaseProvider] Error fetching subscription status:', error)
                 } else {
                     console.log('🔍 [SupabaseProvider] Refreshed subscription status:', data?.subscription_status)
+                    // Cache status for faster load on next refresh
+                    if (data?.subscription_status) {
+                        localStorage.setItem('subscription_status', data.subscription_status)
+                    } else {
+                        localStorage.removeItem('subscription_status')
+                    }
                 }
                 setSubscriptionStatus(data?.subscription_status ?? null)
             } catch (err) {
@@ -61,6 +67,8 @@ export default function SupabaseProvider({
             }
         } else {
             console.warn('⚠️ [SupabaseProvider] No user found in getSession()')
+            setSubscriptionStatus(null)
+            localStorage.removeItem('subscription_status')
         }
     }
 
@@ -90,14 +98,21 @@ export default function SupabaseProvider({
                         console.error('❌ [SupabaseProvider] Error loading subscription status:', error)
                     } else {
                         console.log('🔍 [SupabaseProvider] Loaded subscription status:', data?.subscription_status)
+                        // Cache status for faster load on next refresh
+                        if (data?.subscription_status) {
+                            localStorage.setItem('subscription_status', data.subscription_status)
+                        } else {
+                            localStorage.removeItem('subscription_status')
+                        }
                     }
                     setSubscriptionStatus(data?.subscription_status ?? null)
                 } catch (err) {
                     console.error('❌ [SupabaseProvider] Profile fetch timed out:', err)
-                    setSubscriptionStatus(null)
+                    // Don't clear status on timeout if we have a cache
                 }
             } else {
                 setSubscriptionStatus(null)
+                localStorage.removeItem('subscription_status')
             }
         })
 
@@ -115,6 +130,17 @@ export default function SupabaseProvider({
                 refreshSubscriptionStatus()
                 // Clean up the URL
                 window.history.replaceState({}, '', window.location.pathname)
+            }
+        }
+    }, [])
+
+    // Load cached subscription status on mount for instant UI
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('subscription_status')
+            if (cached) {
+                console.log('⚡ [SupabaseProvider] Loaded cached subscription status:', cached)
+                setSubscriptionStatus(cached)
             }
         }
     }, [])

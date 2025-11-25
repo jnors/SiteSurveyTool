@@ -49,6 +49,7 @@ export function useAuth(callbackUrl: string = '/') {
         }
       }
       keyToRemove.forEach(k => localStorage.removeItem(k))
+      localStorage.removeItem('subscription_status')
       console.log('✅ [useAuth] Local storage cleared')
     } finally {
       console.log('🔄 [useAuth] Redirecting to:', callbackUrl ?? '/')

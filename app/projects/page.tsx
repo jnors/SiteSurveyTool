@@ -202,16 +202,6 @@ export default function ProjectsPage() {
               <p className="text-foreground-muted">Manage your site survey projects</p>
             </div>
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  console.log('🔄 Manually refreshing status...')
-                  auth.refreshSubscriptionStatus()
-                }}
-              >
-                Refresh Status
-              </Button>
               {!isPro && <PricingModal />}
               <Tooltip>
                 <TooltipTrigger asChild>

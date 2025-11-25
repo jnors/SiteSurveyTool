@@ -27,15 +27,30 @@ export default function SupabaseProvider({
     const router = useRouter()
 
     const refreshSubscriptionStatus = async () => {
-        const { data: { user } } = await supabase.auth.getUser()
+        console.log('🔄 [SupabaseProvider] refreshSubscriptionStatus called')
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError) {
+            console.error('❌ [SupabaseProvider] Error getting user:', userError)
+            return
+        }
+
         if (user) {
-            const { data } = await supabase
+            console.log('👤 [SupabaseProvider] User found:', user.id)
+            const { data, error } = await supabase
                 .from('profiles')
                 .select('subscription_status')
                 .eq('id', user.id)
                 .single()
-            console.log('🔍 [SupabaseProvider] Refreshed subscription status:', data?.subscription_status)
+
+            if (error) {
+                console.error('❌ [SupabaseProvider] Error fetching subscription status:', error)
+            } else {
+                console.log('🔍 [SupabaseProvider] Refreshed subscription status:', data?.subscription_status)
+            }
             setSubscriptionStatus(data?.subscription_status ?? null)
+        } else {
+            console.warn('⚠️ [SupabaseProvider] No user found in getUser()')
         }
     }
 

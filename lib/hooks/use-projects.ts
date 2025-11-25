@@ -125,6 +125,8 @@ export function useActiveFloorplan(floorplans: FloorplanLike[]): UseActiveFloorp
       const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false
       if (typeof window !== 'undefined' && isOffline) {
         window.history.replaceState(window.history.state, '', url)
+        // Trigger a popstate event so Next.js router notices the URL change
+        window.dispatchEvent(new PopStateEvent('popstate'))
       } else {
         router.replace(url, { scroll: false })
       }

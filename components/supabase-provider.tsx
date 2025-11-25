@@ -17,13 +17,17 @@ const Context = createContext<SupabaseContext | undefined>(undefined)
 
 export default function SupabaseProvider({
     children,
+    initialSession = null,
+    initialSubscriptionStatus = null,
 }: {
     children: React.ReactNode
+    initialSession?: Session | null
+    initialSubscriptionStatus?: string | null
 }) {
     const [supabase] = useState(() => createClient())
-    const [session, setSession] = useState<Session | null>(null)
-    const [user, setUser] = useState<User | null>(null)
-    const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
+    const [session, setSession] = useState<Session | null>(initialSession)
+    const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
+    const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(initialSubscriptionStatus)
     const router = useRouter()
 
     const refreshSubscriptionStatus = async () => {

@@ -1,6 +1,7 @@
 import Script from 'next/script'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { createClient } from '@/lib/supabase/server'
 
 import './globals.css'
 import { Providers } from './providers'
@@ -27,11 +28,28 @@ export const metadata: Metadata = {
   generator: 'v0.app'
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Server-side fetch for instant initial load
+  const supabase = await createClient()
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  let initialSubscriptionStatus = null
+  if (session?.user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('subscription_status')
+      .eq('id', session.user.id)
+      .single()
+    initialSubscriptionStatus = data?.subscription_status ?? null
+  }
+
   const softwareJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -65,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
-        <Providers>
+        <Providers initialSession={session} initialSubscriptionStatus={initialSubscriptionStatus}>
           {children}
         </Providers>
         <Script id="jsonld-software" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />

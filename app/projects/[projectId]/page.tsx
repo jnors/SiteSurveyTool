@@ -317,8 +317,7 @@ export default function ProjectDetailPage() {
             await addPhotos(pinId, files)
           }}
           onDeletePhoto={deletePhoto}
-          uploadDisabled={!isOnline}
-          uploadDisabledReason="Offline - reconnect to attach photos"
+          uploadDisabled={false}
         />
       </AuthGate>
     </div>

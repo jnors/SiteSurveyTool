@@ -9,6 +9,7 @@ import { PricingModal } from '@/components/pricing-modal'
 import type { SyncStatus } from '@/core'
 import { useRouter } from 'next/navigation'
 import { DRIVE_ROOT_NAME } from '@/core'
+import { restoreFromDrive, type RestoreProgress } from '@/lib/restore'
 
 // Types that were seemingly missing or implicit in the file view, but likely imported or defined elsewhere. 
 // If they were missing in the view, they might be global or imported from types.d.ts
@@ -68,6 +69,9 @@ export default function ProjectsPage() {
   const [floorplanFile, setFloorplanFile] = useState<File | null>(null)
   const [isSavingProject, setIsSavingProject] = useState(false)
   const [createError, setCreateError] = useState<string | undefined>(undefined)
+  const [isRestoring, setIsRestoring] = useState(false)
+  const [restoreProgress, setRestoreProgress] = useState<RestoreProgress | null>(null)
+  const [hasTriggeredRestore, setHasTriggeredRestore] = useState(false)
 
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open)
@@ -157,6 +161,35 @@ export default function ProjectsPage() {
     if (!timestamps.length) return undefined
     return new Date(Math.max(...timestamps)).toISOString()
   }, [projects])
+
+  // Auto-restore from Drive when authenticated + empty DB
+  useEffect(() => {
+    if (auth.isAuthenticated && !isLoading && projects.length === 0 && isOnline && !hasTriggeredRestore && !isRestoring) {
+      setHasTriggeredRestore(true)
+      handleAutoRestore()
+    }
+  }, [auth.isAuthenticated, isLoading, projects.length, isOnline, hasTriggeredRestore, isRestoring])
+
+  const handleAutoRestore = async () => {
+    setIsRestoring(true)
+    try {
+      const result = await restoreFromDrive((progress) => {
+        setRestoreProgress(progress)
+      })
+
+      if (result.errors.length > 0) {
+        setToast({ show: true, message: `Restored ${result.projectsRestored} projects with ${result.errors.length} errors` })
+      } else if (result.projectsRestored > 0) {
+        setToast({ show: true, message: `Restored ${result.projectsRestored} projects from Drive` })
+      }
+    } catch (error) {
+      console.error('[projects] Auto-restore failed:', error)
+      setToast({ show: true, message: 'Failed to restore projects from Drive' })
+    } finally {
+      setIsRestoring(false)
+      setRestoreProgress(null)
+    }
+  }
 
   const handleSyncAll = async () => {
     const result = await syncAll()
@@ -410,6 +443,36 @@ export default function ProjectsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Restore Progress Overlay */}
+      {isRestoring && restoreProgress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-lg">
+            <h2 className="mb-4 text-xl font-semibold">Restoring from Drive...</h2>
+            <p className="mb-4 text-sm text-foreground-muted">{restoreProgress.message}</p>
+            {restoreProgress.projectsTotal > 0 && (
+              <>
+                <div className="mb-2 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{
+                      width: `${(restoreProgress.projectsCompleted / restoreProgress.projectsTotal) * 100}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-center text-sm text-foreground-muted">
+                  {restoreProgress.projectsCompleted} of {restoreProgress.projectsTotal} projects
+                </p>
+              </>
+            )}
+            {restoreProgress.phase === 'discovering' && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -139,3 +139,41 @@ export async function deleteProjectClient(params: { driveFolderId: string }): Pr
   }
   return (await res.json()) as { deleted: boolean }
 }
+
+// ===== Restore/Download Functions =====
+
+export type DriveProjectInfo = {
+  folderId: string
+  folderName: string
+  projectId: string
+  projectName: string
+}
+
+export async function listProjectsClient(): Promise<{ projects: DriveProjectInfo[] }> {
+  const res = await fetch('/api/drive/list-projects')
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`listProjects failed: ${res.status} ${text}`)
+  }
+  return (await res.json()) as { projects: DriveProjectInfo[] }
+}
+
+export async function downloadProjectJsonClient(params: {
+  folderId: string
+}): Promise<any> {
+  const res = await fetch(`/api/drive/download/project-json?folderId=${params.folderId}`)
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`downloadProjectJson failed: ${res.status} ${text}`)
+  }
+  return await res.json()
+}
+
+export async function downloadFileClient(params: { fileId: string }): Promise<{ dataUrl: string }> {
+  const res = await fetch(`/api/drive/download/file?fileId=${params.fileId}`)
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`downloadFile failed: ${res.status} ${text}`)
+  }
+  return (await res.json()) as { dataUrl: string }
+}

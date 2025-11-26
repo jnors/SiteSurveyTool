@@ -52,7 +52,7 @@ function buildSummaryFromProjects(summaries: any[]): string {
 }
 
 export default function ProjectsPage() {
-  const { projects, isLoading, syncAll, recreateProjectFolder, relinkProjectFolder, createProject, deleteProject } = useProjects()
+  const { projects, isLoading, syncAll, recreateProjectFolder, relinkProjectFolder, createProject, deleteProject, refresh } = useProjects()
   const router = useRouter()
   const isOnline = useOnline()
   const auth = useAuth('/projects')
@@ -188,6 +188,7 @@ export default function ProjectsPage() {
     } finally {
       setIsRestoring(false)
       setRestoreProgress(null)
+      await refresh()
     }
   }
 

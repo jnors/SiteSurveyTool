@@ -471,7 +471,11 @@ export function useProjects() {
     setProjects(await mapProjectsToUI())
   }
 
-  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, relinkProjectFolder, createProject, deleteProject }
+  const refresh = useCallback(async () => {
+    setProjects(await mapProjectsToUI())
+  }, [])
+
+  return { projects, isLoading, syncAll, ensureIssues, recreateProjectFolder, relinkProjectFolder, createProject, deleteProject, refresh }
 }
 
 export function useProject(projectId: string, preferredFloorplanId: string | null) {

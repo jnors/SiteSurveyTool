@@ -52,8 +52,9 @@ export function useAuth(callbackUrl: string = '/') {
       localStorage.removeItem('subscription_status')
       console.log('✅ [useAuth] Local storage cleared')
     } finally {
-      console.log('🔄 [useAuth] Redirecting to:', callbackUrl ?? '/')
-      window.location.href = callbackUrl ?? '/'
+      console.log('🔄 [useAuth] Redirecting to server-side signout...')
+      // Always redirect to the server-side sign-out route to ensure cookies are cleared
+      window.location.href = '/auth/signout'
     }
   }, [supabase])
 

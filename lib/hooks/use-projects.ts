@@ -618,7 +618,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
         // Delete the pin
         await db.pins.delete(pinId)
 
-        // Clean up outbox entries
+        // Clean up related outbox entries (uploads, etc.)
         const outboxIds = await db.outbox
           .where('entityId')
           .anyOf([...photoIds, pinId])
@@ -626,6 +626,9 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
         if (outboxIds.length > 0) {
           await db.outbox.bulkDelete(outboxIds)
         }
+
+        // Add outbox entry to trigger project.json sync (which will exclude the deleted pin)
+        await enqueue('update_pin', 'pin', pinId, { projectId, deleted: true })
 
         // Update project timestamp
         const nowIso = new Date().toISOString()

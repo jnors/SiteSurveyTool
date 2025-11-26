@@ -16,6 +16,7 @@ interface PinDetailModalProps {
   onOpenChange: (open: boolean) => void
   isNewPin?: boolean
   onSaveNewPin?: (pin: Pin) => void
+  onDeletePin?: (pinId: string) => Promise<void> | void
   onAddPhotos?: (pinId: string, files: File[]) => Promise<void> | void
   onDeletePhoto?: (photoId: string) => Promise<DeletePhotoResult | void> | DeletePhotoResult | void
   uploadDisabled?: boolean
@@ -28,6 +29,7 @@ export function PinDetailModal({
   onOpenChange,
   isNewPin = false,
   onSaveNewPin,
+  onDeletePin,
   onAddPhotos,
   onDeletePhoto,
   uploadDisabled = false,
@@ -84,9 +86,9 @@ export function PinDetailModal({
     onOpenChange(false)
   }
 
-  const handleDelete = () => {
-    console.log("[v0] Deleting pin:", pin.pinId)
-    // TODO: Implement actual delete logic
+  const handleDelete = async () => {
+    if (!pin || !onDeletePin) return
+    await onDeletePin(pin.pinId)
     onOpenChange(false)
   }
 
@@ -116,8 +118,8 @@ export function PinDetailModal({
           {deleteNotice && (
             <div
               className={`rounded-md border px-3 py-2 text-xs ${deleteNotice.tone === "error"
-                  ? "border-[#EA4335]/60 bg-[#EA4335]/10 text-[#EA4335]"
-                  : "border-[#F9AB00]/60 bg-[#F9AB00]/10 text-[#F9AB00]"
+                ? "border-[#EA4335]/60 bg-[#EA4335]/10 text-[#EA4335]"
+                : "border-[#F9AB00]/60 bg-[#F9AB00]/10 text-[#F9AB00]"
                 }`}
             >
               {deleteNotice.text}

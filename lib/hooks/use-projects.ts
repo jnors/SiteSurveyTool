@@ -603,6 +603,40 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     [projectId, load],
   )
 
+  const deletePin = useCallback(
+    async (pinId: string) => {
+      // Get all photos for this pin
+      const photos = await db.photos.where('pinId').equals(pinId).toArray()
+      const photoIds = photos.map((p) => p.id)
+
+      await db.transaction('rw', [db.pins, db.photos, db.outbox, db.projects], async () => {
+        // Delete all photos
+        if (photoIds.length > 0) {
+          await db.photos.bulkDelete(photoIds)
+        }
+
+        // Delete the pin
+        await db.pins.delete(pinId)
+
+        // Clean up outbox entries
+        const outboxIds = await db.outbox
+          .where('entityId')
+          .anyOf([...photoIds, pinId])
+          .primaryKeys()
+        if (outboxIds.length > 0) {
+          await db.outbox.bulkDelete(outboxIds)
+        }
+
+        // Update project timestamp
+        const nowIso = new Date().toISOString()
+        await db.projects.update(projectId, { updatedAt: nowIso })
+      })
+
+      await load()
+    },
+    [projectId, load],
+  )
+
   const syncAll = useCallback(async (onProgress?: (message: string) => void): Promise<ProjectSyncSummary | null> => {
     const projectRow = await db.projects.get(projectId)
     if (!projectRow) return null
@@ -631,6 +665,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     addPin,
     addPhotos,
     deletePhoto,
+    deletePin,
     addFloorplan,
     syncAll,
   }

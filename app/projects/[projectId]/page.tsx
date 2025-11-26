@@ -33,6 +33,7 @@ export default function ProjectDetailPage() {
     addPin,
     addPhotos,
     deletePhoto,
+    deletePin,
     addFloorplan,
     syncAll,
   } = useProject(projectId, selectedFloorplanId)
@@ -313,6 +314,10 @@ export default function ProjectDetailPage() {
           onOpenChange={setModalOpen}
           isNewPin={selectedPin?.pinId.startsWith("temp-")}
           onSaveNewPin={handleSaveNewPin}
+          onDeletePin={async (pinId) => {
+            await deletePin(pinId)
+            setSelectedPin(null)
+          }}
           onAddPhotos={async (pinId, files) => {
             await addPhotos(pinId, files)
           }}

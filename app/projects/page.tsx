@@ -3,53 +3,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Plus, Loader2 } from '@/ui'
 
-import { AuthGate, NavBar, OfflineBanner, ProjectCreateDialog, ProjectCard, SyncBar, ToastNotification, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Button, Input, useAuth, useOnline, useProjects } from '@/ui'
+import { AuthGate, NavBar, OfflineBanner, ProjectCreateDialog, ProjectCard, SyncBar, ToastNotification, Button, useAuth, useOnline, useProjects } from '@/ui'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { PricingModal } from '@/components/pricing-modal'
+import { RestoreProgressOverlay } from '@/components/restore-progress-overlay'
+import { SyncIssuesDialog } from '@/components/sync-issues-dialog'
+import { RelinkDialog } from '@/components/relink-dialog'
+import { useProjectSync } from '@/hooks/useProjectSync'
+import { useProjectRestore } from '@/hooks/useProjectRestore'
 import type { SyncStatus } from '@/core'
 import { useRouter } from 'next/navigation'
-import { DRIVE_ROOT_NAME } from '@/core'
-import { restoreFromDrive, type RestoreProgress } from '@/lib/restore'
-
-// Types that were seemingly missing or implicit in the file view, but likely imported or defined elsewhere. 
-// If they were missing in the view, they might be global or imported from types.d.ts
-// But the lint errors said "Cannot find name 'SyncResult'".
-// I'll check if I need to import them.
-// The original file had `function buildSummaryMessage(result: SyncResult)`.
-// If `SyncResult` is not imported, it must be global.
-// I'll keep the file as it was in step 364 but add the import.
-
-function buildSummaryMessage(result: any) { // Changed to any to avoid lint error if type is missing
-  const totalProjects = result.projectSummaries.length
-  const totalPhotos = result.projectSummaries.reduce((sum: any, summary: any) => sum + summary.photoStats.total, 0)
-  const uploadedPhotos = result.projectSummaries.reduce((sum: any, summary: any) => sum + summary.photoStats.success, 0)
-  const failedPhotos = result.projectSummaries.reduce((sum: any, summary: any) => sum + summary.photoStats.failed, 0)
-  const jsonCount = result.projectSummaries.filter((summary: any) => summary.projectJsonWritten).length
-
-  const parts: string[] = []
-  if (totalPhotos > 0) {
-    parts.push(`${uploadedPhotos}/${totalPhotos} photos`)
-  }
-  if (failedPhotos > 0) {
-    parts.push(`${failedPhotos} failed`)
-  }
-  parts.push(`${jsonCount} project.json`)
-
-  const base = `Synced ${totalProjects} project${totalProjects === 1 ? '' : 's'}`
-  const detail = parts.length ? `: ${parts.join(' | ')}` : ''
-  const errors = result.errors > 0 ? ` (${result.errors} error${result.errors === 1 ? '' : 's'})` : ''
-  return `${base}${detail}${errors}`
-}
-
-function buildSummaryFromProjects(summaries: any[]): string {
-  const errors = summaries.reduce((sum, summary) => sum + summary.errors.length, 0)
-  return buildSummaryMessage({
-    ensured: summaries.length,
-    movedOrMissing: [],
-    errors,
-    projectSummaries: summaries,
-  })
-}
 
 export default function ProjectsPage() {
   const { projects, isLoading, syncAll, recreateProjectFolder, relinkProjectFolder, createProject, deleteProject, refresh } = useProjects()
@@ -58,20 +21,29 @@ export default function ProjectsPage() {
   const auth = useAuth('/projects')
 
   const [toast, setToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' })
-  const [issues, setIssues] = useState<any[]>([])
-  const [issuesOpen, setIssuesOpen] = useState(false)
-  const [relinkTarget, setRelinkTarget] = useState<any | null>(null)
-  const [relinkInput, setRelinkInput] = useState('')
-  const [relinkError, setRelinkError] = useState<string | null>(null)
-  const [isRelinking, setIsRelinking] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [floorplanFile, setFloorplanFile] = useState<File | null>(null)
   const [isSavingProject, setIsSavingProject] = useState(false)
   const [createError, setCreateError] = useState<string | undefined>(undefined)
-  const [isRestoring, setIsRestoring] = useState(false)
-  const [restoreProgress, setRestoreProgress] = useState<RestoreProgress | null>(null)
-  const [hasTriggeredRestore, setHasTriggeredRestore] = useState(false)
+
+  const showToast = (message: string) => setToast({ show: true, message })
+
+  const syncHook = useProjectSync({
+    syncAll,
+    recreateProjectFolder,
+    relinkProjectFolder,
+    onToast: showToast,
+  })
+
+  const restoreHook = useProjectRestore({
+    isAuthenticated: auth.isAuthenticated,
+    isLoading,
+    projectCount: projects.length,
+    isOnline,
+    refresh,
+    onToast: showToast,
+  })
 
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open)
@@ -90,7 +62,7 @@ export default function ProjectsPage() {
       setCreateError(undefined)
       const projectId = await createProject({ name: projectName, file: floorplanFile })
       handleCreateOpenChange(false)
-      setToast({ show: true, message: 'Project created. Add pins and sync when ready.' })
+      showToast('Project created. Add pins and sync when ready.')
       router.push(`/projects/${projectId}`)
     } catch (error) {
       console.warn('[projects] createProject failed', error)
@@ -162,47 +134,6 @@ export default function ProjectsPage() {
     return new Date(Math.max(...timestamps)).toISOString()
   }, [projects])
 
-  // Auto-restore from Drive when authenticated + empty DB
-  useEffect(() => {
-    if (auth.isAuthenticated && !isLoading && projects.length === 0 && isOnline && !hasTriggeredRestore && !isRestoring) {
-      setHasTriggeredRestore(true)
-      handleAutoRestore()
-    }
-  }, [auth.isAuthenticated, isLoading, projects.length, isOnline, hasTriggeredRestore, isRestoring])
-
-  const handleAutoRestore = async () => {
-    setIsRestoring(true)
-    try {
-      const result = await restoreFromDrive((progress) => {
-        setRestoreProgress(progress)
-      })
-
-      if (result.errors.length > 0) {
-        setToast({ show: true, message: `Restored ${result.projectsRestored} projects with ${result.errors.length} errors` })
-      } else if (result.projectsRestored > 0) {
-        setToast({ show: true, message: `Restored ${result.projectsRestored} projects from Drive` })
-      }
-    } catch (error) {
-      console.error('[projects] Auto-restore failed:', error)
-      setToast({ show: true, message: 'Failed to restore projects from Drive' })
-    } finally {
-      setIsRestoring(false)
-      setRestoreProgress(null)
-      await refresh()
-    }
-  }
-
-  const handleSyncAll = async () => {
-    const result = await syncAll()
-    if (result.movedOrMissing.length) {
-      setIssues(result.movedOrMissing)
-      setIssuesOpen(true)
-    } else {
-      setIssues([])
-    }
-    setToast({ show: true, message: buildSummaryMessage(result) })
-  }
-
   const isPro = auth.subscriptionStatus === 'active'
   const projectLimitReached = !isPro && projects.length >= 1
 
@@ -222,10 +153,10 @@ export default function ProjectsPage() {
           pendingCount={queueStats.pending}
           errorCount={queueStats.errors}
           lastSyncedIso={lastSyncedIso}
-          onSync={handleSyncAll}
+          onSync={syncHook.handleSyncAll}
           disabledReason={syncDisabledReason}
           isSyncing={overallStatus === 'syncing'}
-          onViewIssues={issues.length ? () => setIssuesOpen(true) : undefined}
+          onViewIssues={syncHook.issues.length ? () => syncHook.setIssuesOpen(true) : undefined}
         />
 
         <main className="mx-auto max-w-7xl px-6 py-8">
@@ -261,7 +192,7 @@ export default function ProjectsPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {projects.map((project) => {
-                const isIssue = issues.some((issue) => issue.projectId === project.projectId)
+                const isIssue = syncHook.issues.some((issue) => issue.projectId === project.projectId)
                 return (
                   <ProjectCard
                     key={project.projectId}
@@ -294,186 +225,32 @@ export default function ProjectsPage() {
         errorMessage={createError}
       />
 
-      <Dialog open={issuesOpen} onOpenChange={setIssuesOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Drive folder moved or missing</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 text-sm text-foreground">
-            <p>We couldn't find the linked Drive folder for:</p>
-            <ul className="space-y-2">
-              {issues.map((issue) => (
-                <li
-                  key={issue.projectId}
-                  className="flex flex-col gap-2 rounded-md border border-border bg-background-card px-3 py-2"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm">
-                      <p className="font-medium text-foreground">{issue.projectName}</p>
-                      <p className="text-xs text-foreground-muted">{issue.projectId}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setRelinkTarget(issue)
-                        setRelinkInput('')
-                        setRelinkError(null)
-                      }}
-                    >
-                      Relink
-                    </Button>
-                  </div>
-                  <p className="text-xs text-foreground-muted">
-                    Expected folder name:{' '}
-                    <code className="rounded bg-muted px-1 py-0.5">
-                      {`${issue.projectName}__${issue.projectId}`}
-                    </code>
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <p className="text-foreground-muted">You can re-create the folder under /My Drive/{DRIVE_ROOT_NAME}/ now or do it later.</p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              onClick={async () => {
-                const summaries: any[] = []
-                for (const issue of issues) {
-                  const summary = await recreateProjectFolder(issue.projectId)
-                  if (summary) summaries.push(summary)
-                }
-                setIssues([])
-                setIssuesOpen(false)
-                const toastMessage = summaries.length
-                  ? buildSummaryFromProjects(summaries)
-                  : 'Re-created Drive folder(s).'
-                setToast({ show: true, message: toastMessage })
-              }}
-            >
-              Re-create here
-            </Button>
-            <Button variant="ghost" onClick={() => setIssuesOpen(false)}>
-              Later
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SyncIssuesDialog
+        open={syncHook.issuesOpen}
+        onOpenChange={syncHook.setIssuesOpen}
+        issues={syncHook.issues}
+        onRelink={syncHook.openRelinkDialog}
+        onRecreate={syncHook.handleRecreate}
+      />
 
-      <Dialog
-        open={Boolean(relinkTarget)}
+      <RelinkDialog
+        target={syncHook.relinkTarget}
+        open={Boolean(syncHook.relinkTarget)}
         onOpenChange={(open) => {
-          if (!open) {
-            setRelinkTarget(null)
-            setRelinkInput('')
-            setRelinkError(null)
-            setIsRelinking(false)
-          }
+          if (!open) syncHook.closeRelinkDialog()
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Relink Drive folder</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 text-sm text-foreground">
-            {relinkTarget && (
-              <p className="text-foreground-muted">
-                Paste the Drive folder link or ID for <span className="text-foreground">{relinkTarget.projectName}</span>.
-                The folder must live under <code className="rounded bg-muted px-1 py-0.5">/My Drive/{DRIVE_ROOT_NAME}/</code> and match&nbsp;
-                <code className="rounded bg-muted px-1 py-0.5">
-                  {`${relinkTarget.projectName}__${relinkTarget.projectId}`}
-                </code>
-                .
-              </p>
-            )}
-            <Input
-              placeholder="https://drive.google.com/drive/folders/..."
-              value={relinkInput}
-              onChange={(event) => setRelinkInput(event.target.value)}
-              aria-invalid={Boolean(relinkError)}
-            />
-            {relinkError && <p className="text-sm text-destructive">{relinkError}</p>}
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setRelinkTarget(null)
-                setRelinkInput('')
-                setRelinkError(null)
-                setIsRelinking(false)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                if (!relinkTarget) return
-                try {
-                  setIsRelinking(true)
-                  setRelinkError(null)
-                  await relinkProjectFolder(relinkTarget.projectId, relinkInput)
-                  setIssues((prev) => {
-                    const next = prev.filter((issue) => issue.projectId !== relinkTarget.projectId)
-                    if (!next.length) {
-                      setIssuesOpen(false)
-                    }
-                    return next
-                  })
-                  setToast({ show: true, message: 'Drive folder relinked. Ready to sync.' })
-                  setRelinkTarget(null)
-                  setRelinkInput('')
-                } catch (error) {
-                  const message = error instanceof Error ? error.message : 'Failed to relink folder.'
-                  setRelinkError(message)
-                } finally {
-                  setIsRelinking(false)
-                }
-              }}
-              disabled={isRelinking}
-            >
-              {isRelinking ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Relinking...
-                </span>
-              ) : (
-                'Save'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        inputValue={syncHook.relinkInput}
+        onInputChange={syncHook.setRelinkInput}
+        error={syncHook.relinkError}
+        isRelinking={syncHook.isRelinking}
+        onSave={syncHook.handleRelink}
+        onCancel={syncHook.closeRelinkDialog}
+      />
 
-      {/* Restore Progress Overlay */}
-      {isRestoring && restoreProgress && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-semibold">Restoring from Drive...</h2>
-            <p className="mb-4 text-sm text-foreground-muted">{restoreProgress.message}</p>
-            {restoreProgress.projectsTotal > 0 && (
-              <>
-                <div className="mb-2 h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{
-                      width: `${(restoreProgress.projectsCompleted / restoreProgress.projectsTotal) * 100}%`,
-                    }}
-                  />
-                </div>
-                <p className="text-center text-sm text-foreground-muted">
-                  {restoreProgress.projectsCompleted} of {restoreProgress.projectsTotal} projects
-                </p>
-              </>
-            )}
-            {restoreProgress.phase === 'discovering' && (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <RestoreProgressOverlay
+        isRestoring={restoreHook.isRestoring}
+        progress={restoreHook.restoreProgress}
+      />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import type {
   PinPhoto as UIPinPhoto,
   SyncStatus,
 } from '@/lib/types'
-import type { FloorplanRow, PinRow, ProjectRow } from '@/lib/db'
+import type { FloorplanRow, PinRow, ProjectRow, PhotoRow } from '@/lib/db'
 import { db } from '@/lib/db'
 
 // Compute a pin sync status from its photos
@@ -117,5 +117,63 @@ export async function mapToUIProject(
     floorplans: uiFloorplans,
     pins: uiPins,
     syncAnomaly: project.syncAnomaly ?? null,
+  }
+}
+
+export function buildProjectJsonPayload(
+  project: ProjectRow,
+  activeFloorplan: FloorplanRow | null,
+  allFloorplans: FloorplanRow[],
+  pins: PinRow[],
+  photosByPin: Map<string, PhotoRow[]>,
+  syncedAt: string,
+  activeFloorplanId: string | null,
+) {
+  return {
+    project: {
+      id: project.id,
+      name: project.name,
+      syncedAt,
+      driveFolderId: project.driveFolderId,
+      activeFloorplanId,
+    },
+    floorplan: activeFloorplan
+      ? {
+        id: activeFloorplan.id,
+        projectId: activeFloorplan.projectId,
+        name: activeFloorplan.name,
+        type: activeFloorplan.type,
+        width: activeFloorplan.width,
+        height: activeFloorplan.height,
+        driveFileId: activeFloorplan.driveFileId,
+      }
+      : null,
+    floorplans: allFloorplans.map((fp) => ({
+      id: fp.id,
+      projectId: fp.projectId,
+      name: fp.name,
+      type: fp.type,
+      width: fp.width,
+      height: fp.height,
+      driveFileId: fp.driveFileId,
+    })),
+    pins: pins.map((pin) => ({
+      id: pin.id,
+      floorplanId: pin.floorplanId,
+      title: pin.title,
+      note: pin.note,
+      xPct: pin.xPct,
+      yPct: pin.yPct,
+      updatedAt: pin.updatedAt,
+      photos: (photosByPin.get(pin.id) || []).map((photo) => ({
+        id: photo.id,
+        pinId: photo.pinId,
+        width: photo.width,
+        height: photo.height,
+        sizeBytes: photo.sizeBytes,
+        driveFileId: photo.driveFileId,
+        status: photo.status,
+      })),
+    })),
   }
 }

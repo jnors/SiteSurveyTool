@@ -2,6 +2,7 @@
 
 import { db, type FloorplanRow, type OutboxRow, type PhotoRow, type PinRow, type ProjectRow } from '@/lib/db'
 import { deletePhotoClient, uploadFloorplanClient, uploadPhotoClient, writeProjectJsonClient } from '@/lib/google'
+import { buildProjectJsonPayload } from '@/lib/mappers'
 
 type PhotoUploadStats = {
   total: number
@@ -85,63 +86,7 @@ function getPhotoUploadTargets(photos: Map<string, PhotoRow>, outboxPhotoIds: st
   return targets
 }
 
-function buildProjectJsonPayload(
-  project: ProjectRow,
-  activeFloorplan: FloorplanRow | null,
-  allFloorplans: FloorplanRow[],
-  pins: PinRow[],
-  photosByPin: Map<string, PhotoRow[]>,
-  syncedAt: string,
-  activeFloorplanId: string | null,
-) {
-  return {
-    project: {
-      id: project.id,
-      name: project.name,
-      syncedAt,
-      driveFolderId: project.driveFolderId,
-      activeFloorplanId,
-    },
-    floorplan: activeFloorplan
-      ? {
-        id: activeFloorplan.id,
-        projectId: activeFloorplan.projectId,
-        name: activeFloorplan.name,
-        type: activeFloorplan.type,
-        width: activeFloorplan.width,
-        height: activeFloorplan.height,
-        driveFileId: activeFloorplan.driveFileId,
-      }
-      : null,
-    floorplans: allFloorplans.map((fp) => ({
-      id: fp.id,
-      projectId: fp.projectId,
-      name: fp.name,
-      type: fp.type,
-      width: fp.width,
-      height: fp.height,
-      driveFileId: fp.driveFileId,
-    })),
-    pins: pins.map((pin) => ({
-      id: pin.id,
-      floorplanId: pin.floorplanId,
-      title: pin.title,
-      note: pin.note,
-      xPct: pin.xPct,
-      yPct: pin.yPct,
-      updatedAt: pin.updatedAt,
-      photos: (photosByPin.get(pin.id) || []).map((photo) => ({
-        id: photo.id,
-        pinId: photo.pinId,
-        width: photo.width,
-        height: photo.height,
-        sizeBytes: photo.sizeBytes,
-        driveFileId: photo.driveFileId,
-        status: photo.status,
-      })),
-    })),
-  }
-}
+
 
 async function normalizeDemoPhotoStatuses(params: {
   projectId: string

@@ -2,9 +2,17 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { LogIn, LogOut, UserCircle, Crown } from 'lucide-react'
+import { LogIn, LogOut, UserCircle, Crown, Settings, MessageSquare } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from '@/lib/useAuth'
 
 export function NavBar() {
@@ -33,36 +41,47 @@ export function NavBar() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              <div className={`flex items-center gap-2 rounded-full px-3 py-1 text-sm ${isPro ? 'bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30' : 'bg-background'}`}>
-                <div className="relative">
-                  <UserCircle className={`h-4 w-4 ${isPro ? 'text-primary' : 'text-primary'}`} />
-                  {isPro && (
-                    <Crown className="absolute -right-1 -top-1 h-3 w-3 text-primary" fill="currentColor" />
-                  )}
-                </div>
-                <span className={`truncate max-w-[160px] ${isPro ? 'text-foreground font-medium' : 'text-foreground-muted'}`} title={userLabel}>
-                  {userLabel}
-                </span>
-                {isPro && (
-                  <span className="ml-1 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">
-                    PRO
-                  </span>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="cursor-pointer gap-2 text-foreground-muted hover:text-foreground"
-                style={{ pointerEvents: 'auto' }}
-                onClick={(e) => {
-                  console.log('Sign out clicked')
-                  e.preventDefault()
-                  handleSignOut()
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-                Sign out
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-full justify-start gap-2 rounded-full px-3 hover:bg-muted/50 md:w-auto">
+                    <div className={`flex items-center gap-2 ${isPro ? 'text-primary' : 'text-foreground'}`}>
+                      <div className="relative">
+                        <UserCircle className="h-5 w-5" />
+                        {isPro && (
+                          <Crown className="absolute -right-1 -top-1 h-3 w-3 fill-current text-primary" />
+                        )}
+                      </div>
+                      <span className="hidden max-w-[120px] truncate font-medium md:inline-block" title={userLabel}>
+                        {userLabel}
+                      </span>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer w-full flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="mailto:hello@sitetrace.app?subject=SiteSurveyTool%20Feedback" className="cursor-pointer w-full flex items-center">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Feedback
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer text-red-600 focus:text-red-600"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button

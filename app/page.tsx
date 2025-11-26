@@ -4,6 +4,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 
 import { OfflineBanner, FinalCta, Faq, Hero, HowItWorks, Security, Pillars, DriveProof, SpecsGrid, Screens, Button } from "@/ui"
+import { Demo } from "@/components/landing/Demo"
+import { Pricing } from "@/components/landing/Pricing"
 import type { LandingContent } from "@/types/landing"
 import landingContent from "@/content/landing.json"
 
@@ -61,11 +63,13 @@ export default async function HomePage() {
       />
       <main className="flex flex-1 flex-col">
         <Hero data={content.hero} />
+        <Demo />
         <Pillars data={content.pillars} />
         <HowItWorks data={content.howItWorks} />
         {content.screens ? <Screens data={content.screens} /> : null}
         <DriveProof data={content.driveProof} />
         <SpecsGrid data={content.specs} />
+        <Pricing />
         <Security data={content.security} />
         <Faq data={content.faq} />
         <FinalCta data={content.finalCta} />

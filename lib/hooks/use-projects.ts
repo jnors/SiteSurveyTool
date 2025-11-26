@@ -640,6 +640,57 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     [projectId, load],
   )
 
+  const deleteFloorplan = useCallback(
+    async (floorplanId: string) => {
+      // Get all pins for this floorplan
+      const pins = await db.pins.where('floorplanId').equals(floorplanId).toArray()
+      const pinIds = pins.map((p) => p.id)
+
+      // Get all photos for these pins
+      const photos = pinIds.length > 0
+        ? await db.photos.where('pinId').anyOf(pinIds).toArray()
+        : []
+      const photoIds = photos.map((p) => p.id)
+
+      await db.transaction('rw', [db.floorplans, db.pins, db.photos, db.outbox, db.projects], async () => {
+        // Delete all photos
+        if (photoIds.length > 0) {
+          await db.photos.bulkDelete(photoIds)
+        }
+
+        // Delete all pins
+        if (pinIds.length > 0) {
+          await db.pins.bulkDelete(pinIds)
+        }
+
+        // Delete the floorplan
+        await db.floorplans.delete(floorplanId)
+
+        // Clean up related outbox entries
+        const outboxIds = await db.outbox
+          .where('entityId')
+          .anyOf([...photoIds, ...pinIds, floorplanId])
+          .primaryKeys()
+        if (outboxIds.length > 0) {
+          await db.outbox.bulkDelete(outboxIds)
+        }
+
+        // Add outbox entry to trigger project.json sync
+        await enqueue('update_pin', 'pin', `floorplan-deleted-${floorplanId}`, {
+          projectId,
+          floorplanDeleted: floorplanId
+        })
+
+        // Update project timestamp
+        const nowIso = new Date().toISOString()
+        await db.projects.update(projectId, { updatedAt: nowIso })
+      })
+
+      await load()
+    },
+    [projectId, load],
+  )
+
   const syncAll = useCallback(async (onProgress?: (message: string) => void): Promise<ProjectSyncSummary | null> => {
     const projectRow = await db.projects.get(projectId)
     if (!projectRow) return null
@@ -670,6 +721,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     deletePhoto,
     deletePin,
     addFloorplan,
+    deleteFloorplan,
     syncAll,
   }
 }

@@ -35,6 +35,7 @@ export default function ProjectDetailPage() {
     deletePhoto,
     deletePin,
     addFloorplan,
+    deleteFloorplan,
     syncAll,
   } = useProject(projectId, selectedFloorplanId)
   const floorplanOptions = useMemo(
@@ -53,6 +54,7 @@ export default function ProjectDetailPage() {
   const [showFloorplanToast, setShowFloorplanToast] = useState(false)
   const [syncProgress, setSyncProgress] = useState<string | undefined>(undefined)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [floorplanToDelete, setFloorplanToDelete] = useState<string | null>(null)
   const floorplanRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -220,6 +222,7 @@ export default function ProjectDetailPage() {
                   floorplans={project.floorplans}
                   activeFloorplanId={activeFloorplan?.floorplanId ?? null}
                   onSelect={setActiveFloorplanId}
+                  onDelete={(floorplanId) => setFloorplanToDelete(floorplanId)}
                   disabled={isLoading}
                 />
                 <AddFloorplanButton
@@ -324,6 +327,45 @@ export default function ProjectDetailPage() {
           onDeletePhoto={deletePhoto}
           uploadDisabled={false}
         />
+
+        {/* Delete Floorplan Confirmation */}
+        {floorplanToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="max-w-sm rounded-lg border border-border bg-background-card p-6 shadow-2xl">
+              <h2 className="mb-2 text-lg font-semibold text-foreground">Delete floorplan?</h2>
+              <p className="mb-4 text-sm text-foreground-muted">
+                This will delete the floorplan and all its pins and photos. This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setFloorplanToDelete(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    const idToDelete = floorplanToDelete
+                    setFloorplanToDelete(null)
+
+                    // If deleting the active floorplan, switch to another one first
+                    if (idToDelete === activeFloorplan?.floorplanId) {
+                      const otherFloorplan = project?.floorplans.find(fp => fp.floorplanId !== idToDelete)
+                      if (otherFloorplan) {
+                        setActiveFloorplanId(otherFloorplan.floorplanId)
+                      }
+                    }
+
+                    await deleteFloorplan(idToDelete)
+                  }}
+                >
+                  Delete floorplan
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </AuthGate>
     </div>
   )

@@ -133,7 +133,10 @@ export function useActiveFloorplan(floorplans: FloorplanLike[]): UseActiveFloorp
   )
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParamsString)
+    // When offline, we update URL via replaceState which doesn't update searchParams.
+    // So we must read directly from window.location to get the true current state.
+    const queryString = typeof window !== 'undefined' ? window.location.search : searchParamsString
+    const params = new URLSearchParams(queryString)
     const param = params.get('fp')
     const hasParam = param && floorplans.some((fp) => fp.id === param)
     if (hasParam) {

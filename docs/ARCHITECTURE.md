@@ -493,7 +493,7 @@ All Drive operations are proxied through API routes to keep tokens server-side.
 - Uploads photo to Drive under `/pins/<pinId>/`
 - Returns `driveFileId`
 
-**`/api/drive/write/route.ts`**
+**`/api/drive/write/project-json/route.ts`**
 - Writes or updates `project.json` in Drive
 
 **`/api/drive/download/project-json/route.ts`**
@@ -504,8 +504,13 @@ All Drive operations are proxied through API routes to keep tokens server-side.
 - Downloads any file by ID from Drive
 - Returns data URL
 
-**`/api/drive/delete/[fileId]/route.ts`**
-- Deletes a file from Drive (used for photo cleanup)
+**`/api/drive/delete/photo/route.ts`**
+- Deletes a photo file from Drive
+- Accepts `driveFileId` in body
+
+**`/api/drive/delete/project/route.ts`**
+- Deletes a project folder from Drive
+- Accepts `driveFolderId` in body
 
 **`/api/drive/relink/route.ts`**
 - Relinks a local project to a different Drive folder

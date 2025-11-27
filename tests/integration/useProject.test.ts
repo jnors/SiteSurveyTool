@@ -239,7 +239,7 @@ describe('useProject Integration Tests', () => {
             expect(photosAfter.length).toBe(MAX_PHOTOS)
         })
 
-        it('should delete photo and enqueue Drive deletion', async () => {
+        it('should delete photo and call Drive deletion directly', async () => {
             const { pin } = await seedTestProject()
             // Manually add a photo with driveFileId
             const photo = createTestPhoto(pin.id, {
@@ -263,9 +263,8 @@ describe('useProject Integration Tests', () => {
             const dbPhoto = await db.photos.get(photo.id)
             expect(dbPhoto).toBeUndefined()
 
-            // Verify outbox entry was created for Drive deletion
-            const outboxEntries = await db.outbox.where('entityId').equals(photo.id).toArray()
-            expect(outboxEntries.length).toBeGreaterThan(0)
+            // Verify Drive client was called to delete the photo directly
+            expect(deletePhotoClient).toHaveBeenCalledWith({ driveFileId: 'drive-file-id' })
         })
     })
 

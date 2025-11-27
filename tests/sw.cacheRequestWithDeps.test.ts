@@ -77,9 +77,9 @@ describe('service worker cacheRequestWithDeps', () => {
     const storedKeys = put.mock.calls.map(([arg]) => (arg instanceof Request ? arg.url : arg))
     expect(storedKeys).toEqual(
       expect.arrayContaining([
-        'https://FieldPins.test/projects/abc',
+        'https://fieldpins.test/projects/abc',
         '/projects/abc',
-        'https://FieldPins.test/_next/static/chunk.js',
+        'https://fieldpins.test/_next/static/chunk.js',
         '/_next/static/chunk.js',
       ])
     )

@@ -1,5 +1,7 @@
 // Client-side Google Drive client helpers
 
+import { logger } from '@/lib/logger'
+
 export type EnsureFoldersResponse = {
   rootId: string
   projectFolderId: string
@@ -17,7 +19,7 @@ export async function ensureProjectFolderClient(params: {
   projectName: string
   driveFolderId?: string
 }): Promise<EnsureFoldersResponse> {
-  console.log('[drive] ensureProjectFolderClient POST /api/drive/ensure', params)
+  logger.drive('ensureProjectFolderClient', params)
   const res = await fetch('/api/drive/ensure', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

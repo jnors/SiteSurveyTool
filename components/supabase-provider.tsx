@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Session, User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
 
 type SupabaseContext = {
     supabase: ReturnType<typeof createClient>
@@ -31,17 +32,17 @@ export default function SupabaseProvider({
     const router = useRouter()
 
     const refreshSubscriptionStatus = async () => {
-        console.log('🔄 [SupabaseProvider] refreshSubscriptionStatus called')
+        logger.debug('refreshSubscriptionStatus called')
         // Use getSession instead of getUser to avoid network hangs
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
         if (sessionError) {
-            console.error('❌ [SupabaseProvider] Error getting session:', sessionError)
+            logger.error('Error getting session', sessionError)
             return
         }
 
         if (session?.user) {
-            console.log('👤 [SupabaseProvider] User found:', session.user.id)
+            logger.debug('User found in refreshSubscriptionStatus', { userId: session.user.id })
 
             try {
                 // Race condition to prevent hang
@@ -55,9 +56,9 @@ export default function SupabaseProvider({
                 ])
 
                 if (error) {
-                    console.error('❌ [SupabaseProvider] Error fetching subscription status:', error)
+                    logger.error('Error fetching subscription status', error)
                 } else {
-                    console.log('🔍 [SupabaseProvider] Refreshed subscription status:', data?.subscription_status)
+                    logger.debug('Refreshed subscription status', { status: data?.subscription_status })
                     // Cache status for faster load on next refresh
                     if (data?.subscription_status) {
                         localStorage.setItem('subscription_status', data.subscription_status)
@@ -67,10 +68,10 @@ export default function SupabaseProvider({
                 }
                 setSubscriptionStatus(data?.subscription_status ?? null)
             } catch (err) {
-                console.error('❌ [SupabaseProvider] Profile fetch timed out or failed:', err)
+                logger.error('Profile fetch timed out or failed', err)
             }
         } else {
-            console.warn('⚠️ [SupabaseProvider] No user found in getSession()')
+            logger.warn('No user found in getSession()')
             setSubscriptionStatus(null)
             localStorage.removeItem('subscription_status')
         }
@@ -98,7 +99,7 @@ export default function SupabaseProvider({
                     ])
 
                     if (error) {
-                        console.error('❌ [SupabaseProvider] Error loading subscription status:', error)
+                        logger.error('Error loading subscription status', error)
                     } else {
                         // Cache status for faster load on next refresh
                         if (data?.subscription_status) {
@@ -109,7 +110,7 @@ export default function SupabaseProvider({
                     }
                     setSubscriptionStatus(data?.subscription_status ?? null)
                 } catch (err) {
-                    console.error('❌ [SupabaseProvider] Profile fetch timed out:', err)
+                    logger.error('Profile fetch timed out', err)
                     // Don't clear status on timeout if we have a cache
                 }
             } else {
@@ -128,7 +129,7 @@ export default function SupabaseProvider({
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search)
             if (params.get('success') === 'true') {
-                console.log('🔍 [SupabaseProvider] Detected checkout success, refreshing subscription...')
+                logger.debug('Detected checkout success, refreshing subscription...')
                 refreshSubscriptionStatus()
                 // Clean up the URL
                 window.history.replaceState({}, '', window.location.pathname)
@@ -141,7 +142,7 @@ export default function SupabaseProvider({
         if (typeof window !== 'undefined') {
             const cached = localStorage.getItem('subscription_status')
             if (cached) {
-                console.log('⚡ [SupabaseProvider] Loaded cached subscription status:', cached)
+                logger.debug('Loaded cached subscription status', { status: cached })
                 setSubscriptionStatus(cached)
             }
         }

@@ -31,6 +31,7 @@ export default function ProjectDetailPage() {
     isLoading,
     activeFloorplanId: resolvedActiveFloorplanId,
     addPin,
+    updatePin,
     addPhotos,
     deletePhoto,
     deletePin,
@@ -317,6 +318,7 @@ export default function ProjectDetailPage() {
           onOpenChange={setModalOpen}
           isNewPin={selectedPin?.pinId.startsWith("temp-")}
           onSaveNewPin={handleSaveNewPin}
+          onUpdatePin={updatePin}
           onDeletePin={async (pinId) => {
             await deletePin(pinId)
             setSelectedPin(null)

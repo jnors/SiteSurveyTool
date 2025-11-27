@@ -45,3 +45,53 @@
 - Minimum contrast ratio: 4.5:1
 - Touch targets ≥ 44px
 - Use motion sparingly for focus / activity only
+
+---
+
+## Code Standards
+
+### Logging
+
+**REQUIRED:** All logging must use the centralized logger utility from `lib/logger.ts`.
+
+#### ✅ Do This
+```typescript
+import { logger } from '@/lib/logger';
+
+// Debug/info (development only)
+logger.debug('User interaction', { action: 'click', element: 'save-button' });
+logger.info('Project synced successfully');
+
+// Warnings/errors (all environments)
+logger.warn('Slow network detected', { latency: 5000 });
+logger.error('Failed to upload photo', error);
+
+// Domain-specific helpers
+logger.sync('Uploading photo', projectId, { photoId: '123' });
+logger.auth('Sign in successful', { userId: user.id });
+logger.drive('Folder created', { folderId: 'abc123' });
+```
+
+#### ❌ Don't Do This
+```typescript
+// Never use console.log directly
+console.log('User clicked button'); // ❌ Wrong
+console.info('Project synced');     // ❌ Wrong
+
+// Use the logger instead
+logger.debug('User clicked button'); // ✅ Correct
+logger.info('Project synced');       // ✅ Correct
+```
+
+#### Log Levels
+- **`logger.debug()`** - Detailed debugging (dev only)
+- **`logger.info()`** - General information (dev only)
+- **`logger.warn()`** - Potential issues (all environments)
+- **`logger.error()`** - Error conditions (all environments)
+- **Domain helpers** (`sync`, `auth`, `drive`, `restore`) - Specialized logging (dev only)
+
+#### Why?
+- 🔒 **Security:** Prevents sensitive data from leaking in production logs
+- 🎯 **Consistency:** Standardized log format across the codebase
+- 📊 **Monitoring:** Easy integration with Sentry/LogRocket in the future
+- 🧹 **Clean console:** Production builds won't clutter browser console

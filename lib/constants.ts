@@ -13,9 +13,11 @@ export const COLORS = {
   textPrimary: '#f8fafc', // Slate 50
 }
 
+import { env } from '@/lib/env'
+
 // Photos
-export const MAX_PHOTO_RES = Number(process.env.NEXT_PUBLIC_MAX_PHOTO_RES ?? 1080)
-export const MAX_PHOTOS_PER_PIN = Number(process.env.NEXT_PUBLIC_MAX_PHOTOS_PER_PIN ?? 4)
+export const MAX_PHOTO_RES = env.NEXT_PUBLIC_MAX_PHOTO_RES
+export const MAX_PHOTOS_PER_PIN = env.NEXT_PUBLIC_MAX_PHOTOS_PER_PIN
 
 // Google Drive
 export const DRIVE_ROOT_NAME = 'FieldPins'

@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import { useSupabase } from '@/components/supabase-provider'
+import { logger } from '@/lib/logger'
 
 type SignInOptions = {
   callbackUrl?: string
@@ -28,19 +29,19 @@ export function useAuth(callbackUrl: string = '/') {
   )
 
   const handleSignOut = useCallback(async (callbackUrl?: string) => {
-    console.log('🔄 [useAuth] handleSignOut called')
+    logger.auth('handleSignOut called')
     try {
-      console.log('🔄 [useAuth] Calling supabase.auth.signOut()...')
+      logger.auth('Calling supabase.auth.signOut()...')
       // Race between signOut and 2s timeout to prevent hanging
       await Promise.race([
         supabase.auth.signOut(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Sign out timed out')), 2000))
       ])
-      console.log('✅ [useAuth] supabase.auth.signOut() completed')
+      logger.auth('supabase.auth.signOut() completed')
     } catch (error) {
-      console.error('❌ [useAuth] Error signing out:', error)
+      logger.error('Error signing out', error)
       // Force clear local storage if signOut fails/times out
-      console.log('🧹 [useAuth] Force clearing local storage tokens...')
+      logger.auth('Force clearing local storage tokens...')
       const keyToRemove = []
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -50,9 +51,9 @@ export function useAuth(callbackUrl: string = '/') {
       }
       keyToRemove.forEach(k => localStorage.removeItem(k))
       localStorage.removeItem('subscription_status')
-      console.log('✅ [useAuth] Local storage cleared')
+      logger.auth('Local storage cleared')
     } finally {
-      console.log('🔄 [useAuth] Redirecting to server-side signout...')
+      logger.auth('Redirecting to server-side signout...')
       // Always redirect to the server-side sign-out route to ensure cookies are cleared
       window.location.href = '/auth/signout'
     }

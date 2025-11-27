@@ -3,6 +3,7 @@
 import { db, type FloorplanRow, type OutboxRow, type PhotoRow, type PinRow, type ProjectRow } from '@/lib/db'
 import { deletePhotoClient, uploadFloorplanClient, uploadPhotoClient, writeProjectJsonClient } from '@/lib/google'
 import { buildProjectJsonPayload } from '@/lib/mappers'
+import { logger } from '@/lib/logger'
 
 type PhotoUploadStats = {
   total: number
@@ -121,7 +122,7 @@ async function normalizeDemoPhotoStatuses(params: {
   }
 
   await db.projects.update(projectId, { syncedAt: nowIso })
-  console.log('[sync] demo normalization applied', projectId, idsToNormalize.length)
+  logger.sync('demo normalization applied', projectId, { count: idsToNormalize.length })
   return idsToNormalize.length
 }
 
@@ -172,9 +173,9 @@ export async function syncProject(
     .filter((row) => photoMap.has(row.entityId))
     .map((row) => row.entityId)
 
-  console.log('[sync] project state', projectId, 'photos', photoMap.size, 'outbox', outboxPhotoRows.length)
+  logger.sync('project state', projectId, { photos: photoMap.size, outbox: outboxPhotoRows.length })
   const photoTargets = getPhotoUploadTargets(photoMap, projectPhotoIds)
-  console.log('[sync] photo targets', projectId, Array.from(photoTargets))
+  logger.sync('photo targets', projectId, { targets: Array.from(photoTargets) })
   const photoStats: PhotoUploadStats = {
     total: photoTargets.size,
     success: 0,
@@ -195,13 +196,13 @@ export async function syncProject(
       continue
     }
     try {
-      console.log('[sync] deleting Drive photo', projectId, row.entityId, driveFileId)
+      logger.sync('deleting Drive photo', projectId, { photoId: row.entityId, driveFileId })
       await withBackoff(() => deletePhotoClient({ driveFileId }))
       await db.outbox.delete(row.id)
     } catch (error: any) {
       const message = error instanceof Error ? error.message : 'Drive photo delete failed'
       errors.push(message)
-      console.warn('[sync] photo delete failed', projectId, row.entityId, error)
+      logger.warn('Photo delete failed during sync', { projectId, photoId: row.entityId, error })
       const now = new Date().toISOString()
       await db.outbox.update(row.id, { retries: row.retries + 1, lastTriedAt: now })
     }
@@ -219,7 +220,7 @@ export async function syncProject(
     photo.status = 'syncing'
     try {
       const dataUrl = await ensureDataUrl(photo.localUri)
-      console.log('[sync] uploading photo', projectId, photo.id)
+      logger.sync('uploading photo', projectId, { photoId: photo.id })
       const res = await withBackoff(() =>
         uploadPhotoClient({
           projectFolderId,
@@ -233,14 +234,14 @@ export async function syncProject(
       photo.driveFileId = res.driveFileId
       await db.outbox.where('entityType').equals('photo').and((row) => row.entityId === photo.id).delete()
       photoStats.success += 1
-      console.log('[sync] uploaded photo', projectId, photo.id)
+      logger.sync('uploaded photo', projectId, { photoId: photo.id })
     } catch (error: any) {
       const message = error instanceof Error ? error.message : 'Photo upload failed'
       errors.push(message)
       photoStats.failed += 1
       await db.photos.update(photo.id, { status: 'error' })
       photo.status = 'error'
-      console.warn('[sync] photo upload failed', projectId, photo.id, error)
+      logger.warn('Photo upload failed during sync', { projectId, photoId: photo.id, error })
       const now = new Date().toISOString()
       await db.outbox
         .where('entityType')
@@ -259,7 +260,7 @@ export async function syncProject(
       if (!floorplan.driveFileId || floorplan.localUri.startsWith('data:')) {
         options.onProgress?.(`Syncing floorplan ${floorplan.name}...`)
         const dataUrl = await ensureDataUrl(floorplan.localUri)
-        console.log('[sync] uploading floorplan', projectId, floorplan.id)
+        logger.sync('uploading floorplan', projectId, { floorplanId: floorplan.id })
         const res = await withBackoff(() =>
           uploadFloorplanClient({
             projectFolderId,
@@ -309,7 +310,7 @@ export async function syncProject(
   try {
     options.onProgress?.('Writing project manifest...')
     await withBackoff(() => {
-      console.log('[sync] writing project.json', projectId)
+      logger.sync('writing project.json', projectId)
       return writeProjectJsonClient({ projectFolderId, payload })
     })
     projectJsonWritten = true
@@ -322,7 +323,7 @@ export async function syncProject(
       .equals('pin')
       .and((row) => pinIds.includes(row.entityId))
       .delete()
-    console.log('[sync] cleared pin outbox entries', projectId, pinIds.length)
+    logger.sync('cleared pin outbox entries', projectId, { count: pinIds.length })
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'project.json write failed'
     errors.push(message)

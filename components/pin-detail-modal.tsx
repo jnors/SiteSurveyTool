@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Loader2, Trash2 } from "lucide-react"
 import { BadgeStatus } from "@/ui/ds/BadgeStatus"
 import { PinPhotoGallery } from "@/components/pin-photo-gallery"
+import { logger } from "@/lib/logger"
 
 interface PinDetailModalProps {
   pin: Pin | null
@@ -16,6 +17,7 @@ interface PinDetailModalProps {
   onOpenChange: (open: boolean) => void
   isNewPin?: boolean
   onSaveNewPin?: (pin: Pin) => void
+  onUpdatePin?: (pinId: string, updates: { title: string; note: string }) => Promise<void> | void
   onDeletePin?: (pinId: string) => Promise<void> | void
   onAddPhotos?: (pinId: string, files: File[]) => Promise<void> | void
   onDeletePhoto?: (photoId: string) => Promise<DeletePhotoResult | void> | DeletePhotoResult | void
@@ -29,6 +31,7 @@ export function PinDetailModal({
   onOpenChange,
   isNewPin = false,
   onSaveNewPin,
+  onUpdatePin,
   onDeletePin,
   onAddPhotos,
   onDeletePhoto,
@@ -69,7 +72,7 @@ export function PinDetailModal({
     return "bg-green-600 hover:bg-green-700"
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (isNewPin && onSaveNewPin) {
       const newPin: Pin = {
         ...pin,
@@ -79,9 +82,10 @@ export function PinDetailModal({
         syncStatus: "pending",
       }
       onSaveNewPin(newPin)
-    } else {
-      console.log("[v0] Saving pin:", pin.pinId, "with title:", title, "and note:", note)
-      // TODO: Implement actual save logic for existing pins
+    } else if (!isNewPin && onUpdatePin && pin) {
+      // Save existing pin updates
+      logger.debug('Saving pin updates', { pinId: pin.pinId, title, note })
+      await onUpdatePin(pin.pinId, { title, note })
     }
     onOpenChange(false)
   }

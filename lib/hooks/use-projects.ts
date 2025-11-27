@@ -13,6 +13,7 @@ import { mapToUIProject } from '@/lib/mappers'
 import { compressImageToJpeg } from '@/lib/utils/image'
 import { ProjectSchema, FloorplanSchema, PhotoSchema } from '@/core'
 import { MAX_PHOTO_RES, MAX_PHOTOS_PER_PIN } from '@/lib/constants'
+import { logger } from '@/lib/logger'
 
 export type CreateProjectParams = {
   name: string
@@ -270,7 +271,7 @@ export function useProjects() {
     for (const projectRow of projectRows) {
       let folderId: string | undefined = projectRow.driveFolderId
       try {
-        console.log('[syncAll] ensuring project', projectRow.id, 'current folder', projectRow.driveFolderId)
+        logger.sync('ensuring project', projectRow.id, { currentFolder: projectRow.driveFolderId })
         const ensureRes = await ensureProjectFolderClient({
           projectId: projectRow.id,
           projectName: projectRow.name,
@@ -298,26 +299,26 @@ export function useProjects() {
         }
       } catch (error) {
         errorCount += 1
-        console.warn('[drive] ensure failed', projectRow.id, error)
+        logger.warn('Drive ensure failed', { projectId: projectRow.id, error })
         continue
       }
 
       if (!folderId) {
         errorCount += 1
-        console.warn('[sync] missing Drive folder id for project', projectRow.id)
+        logger.warn('Missing Drive folder id for project', { projectId: projectRow.id })
         continue
       }
 
       try {
         const summary = await syncProject(projectRow.id, folderId)
         summaries.push(summary)
-        console.log('[syncAll] summary', projectRow.id, summary)
+        logger.sync('summary', projectRow.id, summary)
         if (summary.errors.length) {
           errorCount += summary.errors.length
         }
       } catch (error) {
         errorCount += 1
-        console.warn('[sync] project sync failed', projectRow.id, error)
+        logger.warn('Project sync failed', { projectId: projectRow.id, error })
       }
     }
 
@@ -346,7 +347,7 @@ export function useProjects() {
     }
     setEnsureIssues((prev) => prev.filter((issue) => issue.projectId !== projectId))
     if (!folderId) {
-      console.warn('[sync] missing Drive folder after re-create', projectId)
+      logger.warn('Missing Drive folder after re-create', { projectId })
       setProjects(await mapProjectsToUI())
       return null
     }
@@ -374,9 +375,9 @@ export function useProjects() {
     let summary: ProjectSyncSummary | null = null
     try {
       summary = await syncProject(projectId, folderId)
-      console.log('[recreate] summary', projectId, summary)
+      logger.sync('recreate summary', projectId, summary)
     } catch (error) {
-      console.warn('[sync] project sync failed during re-create', projectId, error)
+      logger.warn('Project sync failed during re-create', { projectId, error })
     }
     setProjects(await mapProjectsToUI())
     return summary
@@ -431,7 +432,7 @@ export function useProjects() {
       try {
         await deleteProjectClient({ driveFolderId: projectRow.driveFolderId })
       } catch (error) {
-        console.warn('[deleteProject] drive delete failed', error)
+        logger.warn('Drive delete failed during project deletion', { error })
         // Continue with local delete even if Drive fails
       }
     }
@@ -582,7 +583,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
           await db.photos.add(photoDto)
           await enqueuePhotoUpload(photoId)
         } catch (error) {
-          console.warn('[photos] compression failed', error)
+          logger.warn('Photo compression failed', { error })
         }
       }
       const nowIso = new Date().toISOString()
@@ -691,6 +692,24 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     [projectId, load],
   )
 
+  const updatePin = useCallback(
+    async (pinId: string, updates: { title: string; note: string }) => {
+      const nowIso = new Date().toISOString()
+      await db.transaction('rw', [db.pins, db.projects, db.outbox], async () => {
+        await db.pins.update(pinId, {
+          title: updates.title,
+          note: updates.note,
+          updatedAt: nowIso,
+        })
+        await db.projects.update(projectId, { updatedAt: nowIso })
+        // Enqueue to trigger project.json sync
+        await enqueue('update_pin', 'pin', pinId, { projectId })
+      })
+      await load()
+    },
+    [projectId, load],
+  )
+
   const syncAll = useCallback(async (onProgress?: (message: string) => void): Promise<ProjectSyncSummary | null> => {
     const projectRow = await db.projects.get(projectId)
     if (!projectRow) return null
@@ -717,6 +736,7 @@ export function useProject(projectId: string, preferredFloorplanId: string | nul
     isLoading,
     activeFloorplanId: project?.activeFloorplanId ?? null,
     addPin,
+    updatePin,
     addPhotos,
     deletePhoto,
     deletePin,

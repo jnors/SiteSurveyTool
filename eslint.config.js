@@ -15,6 +15,8 @@ export default [
       ...nextPlugin.configs['core-web-vitals'].rules,
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
+      // Enforce use of logger utility instead of direct console
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
 ]

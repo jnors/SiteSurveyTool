@@ -18,6 +18,10 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    /* Additional strict type-checking options */
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "plugins": [
       {
         "name": "next"

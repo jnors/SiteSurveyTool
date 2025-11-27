@@ -5,6 +5,7 @@ import {
     downloadFileClient,
     type DriveProjectInfo,
 } from './google'
+import { logger } from './logger'
 
 export type RestoreProgress = {
     phase: 'discovering' | 'downloading' | 'complete'
@@ -67,7 +68,7 @@ export async function restoreFromDrive(
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Unknown error'
                 errors.push(`${projectInfo.projectName}: ${message}`)
-                console.error(`[restore] Failed to restore ${projectInfo.projectName}:`, error)
+                logger.error('Failed to restore project', error, { projectName: projectInfo.projectName })
             }
         }
 
@@ -114,7 +115,7 @@ async function restoreSingleProject(projectInfo: DriveProjectInfo): Promise<void
     // Check if project already exists (skip if so)
     const existingProject = await db.projects.get(projectRow.id)
     if (existingProject) {
-        console.log(`[restore] Project ${projectRow.id} already exists, skipping`)
+        logger.restore('Project already exists, skipping', { projectId: projectRow.id })
         return
     }
 
@@ -145,7 +146,7 @@ async function restoreSingleProject(projectInfo: DriveProjectInfo): Promise<void
 
             await db.floorplans.add(floorplanRow)
         } catch (error) {
-            console.error(`[restore] Failed to restore floorplan ${fpData.id}:`, error)
+            logger.error('Failed to restore floorplan', error, { floorplanId: fpData.id })
             // Continue with other floorplans
         }
     }
@@ -170,7 +171,7 @@ async function restoreSingleProject(projectInfo: DriveProjectInfo): Promise<void
             // Note: We're NOT downloading photos here
             // They can be lazy-loaded when the user opens a pin
         } catch (error) {
-            console.error(`[restore] Failed to restore pin ${pinData.id}:`, error)
+            logger.error('Failed to restore pin', error, { pinId: pinData.id })
             // Continue with other pins
         }
     }
@@ -182,5 +183,5 @@ async function restoreSingleProject(projectInfo: DriveProjectInfo): Promise<void
         })
     }
 
-    console.log(`[restore] Successfully restored project ${projectRow.name}`)
+    logger.restore('Successfully restored project', { projectName: projectRow.name })
 }

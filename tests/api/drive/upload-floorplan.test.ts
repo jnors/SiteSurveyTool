@@ -122,7 +122,7 @@ describe('POST /api/drive/upload/floorplan', () => {
         })
         vi.mocked(ensureChildFolder).mockResolvedValue('floorplans-folder-id')
         vi.mocked(extensionFromMime).mockReturnValue('png')
-        vi.mocked(findFileInFolder).mockResolvedValue({ id: 'existing-file-id' })
+        vi.mocked(findFileInFolder).mockResolvedValue({ id: 'existing-file-id', name: 'fp-456.png' })
         vi.mocked(uploadFileMultipart).mockResolvedValue({ id: 'existing-file-id' })
 
         const req = new Request('http://localhost:3000/api/drive/upload/floorplan', {

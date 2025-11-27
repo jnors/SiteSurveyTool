@@ -15,7 +15,7 @@ interface UseProjectSyncProps {
         errors: number
     }>
     recreateProjectFolder: (projectId: string) => Promise<ProjectSyncSummary | null>
-    relinkProjectFolder: (projectId: string, folderUrlOrId: string) => Promise<void>
+    relinkProjectFolder: (projectId: string, folderUrlOrId: string) => Promise<string | null>
     onToast: (message: string) => void
 }
 

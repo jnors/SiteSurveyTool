@@ -217,7 +217,7 @@ describe('useProject Integration Tests', () => {
 
             // Add photos up to the limit (already has 1)
             const MAX_PHOTOS = 4
-            const files = []
+            const files: File[] = []
             for (let i = 1; i < MAX_PHOTOS; i++) {
                 files.push(createMockFile(`photo-${i}.jpg`))
             }

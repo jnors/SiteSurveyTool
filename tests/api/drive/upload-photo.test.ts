@@ -154,7 +154,7 @@ describe('POST /api/drive/upload/photo', () => {
         })
         vi.mocked(ensureChildFolder).mockResolvedValue('photos-folder-id')
         vi.mocked(extensionFromMime).mockReturnValue('jpg')
-        vi.mocked(findFileInFolder).mockResolvedValue({ id: 'existing-file-id' })
+        vi.mocked(findFileInFolder).mockResolvedValue({ id: 'existing-file-id', name: 'photo-123.jpg' })
         vi.mocked(uploadFileMultipart).mockResolvedValue({ id: 'existing-file-id' })
 
         const req = new Request('http://localhost:3000/api/drive/upload/photo', {

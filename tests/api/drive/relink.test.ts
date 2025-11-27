@@ -58,7 +58,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should extract folder ID from URL', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,
@@ -89,7 +89,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should accept raw folder ID', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,
@@ -120,7 +120,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should return error if folder not found', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: false,
             status: 404,
@@ -143,7 +143,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should return error if not a folder', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,
@@ -173,7 +173,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should return error if folder is trashed', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,
@@ -204,7 +204,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should return error if user is not owner', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,
@@ -235,7 +235,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should return error if folder has wrong parent', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,
@@ -266,7 +266,7 @@ describe('POST /api/drive/relink', () => {
     })
 
     it('should return error if folder name does not match', async () => {
-        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id' })
+        vi.mocked(findFolderByName).mockResolvedValue({ id: 'root-id', name: 'FieldPins' })
         vi.mocked(driveFetch).mockResolvedValue({
             ok: true,
             status: 200,

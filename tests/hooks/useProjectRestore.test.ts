@@ -136,7 +136,7 @@ describe('useProjectRestore', () => {
                 })
 
                 onProgress({
-                    phase: 'restoring',
+                    phase: 'downloading',
                     message: 'Restoring project 1...',
                     projectsTotal: 3,
                     projectsCompleted: 1,

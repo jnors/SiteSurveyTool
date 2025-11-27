@@ -118,7 +118,7 @@ describe('POST /api/drive/write/project-json', () => {
     })
 
     it('should update existing project.json', async () => {
-        vi.mocked(findFileInFolder).mockResolvedValue({ id: 'existing-file-123' })
+        vi.mocked(findFileInFolder).mockResolvedValue({ id: 'existing-file-123', name: 'project.json' })
         vi.mocked(uploadFileMultipart).mockResolvedValue({ id: 'existing-file-123' })
 
         const payload = {

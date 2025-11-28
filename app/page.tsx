@@ -96,7 +96,7 @@ export default async function HomePage() {
             <Link href="/terms" className="transition-colors hover:text-primary">
               Terms & Conditions
             </Link>
-            <Link href="mailto:hello@sitetrace.app" className="transition-colors hover:text-primary">
+            <Link href="mailto:fieldpins@jnors.eu" className="transition-colors hover:text-primary">
               Contact
             </Link>
           </div>

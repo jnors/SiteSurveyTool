@@ -67,7 +67,7 @@ export function NavBar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="mailto:hello@sitetrace.app?subject=SiteSurveyTool%20Feedback" className="cursor-pointer w-full flex items-center">
+                    <a href="mailto:fieldpins@jnors.eu?subject=SiteSurveyTool%20Feedback" className="cursor-pointer w-full flex items-center">
                       <MessageSquare className="mr-2 h-4 w-4" />
                       Feedback
                     </a>

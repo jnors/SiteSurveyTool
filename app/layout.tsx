@@ -67,7 +67,7 @@ export default async function RootLayout({
     name: 'FieldPins',
     url: 'https://FieldPins.app',
     sameAs: [],
-    contactPoint: [{ '@type': 'ContactPoint', email: 'hello@sitetrace.app', contactType: 'customer support' }],
+    contactPoint: [{ '@type': 'ContactPoint', email: 'fieldpins@jnors.eu', contactType: 'customer support' }],
   }
 
   const faqJsonLd = {

@@ -354,8 +354,8 @@ export default function TermsPage() {
                             </p>
                             <p className="mb-4 leading-relaxed">
                                 <strong>Email:</strong>{" "}
-                                <a href="mailto:hello@sitetrace.app" className="text-primary hover:underline">
-                                    hello@sitetrace.app
+                                <a href="mailto:fieldpins@jnors.eu" className="text-primary hover:underline">
+                                    fieldpins@jnors.eu
                                 </a>
                             </p>
                         </section>
@@ -386,7 +386,7 @@ export default function TermsPage() {
                         <Link href="/terms" className="transition-colors hover:text-primary">
                             Terms & Conditions
                         </Link>
-                        <Link href="mailto:hello@sitetrace.app" className="transition-colors hover:text-primary">
+                        <Link href="mailto:fieldpins@jnors.eu" className="transition-colors hover:text-primary">
                             Contact
                         </Link>
                     </div>

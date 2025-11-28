@@ -86,12 +86,6 @@ export default async function RootLayout({
         <Providers initialSession={session} initialSubscriptionStatus={initialSubscriptionStatus}>
           {children}
         </Providers>
-        {/* Loom SDK initialization to prevent feature gate errors */}
-        <Script
-          id="loom-sdk"
-          strategy="beforeInteractive"
-          src="https://cdn.loom.com/assets/js/loom-embed.js"
-        />
         <Script id="jsonld-software" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
         <Script id="jsonld-organization" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <Script id="jsonld-faq" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />

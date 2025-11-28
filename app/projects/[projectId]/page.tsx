@@ -11,8 +11,12 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { AddFloorplanButton } from "@/components/add-floorplan-button"
 import { AddPinButton } from "@/components/add-pin-button"
 import { AuthGate, NavBar, OfflineBanner, SyncBar } from "@/ui"
+import dynamic from "next/dynamic"
 import { FloorplanSwitcher } from "@/components/floorplan-switcher"
-import { PinDetailModal } from "@/components/pin-detail-modal"
+// Lazy load PinDetailModal
+const PinDetailModal = dynamic(() => import("@/components/pin-detail-modal").then((mod) => mod.PinDetailModal), {
+  loading: () => null,
+})
 import { PinMarker } from "@/components/pin-marker"
 import { PinSidebar } from "@/components/pin-sidebar"
 import { ToastNotification } from "@/components/toast-notification"

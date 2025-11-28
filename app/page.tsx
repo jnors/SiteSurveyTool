@@ -90,6 +90,12 @@ export default async function HomePage() {
             <Link href="#faq" className="transition-colors hover:text-primary">
               FAQ
             </Link>
+            <Link href="/privacy-policy" className="transition-colors hover:text-primary">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-primary">
+              Terms & Conditions
+            </Link>
             <Link href="mailto:hello@sitetrace.app" className="transition-colors hover:text-primary">
               Contact
             </Link>

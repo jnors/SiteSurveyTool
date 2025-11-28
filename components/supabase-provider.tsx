@@ -52,7 +52,7 @@ export default function SupabaseProvider({
                         .select('subscription_status')
                         .eq('id', session.user.id)
                         .single(),
-                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 5000))
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 15000))
                 ])
 
                 if (error) {
@@ -68,7 +68,7 @@ export default function SupabaseProvider({
                 }
                 setSubscriptionStatus(data?.subscription_status ?? null)
             } catch (err) {
-                logger.error('Profile fetch timed out or failed', err)
+                logger.warn('Profile fetch timed out or failed', { error: err, userId: session.user.id })
             }
         } else {
             logger.warn('No user found in getSession()')
@@ -95,7 +95,7 @@ export default function SupabaseProvider({
                             .select('subscription_status')
                             .eq('id', session.user.id)
                             .single(),
-                        new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 5000))
+                        new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 15000))
                     ])
 
                     if (error) {
@@ -110,7 +110,7 @@ export default function SupabaseProvider({
                     }
                     setSubscriptionStatus(data?.subscription_status ?? null)
                 } catch (err) {
-                    logger.error('Profile fetch timed out', err)
+                    logger.warn('Profile fetch timed out', { error: err, userId: session?.user?.id })
                     // Don't clear status on timeout if we have a cache
                 }
             } else {

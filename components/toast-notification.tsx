@@ -23,15 +23,15 @@ export function ToastNotification({ message, show, onClose, duration = 3000 }: T
       }, duration)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [show, duration, onClose])
 
   if (!show && !isVisible) return null
 
   return (
     <div
-      className={`fixed top-20 left-1/2 z-50 flex -translate-x-1/2 transition-all duration-150 ${
-        isVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
-      }`}
+      className={`fixed top-20 left-1/2 z-50 flex -translate-x-1/2 transition-all duration-150 ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
+        }`}
     >
       <Toast
         tone="success"

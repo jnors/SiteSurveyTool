@@ -34,8 +34,7 @@ export function SignInCard({
   const isOnline = useOnline()
   const hasMounted = useHasMounted()
   const effectiveOnline = hasMounted ? isOnline : true
-  const isLoading = status === 'loading'
-  const isDisabled = isLoading || !effectiveOnline
+  const isDisabled = !effectiveOnline
 
   const handleSignIn = () => {
     if (isDisabled) return

@@ -1,4 +1,4 @@
-import { Zap, RefreshCw, Lock } from 'lucide-react'
+import { Zap, RefreshCw, Lock, type LucideIcon } from 'lucide-react'
 import type { PillarsProps } from "@/types/landing"
 
 type PillarsSectionProps = {
@@ -6,7 +6,7 @@ type PillarsSectionProps = {
 }
 
 export function Pillars({ data }: PillarsSectionProps) {
-  const icons = [Zap, RefreshCw, Lock]
+  const icons: LucideIcon[] = [Zap, RefreshCw, Lock]
   const iconColors = [
     'bg-gradient-to-br from-primary/20 to-primary/10',
     'bg-gradient-to-br from-secondary/20 to-secondary/10',
@@ -35,6 +35,8 @@ export function Pillars({ data }: PillarsSectionProps) {
           {data.items.map((p, idx) => {
             const Icon = icons[idx]
             const iconBg = iconColors[idx]
+
+            if (!Icon) return null
 
             return (
               <article

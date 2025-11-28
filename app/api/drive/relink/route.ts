@@ -55,7 +55,7 @@ function extractFolderId(raw: string | undefined): string | null {
     const segments = url.pathname.split('/').filter(Boolean)
     if (segments.length) {
       const lastSegment = segments[segments.length - 1]
-      if (/^[a-zA-Z0-9_-]{10,}$/.test(lastSegment)) {
+      if (lastSegment && /^[a-zA-Z0-9_-]{10,}$/.test(lastSegment)) {
         return lastSegment
       }
     }

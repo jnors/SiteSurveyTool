@@ -39,13 +39,14 @@ export async function POST(req: Request) {
   try {
     const { buffer, mimeType } = parseDataUrl(body.dataUrl)
     const folderId = await ensureChildFolder(token, body.projectFolderId, 'floorplans')
-    const extension = extensionFromMime(mimeType)
+    const finalMimeType = mimeType || 'image/jpeg'
+    const extension = extensionFromMime(finalMimeType)
     const name = body.fileName || `${body.floorplanId}.${extension}`
     const existing = await findFileInFolder(token, folderId, name)
     const uploaded = await uploadFileMultipart(token, {
       name,
       parentId: folderId,
-      mimeType,
+      mimeType: finalMimeType,
       data: buffer,
       fileId: existing?.id,
     })

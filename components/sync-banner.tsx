@@ -23,6 +23,7 @@ export function SyncBanner({ status, onSync, actionDisabled, disabledReason }: S
       }, 150)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [status, prevStatus])
 
   const getIcon = () => {

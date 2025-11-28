@@ -176,12 +176,5 @@ async function restoreSingleProject(projectInfo: DriveProjectInfo): Promise<void
         }
     }
 
-    // Set active floorplan
-    if (projectJson.project.activeFloorplanId) {
-        await db.projects.update(projectRow.id, {
-            activeFloorplanId: projectJson.project.activeFloorplanId,
-        })
-    }
-
     logger.restore('Successfully restored project', { projectName: projectRow.name })
 }

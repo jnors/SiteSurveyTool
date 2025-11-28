@@ -179,6 +179,9 @@ export function parseDataUrl(dataUrl: string) {
   }
   const mimeType = match.groups.mime
   const base64Data = match.groups.data
+  if (!mimeType || !base64Data) {
+    throw new Error("Invalid data URL payload")
+  }
   const buffer = Buffer.from(base64Data, "base64")
   return { mimeType, buffer }
 }

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Trash2 } from "lucide-react"
+import { usePhotoLazyLoad } from "@/hooks/usePhotoLazyLoad"
 import Image from "next/image"
 
 interface PinPhotoGalleryProps {
@@ -35,6 +36,7 @@ export function PinPhotoGallery({
     const [isDeleting, setIsDeleting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const fileInputId = `pin-photo-input-${pin.pinId}`
+    const { getPhotoUri } = usePhotoLazyLoad(pin.photos)
 
     useEffect(() => {
         if (previewIndex !== null) {
@@ -138,7 +140,7 @@ export function PinPhotoGallery({
                                     aria-label={`View photo ${index + 1}`}
                                 >
                                     <Image
-                                        src={photo.localUri || "/placeholder.svg"}
+                                        src={getPhotoUri(photo)}
                                         alt={`${pin.title} photo ${index + 1}`}
                                         fill
                                         className="object-cover transition-transform duration-150 group-hover:scale-105"
@@ -224,7 +226,7 @@ export function PinPhotoGallery({
                         <div className="relative mx-auto aspect-video w-full max-h-[60vh]">
                             {previewIndex !== null && pin.photos[previewIndex] && (
                                 <Image
-                                    src={pin.photos[previewIndex]?.localUri || "/placeholder.svg"}
+                                    src={getPhotoUri(pin.photos[previewIndex])}
                                     alt={`${pin.title} large preview`}
                                     fill
                                     className="object-contain"

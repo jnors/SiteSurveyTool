@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { lazyLoadPhoto } from '@/lib/lazy-load-photo'
 import type { PinPhoto } from '@/lib/types'
 
@@ -8,45 +8,43 @@ import type { PinPhoto } from '@/lib/types'
  */
 export function usePhotoLazyLoad(photos: PinPhoto[]) {
     const [photoUris, setPhotoUris] = useState<Map<string, string>>(new Map())
-    const [loading, setLoading] = useState<Set<string>>(new Set())
+    const loadingRef = useRef<Set<string>>(new Set())
 
     useEffect(() => {
         // Find photos that need loading (empty localUri but have driveFileId)
         const photosToLoad = photos.filter(
-            (photo) => !photo.localUri && photo.driveFileId && !loading.has(photo.photoId)
+            (photo) => !photo.localUri && photo.driveFileId && !loadingRef.current.has(photo.photoId)
         )
 
         if (photosToLoad.length === 0) {
             return
         }
 
-        // Mark as loading
-        setLoading((prev) => {
-            const next = new Set(prev)
-            photosToLoad.forEach((photo) => next.add(photo.photoId))
-            return next
+        // Mark as loading (using ref to avoid dependency issues)
+        photosToLoad.forEach((photo) => {
+            loadingRef.current.add(photo.photoId)
         })
 
         // Load each photo
-        photosToLoad.forEach(async (photo) => {
-            try {
-                const uri = await lazyLoadPhoto(photo.photoId)
-                if (uri) {
-                    setPhotoUris((prev) => {
-                        const next = new Map(prev)
-                        next.set(photo.photoId, uri)
-                        return next
-                    })
+        Promise.all(
+            photosToLoad.map(async (photo) => {
+                try {
+                    const uri = await lazyLoadPhoto(photo.photoId)
+                    if (uri) {
+                        setPhotoUris((prev) => {
+                            const next = new Map(prev)
+                            next.set(photo.photoId, uri)
+                            return next
+                        })
+                    }
+                } catch (error) {
+                    console.error(`Failed to load photo ${photo.photoId}:`, error)
+                } finally {
+                    loadingRef.current.delete(photo.photoId)
                 }
-            } finally {
-                setLoading((prev) => {
-                    const next = new Set(prev)
-                    next.delete(photo.photoId)
-                    return next
-                })
-            }
-        })
-    }, [photos, loading])
+            })
+        )
+    }, [photos])
 
     // Return URIs for photos, using loaded URI if available, otherwise localUri or placeholder
     const getPhotoUri = (photo: PinPhoto): string => {
@@ -56,5 +54,5 @@ export function usePhotoLazyLoad(photos: PinPhoto[]) {
         return '/placeholder.svg'
     }
 
-    return { getPhotoUri, isLoading: (photoId: string) => loading.has(photoId) }
+    return { getPhotoUri, isLoading: (photoId: string) => loadingRef.current.has(photoId) }
 }

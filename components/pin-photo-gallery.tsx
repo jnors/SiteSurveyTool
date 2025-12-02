@@ -36,6 +36,20 @@ export function PinPhotoGallery({
     const [isDeleting, setIsDeleting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const fileInputId = `pin-photo-input-${pin.pinId}`
+
+    // DEBUG: Log what photos we receive
+    console.log('[PinPhotoGallery] Received pin with photos:', pin.photos)
+    pin.photos.forEach((photo, idx) => {
+        console.log(`[PinPhotoGallery] Photo ${idx}:`, {
+            id: photo.photoId,
+            hasLocalUri: !!photo.localUri,
+            localUriLength: photo.localUri?.length || 0,
+            localUriPreview: photo.localUri?.substring(0, 50) || 'empty',
+            hasDriveFileId: !!photo.driveFileId,
+            driveFileId: photo.driveFileId
+        })
+    })
+
     const { getPhotoUri } = usePhotoLazyLoad(pin.photos)
 
     useEffect(() => {

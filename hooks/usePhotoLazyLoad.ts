@@ -11,25 +11,10 @@ export function usePhotoLazyLoad(photos: PinPhoto[]) {
     const loadingRef = useRef<Set<string>>(new Set())
 
     useEffect(() => {
-        console.log('[usePhotoLazyLoad] Hook called with photos:', photos.length)
-
         // Find photos that need loading (empty localUri but have driveFileId)
         const photosToLoad = photos.filter(
-            (photo) => {
-                const needsLoading = !photo.localUri && photo.driveFileId && !loadingRef.current.has(photo.photoId)
-                console.log('[usePhotoLazyLoad] Photo check:', {
-                    photoId: photo.photoId,
-                    hasLocalUri: !!photo.localUri,
-                    localUriLength: photo.localUri?.length || 0,
-                    hasDriveFileId: !!photo.driveFileId,
-                    alreadyLoading: loadingRef.current.has(photo.photoId),
-                    needsLoading
-                })
-                return needsLoading
-            }
+            (photo) => !photo.localUri && photo.driveFileId && !loadingRef.current.has(photo.photoId)
         )
-
-        console.log('[usePhotoLazyLoad] Photos to load:', photosToLoad.length)
 
         if (photosToLoad.length === 0) {
             return
@@ -37,7 +22,6 @@ export function usePhotoLazyLoad(photos: PinPhoto[]) {
 
         // Mark as loading (using ref to avoid dependency issues)
         photosToLoad.forEach((photo) => {
-            console.log('[usePhotoLazyLoad] Starting load for:', photo.photoId)
             loadingRef.current.add(photo.photoId)
         })
 
@@ -45,14 +29,11 @@ export function usePhotoLazyLoad(photos: PinPhoto[]) {
         Promise.all(
             photosToLoad.map(async (photo) => {
                 try {
-                    console.log('[usePhotoLazyLoad] Calling lazyLoadPhoto for:', photo.photoId)
                     const uri = await lazyLoadPhoto(photo.photoId)
-                    console.log('[usePhotoLazyLoad] Got URI:', uri ? `SUCCESS (${uri.substring(0, 50)}...)` : 'EMPTY')
                     if (uri) {
                         setPhotoUris((prev) => {
                             const next = new Map(prev)
                             next.set(photo.photoId, uri)
-                            console.log('[usePhotoLazyLoad] Updated photoUris map, size:', next.size)
                             return next
                         })
                     }
@@ -68,11 +49,7 @@ export function usePhotoLazyLoad(photos: PinPhoto[]) {
     // Return URIs for photos, using loaded URI if available, otherwise localUri or placeholder
     const getPhotoUri = (photo: PinPhoto): string => {
         const loadedUri = photoUris.get(photo.photoId)
-        const result = loadedUri || photo.localUri || '/placeholder.svg'
-        console.log('[usePhotoLazyLoad] getPhotoUri for:', photo.photoId, '→',
-            result === '/placeholder.svg' ? 'PLACEHOLDER' :
-                result.substring(0, 30) + '...')
-        return result
+        return loadedUri || photo.localUri || '/placeholder.svg'
     }
 
     return { getPhotoUri, isLoading: (photoId: string) => loadingRef.current.has(photoId) }

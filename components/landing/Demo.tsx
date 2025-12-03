@@ -17,7 +17,7 @@ export function Demo() {
                     <div className="relative aspect-video overflow-hidden rounded-xl border border-border bg-muted shadow-xl">
                         {/* Loom embed with analytics disabled to prevent SDK initialization errors */}
                         <iframe
-                            src="https://www.loom.com/embed/be9216f6e8bb4a399e001eb7054b1d06?sid=9b5d7c3a-8b1b-4b1b-8b1b-8b1b8b1b8b1b&hide_owner=true&hide_share=true&hideEmbedTopBar=true"
+                            src="https://www.loom.com/embed/1c4514bdad744388be751bc312e18a77"
                             frameBorder="0"
                             allowFullScreen
                             className="absolute top-0 left-0 h-full w-full"

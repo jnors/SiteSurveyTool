@@ -1,10 +1,11 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Session, User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { logger } from '@/lib/logger'
+import { db } from '@/lib/db'
 
 type SupabaseContext = {
     supabase: ReturnType<typeof createClient>
@@ -30,6 +31,8 @@ export default function SupabaseProvider({
     const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
     const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(initialSubscriptionStatus)
     const router = useRouter()
+    // Track previous user ID to detect account switches
+    const previousUserIdRef = useRef<string | null>(initialSession?.user?.id ?? null)
 
     const refreshSubscriptionStatus = async () => {
         logger.debug('refreshSubscriptionStatus called')
@@ -84,6 +87,28 @@ export default function SupabaseProvider({
             if (session?.access_token !== session?.access_token) {
                 router.refresh()
             }
+
+            // Detect account switch and clear IndexedDB for security
+            const currentUserId = session?.user?.id ?? null
+            const previousUserId = previousUserIdRef.current
+
+            if (currentUserId && previousUserId && currentUserId !== previousUserId) {
+                logger.auth('Account switch detected', {
+                    previousUserId,
+                    currentUserId
+                })
+                try {
+                    logger.auth('Clearing IndexedDB due to account switch...')
+                    await db.delete()
+                    logger.auth('IndexedDB cleared successfully')
+                } catch (dbError) {
+                    logger.error('Error clearing IndexedDB on account switch', dbError)
+                }
+            }
+
+            // Update the ref for next comparison
+            previousUserIdRef.current = currentUserId
+
             setSession(session)
             setUser(session?.user ?? null)
 

@@ -6,6 +6,7 @@ export async function GET(request: Request) {
     const supabase = await createClient()
 
     // Sign out on the server to clear cookies
+    // Note: IndexedDB clearing happens client-side in lib/useAuth.ts before this route is called
     await supabase.auth.signOut()
 
     // Redirect to the landing page

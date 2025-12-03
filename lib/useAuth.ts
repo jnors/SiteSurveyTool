@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 import { useSupabase } from '@/components/supabase-provider'
 import { logger } from '@/lib/logger'
+import { db } from '@/lib/db'
 
 type SignInOptions = {
   callbackUrl?: string
@@ -53,6 +54,16 @@ export function useAuth(callbackUrl: string = '/') {
       localStorage.removeItem('subscription_status')
       logger.auth('Local storage cleared')
     } finally {
+      // Clear IndexedDB to prevent data leakage between accounts
+      try {
+        logger.auth('Clearing IndexedDB...')
+        await db.delete()
+        logger.auth('IndexedDB cleared successfully')
+      } catch (dbError) {
+        logger.error('Error clearing IndexedDB', dbError)
+        // Continue with sign-out even if DB clearing fails
+      }
+
       logger.auth('Redirecting to server-side signout...')
       // Always redirect to the server-side sign-out route to ensure cookies are cleared
       window.location.href = '/auth/signout'

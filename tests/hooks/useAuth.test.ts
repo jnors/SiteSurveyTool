@@ -145,7 +145,7 @@ describe('useAuth', () => {
             })
 
             const callArgs = mockSupabaseAuth.signInWithOAuth.mock.calls[0][0]
-            expect(callArgs.options.scopes).toContain('https://www.googleapis.com/auth/drive')
+            expect(callArgs.options.scopes).toContain('https://www.googleapis.com/auth/drive.file')
         })
     })
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { requireServerAccessToken } from '@/sync/drive'
 import { DRIVE_ROOT_NAME } from '@/core'
+import { createClient } from '@/lib/supabase/server'
 
 const DRIVE_BASE = 'https://www.googleapis.com/drive/v3'
 
@@ -61,19 +62,48 @@ export async function GET() {
         return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 })
     }
 
-    try {
-        // Find root folder
-        const ROOT_NAME = DRIVE_ROOT_NAME
-        const ROOT_PARENT = 'root'
-        const root = await findFolderByName(token, ROOT_NAME, ROOT_PARENT)
+    // Get Supabase client and user
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 })
+    }
 
-        if (!root) {
-            // No root folder, user has no projects
-            return NextResponse.json({ projects: [] } satisfies ListProjectsResult)
+    try {
+        // Try to get root folder ID from database first (for drive.file scope compatibility)
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('drive_root_folder_id')
+            .eq('id', user.id)
+            .single()
+
+        let rootId: string | null = null
+
+        // If we have a stored folder ID, use it directly
+        if (profile?.drive_root_folder_id) {
+            rootId = profile.drive_root_folder_id
+        } else {
+            // Fall back to searching by name (for backward compatibility)
+            const ROOT_NAME = DRIVE_ROOT_NAME
+            const ROOT_PARENT = 'root'
+            const root = await findFolderByName(token, ROOT_NAME, ROOT_PARENT)
+
+            if (!root) {
+                // No root folder, user has no projects
+                return NextResponse.json({ projects: [] } satisfies ListProjectsResult)
+            }
+
+            rootId = root.id
+
+            // Store it for future use
+            await supabase
+                .from('profiles')
+                .update({ drive_root_folder_id: rootId })
+                .eq('id', user.id)
         }
 
-        // List all folders under root
-        const folders = await listFoldersInParent(token, root.id)
+        // List all folders under root (rootId is guaranteed to be non-null here)
+        const folders = await listFoldersInParent(token, rootId!)
 
         // Parse folder names (format: "ProjectName__projectId")
         const projects = folders

@@ -57,7 +57,7 @@ export function SignInCard({
         <p>
           We only request the scopes your surveys need:
           <code className="ml-2 inline-block rounded bg-background-elevated px-2 py-1 text-xs text-primary/90">
-            openid email profile https://www.googleapis.com/auth/drive
+            openid email profile https://www.googleapis.com/auth/drive.file
           </code>
         </p>
         <p>

@@ -18,7 +18,7 @@ export function useAuth(callbackUrl: string = '/') {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: process.env.NEXT_PUBLIC_GOOGLE_DRIVE_SCOPE ?? 'openid email profile https://www.googleapis.com/auth/drive',
+          scopes: process.env.NEXT_PUBLIC_GOOGLE_DRIVE_SCOPE ?? 'openid email profile https://www.googleapis.com/auth/drive.file',
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',

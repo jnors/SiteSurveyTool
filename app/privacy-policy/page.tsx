@@ -129,7 +129,7 @@ export default function PrivacyPolicyPage() {
                                 <li><code>openid</code> - Identity verification</li>
                                 <li><code>email</code> - Your email address</li>
                                 <li><code>profile</code> - Basic profile information</li>
-                                <li><code>https://www.googleapis.com/auth/drive</code> - Google Drive access for file storage</li>
+                                <li><code>https://www.googleapis.com/auth/drive.file</code> - Limited Google Drive access (only files created by this app)</li>
                             </ul>
 
                             <h3 className="mb-3 text-xl font-medium">5.3 Stripe</h3>

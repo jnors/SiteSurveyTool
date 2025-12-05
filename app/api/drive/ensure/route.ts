@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { requireServerAccessToken } from '@/sync/drive'
 import { DRIVE_ROOT_NAME } from '@/core'
+import { createClient } from '@/lib/supabase/server'
 
 const DRIVE_BASE = 'https://www.googleapis.com/drive/v3'
 
@@ -79,16 +80,58 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'INVALID_REQUEST' }, { status: 400 })
   }
 
+  // Get Supabase client and user
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 })
+  }
+
   const created: EnsureResult['created'] = {}
 
   // 1) Ensure root FieldPins under My Drive
   const ROOT_NAME = DRIVE_ROOT_NAME
   const ROOT_PARENT = 'root'
-  let root = await findFolderByName(token, ROOT_NAME, ROOT_PARENT)
+
+  // Try to get root folder ID from database first (for drive.file scope compatibility)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('drive_root_folder_id')
+    .eq('id', user.id)
+    .single()
+
+  let root: { id: string; name: string; parents?: string[] } | null = null
+
+  // If we have a stored folder ID, verify it still exists
+  if (profile?.drive_root_folder_id) {
+    try {
+      const existing = await getFileById(token, profile.drive_root_folder_id)
+      if (existing && !existing.trashed && existing.name === ROOT_NAME) {
+        root = existing
+      }
+    } catch (error) {
+      console.warn('[ensure] Stored root folder not found, will search/create:', error)
+    }
+  }
+
+  // Fall back to search by name (works on first creation or if not stored)
+  if (!root) {
+    root = await findFolderByName(token, ROOT_NAME, ROOT_PARENT)
+  }
+
+  // Create if it doesn't exist
   if (!root) {
     const createdRoot = await createFolder(token, ROOT_NAME, ROOT_PARENT)
     root = { id: createdRoot.id, name: ROOT_NAME, parents: [ROOT_PARENT] }
     created.root = true
+  }
+
+  // Store the root folder ID in database for future use
+  if (!profile?.drive_root_folder_id || profile.drive_root_folder_id !== root.id) {
+    await supabase
+      .from('profiles')
+      .update({ drive_root_folder_id: root.id })
+      .eq('id', user.id)
   }
 
   // 2) Ensure project folder under root

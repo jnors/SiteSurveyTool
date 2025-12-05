@@ -7,18 +7,40 @@ vi.mock('@/lib/google-server', () => ({
   requireServerAccessToken: vi.fn(),
 }))
 
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(),
+}))
+
 let requireServerAccessToken: any
+let createClient: any
 
 const mockFetch = vi.fn()
+const mockUser = { id: 'user-123', email: 'test@example.com' }
 
 beforeEach(async () => {
   vi.resetAllMocks()
 
-  // grab the mocked export at runtime (no top-level await)
-  const mod = await import('@/lib/google-server')
-  requireServerAccessToken = mod.requireServerAccessToken
+  // grab the mocked exports at runtime (no top-level await)
+  const googleMod = await import('@/lib/google-server')
+  requireServerAccessToken = googleMod.requireServerAccessToken
 
-  ;(globalThis as any).fetch = mockFetch
+  const supabaseMod = await import('@/lib/supabase/server')
+  createClient = supabaseMod.createClient
+
+    ; (globalThis as any).fetch = mockFetch
+
+  // Mock Supabase client
+  vi.mocked(createClient).mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
+    },
+    from: vi.fn((table: string) => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { drive_root_folder_id: null }, error: null }),
+      update: vi.fn().mockReturnThis(),
+    })),
+  } as any)
 })
 
 function jsonResponse(body: any, status = 200) {

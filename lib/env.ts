@@ -10,7 +10,7 @@ const serverSchema = z.object({
 const clientSchema = z.object({
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-    NEXT_PUBLIC_GOOGLE_DRIVE_SCOPE: z.string().optional().default('openid email profile https://www.googleapis.com/auth/drive'),
+    NEXT_PUBLIC_GOOGLE_DRIVE_SCOPE: z.string().optional().default('openid email profile https://www.googleapis.com/auth/drive.file'),
     NEXT_PUBLIC_MAX_PHOTO_RES: z.coerce.number().optional().default(1080),
     NEXT_PUBLIC_MAX_PHOTOS_PER_PIN: z.coerce.number().optional().default(4),
     NEXT_PUBLIC_DEMO_SYNC: z.string().optional(),

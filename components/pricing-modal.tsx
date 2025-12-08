@@ -3,21 +3,31 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Check } from 'lucide-react'
 import { useSupabase } from '@/components/supabase-provider'
 
 export function PricingModal() {
-    const [isYearly, setIsYearly] = useState(false)
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly' | 'promo'>('monthly')
     const [loading, setLoading] = useState(false)
     const { user } = useSupabase()
 
     const handleCheckout = async () => {
         setLoading(true)
         try {
-            const priceId = isYearly
-                ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY
-                : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+            let priceId;
+            switch (billingCycle) {
+                case 'yearly':
+                    priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY;
+                    break;
+                case 'promo':
+                    priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_PROMO;
+                    break;
+                case 'monthly':
+                default:
+                    priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY;
+                    break;
+            }
 
             if (!priceId) {
                 alert('Pricing configuration missing. Please check .env.local')
@@ -46,6 +56,16 @@ export function PricingModal() {
         }
     }
 
+    const getPriceDisplay = () => {
+        switch (billingCycle) {
+            case 'monthly': return { amount: '€10', period: '/mo', label: 'Monthly' }
+            case 'yearly': return { amount: '€96', period: '/yr', label: 'Yearly' }
+            case 'promo': return { amount: '€60', period: '/yr', label: 'Special' }
+        }
+    }
+
+    const { amount, period, label } = getPriceDisplay()
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -60,21 +80,29 @@ export function PricingModal() {
 
                 <div className="flex flex-col items-center gap-6 py-6">
                     {/* Toggle */}
-                    <div className="flex items-center gap-3">
-                        <span className={`text-sm font-medium ${!isYearly ? 'text-primary' : 'text-muted-foreground'}`}>Monthly</span>
-                        <Switch checked={isYearly} onCheckedChange={setIsYearly} />
-                        <span className={`text-sm font-medium ${isYearly ? 'text-primary' : 'text-muted-foreground'}`}>
-                            Yearly <span className="text-xs text-green-500 font-bold ml-1">(Save 20%)</span>
-                        </span>
-                    </div>
+                    <Tabs value={billingCycle} onValueChange={(v) => setBillingCycle(v as any)} className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                            <TabsTrigger value="promo" className="relative">
+                                Special
+                                <span className="absolute -top-2 -right-1 flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                </span>
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
 
                     {/* Price Display */}
                     <div className="text-center">
                         <div className="text-4xl font-bold">
-                            {isYearly ? '€100' : '€10'}
-                            <span className="text-lg text-muted-foreground font-normal">/{isYearly ? 'yr' : 'mo'}</span>
+                            {amount}
+                            <span className="text-lg text-muted-foreground font-normal">{period}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">Cancel anytime.</p>
+                        {billingCycle === 'yearly' && <p className="text-sm text-green-500 font-medium mt-2">Save 20%</p>}
+                        {billingCycle === 'promo' && <p className="text-sm text-red-500 font-bold mt-2">Limited Time Offer! Save 50%</p>}
+                        {billingCycle === 'monthly' && <p className="text-sm text-muted-foreground mt-2">Cancel anytime.</p>}
                     </div>
 
                     {/* Features */}
@@ -99,7 +127,7 @@ export function PricingModal() {
                         disabled={loading}
                         className="w-full bg-primary hover:bg-primary/90 text-lg py-6"
                     >
-                        {loading ? 'Redirecting...' : `Subscribe ${isYearly ? 'Yearly' : 'Monthly'}`}
+                        {loading ? 'Redirecting...' : `Subscribe ${label}`}
                     </Button>
                 </div>
             </DialogContent>

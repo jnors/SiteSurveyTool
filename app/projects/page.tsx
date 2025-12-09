@@ -160,7 +160,7 @@ export default function ProjectsPage() {
         />
 
         <main className="mx-auto max-w-7xl px-6 py-8">
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="mb-2 text-3xl font-bold text-foreground">Projects</h1>
               <p className="text-foreground-muted">Manage your site survey projects</p>

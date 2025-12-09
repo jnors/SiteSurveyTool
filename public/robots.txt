@@ -1,0 +1,13 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /privacy-policy
+Disallow: /terms
+Disallow: /404
+Disallow: /500
+
+# Host
+Host: https://www.fieldpins.com
+
+# Sitemap
+Sitemap: https://www.fieldpins.com/sitemap.xml

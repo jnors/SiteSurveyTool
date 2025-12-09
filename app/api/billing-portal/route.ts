@@ -34,6 +34,34 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: session.url })
     } catch (error: any) {
         console.error('[billing-portal] Error:', error)
+
+        // Handle stale customer ID (e.g. from switching between Test/Live mode)
+        if (error?.code === 'resource_missing' || (error?.message && error.message.includes('No such customer'))) {
+            try {
+                const supabase = await createClient()
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser()
+
+                if (user) {
+                    await supabase
+                        .from('profiles')
+                        .update({
+                            stripe_customer_id: null,
+                            subscription_status: null,
+                            subscription_id: null
+                        })
+                        .eq('id', user.id)
+                }
+                return NextResponse.json(
+                    { error: 'Subscription data was invalid and has been reset. Please refresh the page and subscribe again.' },
+                    { status: 400 } // Use 400 so client alerts the message
+                )
+            } catch (dbError) {
+                console.error('Failed to reset profile:', dbError)
+            }
+        }
+
         return NextResponse.json(
             { error: error.message || 'Internal Server Error' },
             { status: 500 }

@@ -25,14 +25,17 @@ export default function SettingsPage() {
                 method: "POST",
             })
             const data = await res.json()
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to open billing portal')
+            }
             if (data.url) {
                 window.location.href = data.url
             } else {
                 throw new Error("No portal URL returned")
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to open billing portal:", error)
-            alert("Failed to load subscription settings. Please try again.")
+            alert(error.message || "Failed to load subscription settings. Please try again.")
         } finally {
             setIsPortalLoading(false)
         }

@@ -20,7 +20,10 @@ export async function POST(req: Request) {
             .single()
 
         if (!profile?.stripe_customer_id) {
-            return new NextResponse('No Stripe customer found', { status: 400 })
+            return NextResponse.json(
+                { error: 'No Stripe customer found' },
+                { status: 400 }
+            )
         }
 
         const session = await stripe.billingPortal.sessions.create({
@@ -29,8 +32,11 @@ export async function POST(req: Request) {
         })
 
         return NextResponse.json({ url: session.url })
-    } catch (error) {
+    } catch (error: any) {
         console.error('[billing-portal] Error:', error)
-        return new NextResponse('Internal Error', { status: 500 })
+        return NextResponse.json(
+            { error: error.message || 'Internal Server Error' },
+            { status: 500 }
+        )
     }
 }

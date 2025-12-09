@@ -7,6 +7,7 @@ import './globals.css'
 import { Providers } from './providers'
 import landingContent from '@/content/landing.json'
 import type { LandingContent } from '@/types/landing'
+import { PromotionalBanner } from '@/components/promotional-banner'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', weight: ['400', '500', '600', '700'] })
 
@@ -84,6 +85,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers initialSession={session} initialSubscriptionStatus={initialSubscriptionStatus}>
+          <PromotionalBanner />
           {children}
         </Providers>
         <Script id="jsonld-software" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />

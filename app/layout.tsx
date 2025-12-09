@@ -85,7 +85,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers initialSession={session} initialSubscriptionStatus={initialSubscriptionStatus}>
-          <PromotionalBanner />
+          <PromotionalBanner subscriptionStatus={initialSubscriptionStatus} />
           {children}
         </Providers>
         <Script id="jsonld-software" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />

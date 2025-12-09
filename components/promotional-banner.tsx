@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-export function PromotionalBanner() {
+export function PromotionalBanner({ subscriptionStatus }: { subscriptionStatus?: string | null }) {
     const [timeLeft, setTimeLeft] = useState('')
     const [isMounted, setIsMounted] = useState(false)
 
@@ -36,6 +36,11 @@ export function PromotionalBanner() {
     }, [])
 
     if (!isMounted) return null
+
+    // Hide for Pro users
+    if (subscriptionStatus === 'active' || subscriptionStatus === 'trialing' || subscriptionStatus === 'pro') {
+        return null
+    }
 
     return (
         <div className="bg-primary text-primary-foreground px-4 py-3 text-center text-sm font-medium">

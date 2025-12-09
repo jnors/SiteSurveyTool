@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Check } from 'lucide-react'
 import { useSupabase } from '@/components/supabase-provider'
 
-export function PricingModal() {
+export function PricingModal({ className }: { className?: string }) {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly' | 'promo'>('monthly')
     const [loading, setLoading] = useState(false)
     const { user } = useSupabase()
@@ -69,7 +69,7 @@ export function PricingModal() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="default" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg">
+                <Button variant="default" className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg ${className}`}>
                     Upgrade to Pro
                 </Button>
             </DialogTrigger>

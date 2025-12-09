@@ -166,12 +166,12 @@ export default function ProjectsPage() {
               <p className="text-foreground-muted">Manage your site survey projects</p>
             </div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              {!isPro && <PricingModal />}
+              {!isPro && <PricingModal className="w-full sm:w-auto" />}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex">
+                  <span className="flex w-full sm:w-auto">
                     <Button
-                      className="gap-2 bg-primary hover:bg-primary-hover"
+                      className="w-full gap-2 bg-primary hover:bg-primary-hover sm:w-auto"
                       onClick={() => handleCreateOpenChange(true)}
                       disabled={Boolean(createDisabledReason)}
                     >

@@ -165,7 +165,7 @@ export default function ProjectsPage() {
               <h1 className="mb-2 text-3xl font-bold text-foreground">Projects</h1>
               <p className="text-foreground-muted">Manage your site survey projects</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               {!isPro && <PricingModal />}
               <Tooltip>
                 <TooltipTrigger asChild>

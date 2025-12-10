@@ -102,7 +102,8 @@ export async function mapToUIProject(
     if (uiPins.some((p) => p.syncStatus === 'pending')) return 'pending'
     if (!project.driveFolderId) return 'pending'
     // Check if ANY floorplan needs syncing, not just the active one
-    if (floorplans.some((fp) => !fp.driveFileId)) return 'pending'
+    // Only consider floorplans pending if they lack a Drive ID AND have a local URI (not "ghost" records)
+    if (floorplans.some((fp) => !fp.driveFileId && fp.localUri)) return 'pending'
     return 'synced'
   })()
 

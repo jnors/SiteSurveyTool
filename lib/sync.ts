@@ -274,6 +274,7 @@ export async function syncProject(
       }
     } catch (error: any) {
       const message = error instanceof Error ? error.message : `Floorplan ${floorplan.name} upload failed`
+      logger.warn('Floorplan upload failed', { projectId, floorplanId: floorplan.id, error })
       errors.push(message)
     }
   }

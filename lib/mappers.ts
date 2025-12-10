@@ -99,10 +99,17 @@ export async function mapToUIProject(
   const projectStatus: SyncStatus = ((): SyncStatus => {
     if (uiPins.some((p) => p.syncStatus === 'error')) return 'error'
     if (uiPins.some((p) => p.syncStatus === 'syncing')) return 'syncing'
+
+    // If we have a fresh sync timestamp (newer than or equal to last local update),
+    // we trust the sync worked (since errors prevent timestamp update).
+    const isFresh = project.syncedAt && project.updatedAt && project.syncedAt >= project.updatedAt
+    if (isFresh && !uiPins.some((p) => p.syncStatus === 'pending')) {
+      return 'synced'
+    }
+
     if (uiPins.some((p) => p.syncStatus === 'pending')) return 'pending'
     if (!project.driveFolderId) return 'pending'
     // Check if ANY floorplan needs syncing, not just the active one
-    // Only consider floorplans pending if they lack a Drive ID AND have a local URI (not "ghost" records)
     if (floorplans.some((fp) => !fp.driveFileId && fp.localUri)) return 'pending'
     return 'synced'
   })()

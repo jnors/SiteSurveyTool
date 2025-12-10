@@ -269,6 +269,9 @@ export async function syncProject(
             dataUrl,
           }),
         )
+        if (!res.driveFileId) {
+          throw new Error(`Floorplan upload response missing file ID`)
+        }
         floorplanUploaded = true
         await db.floorplans.update(floorplan.id, { driveFileId: res.driveFileId })
       }
@@ -315,7 +318,11 @@ export async function syncProject(
       return writeProjectJsonClient({ projectFolderId, payload })
     })
     projectJsonWritten = true
-    await db.projects.update(projectId, { syncedAt: nowIso })
+
+    // Only update syncedAt if there were no partial errors
+    if (errors.length === 0) {
+      await db.projects.update(projectId, { syncedAt: nowIso })
+    }
 
     // Clear pin outbox entries since they're now synced via project.json
     const pinIds = allPins.map((p) => p.id)

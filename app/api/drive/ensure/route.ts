@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { requireServerAccessToken } from '@/sync/drive'
 import { DRIVE_ROOT_NAME } from '@/core'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 const DRIVE_BASE = 'https://www.googleapis.com/drive/v3'
 
@@ -87,6 +88,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 })
   }
 
+  // Use Service Client for DB operations to bypass RLS
+  const serviceClient = createServiceClient()
+
   const created: EnsureResult['created'] = {}
 
   // 1) Ensure root FieldPins under My Drive
@@ -94,7 +98,7 @@ export async function POST(req: Request) {
   const ROOT_PARENT = 'root'
 
   // Try to get root folder ID from database first (for drive.file scope compatibility)
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('profiles')
     .select('drive_root_folder_id')
     .eq('id', user.id)
@@ -128,7 +132,7 @@ export async function POST(req: Request) {
 
   // Store the root folder ID in database for future use
   if (!profile?.drive_root_folder_id || profile.drive_root_folder_id !== root.id) {
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await serviceClient
       .from('profiles')
       .upsert({
         id: user.id,

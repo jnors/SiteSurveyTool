@@ -14,8 +14,13 @@ vi.mock('@/lib/supabase/server', () => ({
     createClient: vi.fn(),
 }))
 
+vi.mock('@/lib/supabase/service', () => ({
+    createServiceClient: vi.fn(),
+}))
+
 import { requireServerAccessToken } from '@/sync/drive'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 describe('POST /api/drive/ensure', () => {
     const mockToken = 'mock-token-123'
@@ -26,11 +31,15 @@ describe('POST /api/drive/ensure', () => {
         global.fetch = vi.fn()
         vi.mocked(requireServerAccessToken).mockResolvedValue(mockToken)
 
-        // Mock Supabase client
+        // Mock Supabase client (Auth only)
         vi.mocked(createClient).mockResolvedValue({
             auth: {
                 getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
             },
+        } as any)
+
+        // Mock Service Client (DB operations)
+        vi.mocked(createServiceClient).mockReturnValue({
             from: vi.fn((table: string) => ({
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),

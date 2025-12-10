@@ -257,7 +257,7 @@ export async function syncProject(
   let floorplanUploaded = false
   for (const floorplan of allFloorplans) {
     try {
-      if (!floorplan.driveFileId || floorplan.localUri.startsWith('data:')) {
+      if (!floorplan.driveFileId) {
         options.onProgress?.(`Syncing floorplan ${floorplan.name}...`)
         const dataUrl = await ensureDataUrl(floorplan.localUri)
         logger.sync('uploading floorplan', projectId, { floorplanId: floorplan.id })

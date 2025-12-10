@@ -35,7 +35,9 @@ describe('POST /api/drive/ensure', () => {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
                 single: vi.fn().mockResolvedValue({ data: { drive_root_folder_id: null }, error: null }),
+                maybeSingle: vi.fn().mockResolvedValue({ data: { drive_root_folder_id: null }, error: null }),
                 update: vi.fn().mockReturnThis(),
+                upsert: vi.fn().mockReturnThis(),
             })),
         } as any)
     })

@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     .from('profiles')
     .select('drive_root_folder_id')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   let root: { id: string; name: string; parents?: string[] } | null = null
 
@@ -128,10 +128,17 @@ export async function POST(req: Request) {
 
   // Store the root folder ID in database for future use
   if (!profile?.drive_root_folder_id || profile.drive_root_folder_id !== root.id) {
-    await supabase
+    const { error: upsertError } = await supabase
       .from('profiles')
-      .update({ drive_root_folder_id: root.id })
-      .eq('id', user.id)
+      .upsert({
+        id: user.id,
+        drive_root_folder_id: root.id,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+
+    if (upsertError) {
+      console.error('[ensure] Failed to update profile with root folder ID:', upsertError)
+    }
   }
 
   // 2) Ensure project folder under root
